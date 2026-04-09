@@ -24,7 +24,7 @@ export default function ThreeBackground() {
 
     // Create water-like floating particles
     const particlesGeometry = new THREE.BufferGeometry();
-    const particlesCount = 1200;
+    const particlesCount = 200;
     
     const posArray = new Float32Array(particlesCount * 3);
     

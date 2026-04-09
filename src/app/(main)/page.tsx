@@ -8,6 +8,7 @@ import { format, isValid } from 'date-fns';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } from 'recharts';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
+import ThreeBackground from '@/components/ThreeBackground';
 import RealtimeManager from '@/components/RealtimeManager';
 import RecognitionsWidget from '@/components/RecognitionsWidget';
 import TransparencyFeed from '@/components/TransparencyFeed';
@@ -114,6 +115,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-10 selection:bg-brand-sky/30">
+      <ThreeBackground />
       <RealtimeManager
         onLogsChange={() => fetchData()}
         onProjectsChange={() => fetchData()}

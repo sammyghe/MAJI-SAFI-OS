@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import ThreeBackground from "@/components/ThreeBackground";
 import ToastContainer from "@/components/ToastContainer";
 
 const geistSans = Geist({
@@ -30,7 +29,6 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0F172A] to-[#020617] text-white overflow-hidden relative">
-        <ThreeBackground />
         <ToastContainer />
         {/* Child layouts like (main)/layout and /investor control the actual flex flows */}
         {children}

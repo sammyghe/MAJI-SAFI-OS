@@ -61,21 +61,36 @@ export default function Dashboard() {
     setLoading(true);
     setRefreshing(true);
     try {
-      const { data: logData } = await supabase
-        .from('maji_daily_logs')
-        .select('*')
-        .order('date', { ascending: false })
-        .limit(1)
-        .single();
-      
+      const [
+        { data: logData },
+        { data: last7Logs },
+        { data: phaseData },
+        { data: projectsData },
+      ] = await Promise.all([
+        supabase
+          .from('maji_daily_logs')
+          .select('*')
+          .order('date', { ascending: false })
+          .limit(1)
+          .single(),
+        supabase
+          .from('maji_daily_logs')
+          .select('date, jars_produced')
+          .order('date', { ascending: false })
+          .limit(7),
+        supabase
+          .from('maji_phase')
+          .select('*')
+          .eq('active', true)
+          .single(),
+        supabase
+          .from('maji_projects')
+          .select('*')
+          .eq('status', 'active'),
+      ]);
+
       setLog(logData);
 
-      const { data: last7Logs } = await supabase
-        .from('maji_daily_logs')
-        .select('date, jars_produced')
-        .order('date', { ascending: false })
-        .limit(7);
-      
       if (last7Logs) {
         const formattedChart = [...last7Logs].reverse().map(d => ({
           date: format(new Date(d.date), 'MMM d'),
@@ -84,19 +99,7 @@ export default function Dashboard() {
         setChartData(formattedChart);
       }
 
-      const { data: phaseData } = await supabase
-        .from('maji_phase')
-        .select('*')
-        .eq('active', true)
-        .single();
-      
       setPhase(phaseData);
-
-      const { data: projectsData } = await supabase
-        .from('maji_projects')
-        .select('*')
-        .eq('status', 'active');
-      
       setProjects(projectsData || []);
     } catch (error) {
       console.error('Error fetching data:', error);

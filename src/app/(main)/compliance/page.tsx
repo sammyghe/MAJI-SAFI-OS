@@ -30,7 +30,7 @@ export default async function CompliancePage() {
   const records = recordsData || [];
 
   // Identify UNBS
-  const unbsRecord = records.find(r => r.document_name.includes('UNBS'));
+  const unbsRecord = records.find(r => r.document_name?.includes('UNBS'));
   const isExpiringSoon = unbsRecord && new Date(unbsRecord.expiry_date).getTime() < Date.now() + 1000 * 60 * 60 * 24 * 30; // Within 30 days
 
   return (

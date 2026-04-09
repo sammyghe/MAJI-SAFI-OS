@@ -1,0 +1,108 @@
+"use client";
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { 
+  LayoutDashboard, 
+  Settings, 
+  ShieldCheck, 
+  BadgeDollarSign, 
+  Package, 
+  Wallet, 
+  ClipboardCheck,
+  Droplets,
+  ChevronRight,
+  Beaker,
+  Truck,
+  Box,
+  Scale
+} from 'lucide-react';
+
+const navGroups = [
+  {
+    label: "Intelligence",
+    items: [
+      { name: 'Global Overview', href: '/', icon: LayoutDashboard },
+    ]
+  },
+  {
+    label: "Sectors",
+    items: [
+      { name: 'Operations', href: '/department/operations', icon: Settings },
+      { name: 'Quality', href: '/department/quality', icon: Beaker },
+      { name: 'Sales', href: '/department/sales', icon: Truck },
+      { name: 'Inventory', href: '/department/inventory', icon: Box },
+      { name: 'Finance', href: '/department/finance', icon: Wallet },
+      { name: 'Compliance', href: '/department/compliance', icon: Scale },
+    ]
+  }
+];
+
+
+export default function Sidebar() {
+  const pathname = usePathname();
+
+  return (
+    <aside className="w-72 flex-shrink-0 border-r border-white/5 bg-brand-deep/40 backdrop-blur-3xl hidden md:flex flex-col relative z-20">
+      {/* Brand Header */}
+      <div className="p-8 pb-4">
+        <Link href="/" className="flex items-center gap-4 group">
+          <div className="p-3 bg-gradient-to-br from-brand-steel to-brand-navy rounded-2xl shadow-lg group-hover:shadow-brand-sky/20 transition-all duration-500">
+            <Droplets className="w-7 h-7 text-brand-pale animate-pulse" />
+          </div>
+          <div>
+            <h1 className="text-xl font-black tracking-tighter text-white uppercase italic">
+              MajiSafi<span className="text-brand-sky">OS</span>
+            </h1>
+            <p className="text-[10px] font-bold text-brand-steel tracking-widest uppercase">Pure Productivity</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto px-6 py-4 space-y-8 scrollbar-hide">
+        {navGroups.map((group) => (
+          <div key={group.label} className="space-y-3">
+            <p className="px-4 text-[11px] font-black text-brand-steel uppercase tracking-[0.2em]">
+              {group.label}
+            </p>
+            <div className="space-y-1">
+              {group.items.map((item) => {
+                const isActive = pathname === item.href || (item.name === 'Operations' && pathname.startsWith('/department') && !pathname.includes('compliance') && !pathname.includes('hr'));
+                return (
+                  <Link 
+                    key={item.name} 
+                    href={item.href}
+                    className={`glass-nav-item flex items-center justify-between px-4 py-3 rounded-2xl font-semibold text-sm group ${
+                      isActive ? 'active' : 'text-brand-steel hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-brand-pale' : 'opacity-60'}`} />
+                      {item.name}
+                    </div>
+                    {isActive && <ChevronRight className="w-4 h-4 text-brand-pale" />}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Footer Profile */}
+      <div className="p-6 mt-auto border-t border-white/5">
+        <div className="glass-panel p-4 rounded-3xl flex items-center gap-3 bg-white/5 border-white/10">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-steel to-brand-navy border border-white/20 flex items-center justify-center text-white font-bold shadow-inner">
+            MS
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-black text-white truncate">System Admin</p>
+            <p className="text-[10px] text-brand-steel font-bold truncate">sammy@gmail.com</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+

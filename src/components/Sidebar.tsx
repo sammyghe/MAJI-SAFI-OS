@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { 
   LayoutDashboard, 
   Settings, 
@@ -23,6 +24,7 @@ const navGroups = [
     label: "Intelligence",
     items: [
       { name: 'Global Overview', href: '/', icon: LayoutDashboard },
+      { name: 'Supply Chain', href: '/suppliers', icon: Truck },
     ]
   },
   {
@@ -41,9 +43,14 @@ const navGroups = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    setSearch(window.location.search);
+  }, []);
 
   return (
-    <aside className="w-72 flex-shrink-0 border-r border-white/5 bg-brand-deep/40 backdrop-blur-3xl hidden md:flex flex-col relative z-20">
+    <aside className="w-72 flex-shrink-0 border-r border-white/5 bg-brand-deep/40 backdrop-blur-3xl hidden md:flex flex-col h-full sticky top-0 relative z-20">
       {/* Brand Header */}
       <div className="p-8 pb-4">
         <Link href="/" className="flex items-center gap-4 group">
@@ -69,10 +76,14 @@ export default function Sidebar() {
             <div className="space-y-1">
               {group.items.map((item) => {
                 const isActive = pathname === item.href || (item.name === 'Operations' && pathname.startsWith('/department') && !pathname.includes('compliance') && !pathname.includes('hr'));
+                
+                // Append current query params to the link href
+                const hrefWithParams = `${item.href}${search}`;
+
                 return (
                   <Link 
                     key={item.name} 
-                    href={item.href}
+                    href={hrefWithParams}
                     className={`glass-nav-item flex items-center justify-between px-4 py-3 rounded-2xl font-semibold text-sm group ${
                       isActive ? 'active' : 'text-brand-steel hover:text-white'
                     }`}

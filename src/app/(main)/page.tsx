@@ -12,6 +12,7 @@ import ThreeBackground from '@/components/ThreeBackground';
 import RealtimeManager from '@/components/RealtimeManager';
 import RecognitionsWidget from '@/components/RecognitionsWidget';
 import TransparencyFeed from '@/components/TransparencyFeed';
+import FounderDigest from '@/components/FounderDigest';
 
 
 interface DailyLog {
@@ -143,12 +144,15 @@ export default function Dashboard() {
             <span className="font-bold text-xs text-white uppercase tracking-wider">Sync State</span>
           </button>
           
-          <div className="flex items-center gap-2 px-4 py-2 bg-brand-navy/20 rounded-2xl border border-white/5">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-black text-brand-steel uppercase tracking-widest">Live Network</span>
-          </div>
         </div>
       </div>
+
+      {isFounder && (
+        <div className="animate-in fade-in slide-in-from-top-4 duration-1000 delay-300">
+          <FounderDigest projects={projects} userName="Sammy" />
+        </div>
+      )}
+
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 space-y-4">
@@ -196,16 +200,16 @@ export default function Dashboard() {
                     {/* Liquid Progress Bar */}
                     <div className="relative h-10 w-full bg-brand-deep/50 rounded-2xl overflow-hidden border border-white/5 shadow-inner">
                       <div 
-                        className="absolute inset-0 transition-all duration-1000 ease-out"
+                        className="absolute inset-0 transition-all duration-1000 ease-out h-full"
                         style={{ width: `${Math.min((log.jars_produced / TARGET_JARS) * 100, 100)}%` }}
                       >
                         {/* Wave Layer 1 */}
-                        <div className="absolute inset-0 bg-brand-sky/20 animate-wave opacity-50" 
+                        <div className="absolute inset-0 bg-brand-sky/20 animate-wave" 
                              style={{ background: 'linear-gradient(90deg, transparent, rgba(193, 232, 255, 0.4), transparent)', backgroundSize: '200% 100%' }} />
                         {/* Fill Base */}
-                        <div className={`h-full w-full opacity-30 ${log.jars_produced >= TARGET_JARS ? 'bg-emerald-400' : 'bg-brand-sky'}`} />
+                        <div className={`h-full w-full ${log.jars_produced >= TARGET_JARS ? 'bg-emerald-500/80 shadow-[0_0_20px_rgba(16,185,129,0.4)]' : 'bg-brand-sky/80 shadow-[0_0_20px_rgba(193,232,255,0.4)]'}`} />
                         {/* Highlight */}
-                        <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/20" />
+                        <div className="absolute top-0 left-0 right-0 h-[2px] bg-white/40" />
                       </div>
                     </div>
                   </div>
@@ -229,11 +233,10 @@ export default function Dashboard() {
                     </Link>
                   </div>
                   
-                  <div className="flex items-baseline gap-2 mb-6">
+                  <div className="flex items-baseline gap-2 mb-6 flex-wrap">
                     <span className="text-2xl font-black text-brand-steel italic">UGX</span>
-                    <span className="text-7xl font-black tracking-tighter text-white drop-shadow-lg leading-none">
-                      <CountUp end={log.cash_collected_ugx / 1000} duration={2} decimals={1} />
-                      <span className="text-4xl text-brand-sky italic">k</span>
+                    <span className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-white drop-shadow-lg leading-none">
+                      <CountUp end={log.cash_collected_ugx} duration={2} separator="," />
                     </span>
                   </div>
 

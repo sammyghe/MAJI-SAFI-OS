@@ -1,11 +1,16 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Logo from '@/components/Logo';
 import { Lock, TrendingUp, Calendar as CalendarIcon, Quote, Target, ArrowRight } from 'lucide-react';
 
+const InvestorScene = dynamic(() => import('./InvestorScene'), { ssr: false });
+
 export default function InvestorPage() {
+  const router = useRouter();
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState(false);
@@ -43,7 +48,16 @@ export default function InvestorPage() {
     }
   }, [isAuthenticated]);
 
+  if (isAuthenticated) {
+    return (
+      <div className="fixed inset-0 z-50 overflow-hidden">
+        <InvestorScene onEnter={() => router.push('/')} />
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
+
     return (
       <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-[2rem] shadow-2xl w-full max-w-md text-center">

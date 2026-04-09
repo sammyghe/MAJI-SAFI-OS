@@ -61,51 +61,68 @@ export default function DeptRealtimeLogs({
             {config.formFields.slice(0, 2).map((f: any) => (
               <th key={f.name} className="px-6 pb-2">{f.label}</th>
             ))}
+            {department === 'inventory' && <th className="px-6 pb-2 text-brand-sky">Calculated Volume (L)</th>}
             <th className="px-6 pb-2">Integrity Status</th>
             <th className="px-6 pb-2">Authority</th>
           </tr>
         </thead>
         <tbody className="text-xs">
-          {logs.length > 0 ? logs.map((log: any, idx) => (
-            <tr key={idx} className="group glass-panel hover:bg-white/5 transition-all duration-300">
-              <td className="px-6 py-5 text-brand-steel font-bold rounded-l-3xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-1.5 h-1.5 rounded-full bg-brand-sky/40" />
-                  {log.date}
-                </div>
-              </td>
-              
-              {config.formFields.slice(0, 2).map((f: any) => (
-                <td key={f.name} className="px-6 py-5 text-white font-black italic uppercase italic">
-                  {getDynamicValue(log, f.name)}
+          {logs.length > 0 ? logs.map((log: any, idx) => {
+            let volumeL = null;
+            if (department === 'inventory' && config.products) {
+              const prod = config.products.find((p: any) => p.name === log.product_type);
+              if (prod) {
+                volumeL = (log.quantity || 0) * prod.size;
+              }
+            }
+
+            return (
+              <tr key={idx} className="group glass-panel hover:bg-white/5 transition-all duration-300">
+                <td className="px-6 py-5 text-brand-steel font-bold rounded-l-3xl">
+                  <div className="flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-brand-sky/40" />
+                    {log.date}
+                  </div>
                 </td>
-              ))}
+                
+                {config.formFields.slice(0, 2).map((f: any) => (
+                  <td key={f.name} className="px-6 py-5 text-white font-black italic uppercase italic">
+                    {getDynamicValue(log, f.name)}
+                  </td>
+                ))}
 
-              <td className="px-6 py-5">
-                {log.status || log.quality_status ? (
-                  <span className={`px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${statusBadge(log.status || log.quality_status)}`}>
-                    {log.status || log.quality_status}
-                  </span>
-                ) : (
-                  <div className="flex items-center gap-2 text-brand-steel/50 italic">
-                    <Info className="w-3 h-3" />
-                    Pending
-                  </div>
+                {department === 'inventory' && (
+                  <td className="px-6 py-5 text-brand-sky font-black italic uppercase">
+                    {volumeL !== null ? `${volumeL.toLocaleString()} L` : '—'}
+                  </td>
                 )}
-              </td>
 
-              <td className="px-6 py-5 rounded-r-3xl">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-lg bg-brand-navy flex items-center justify-center text-[10px] font-black text-brand-sky border border-white/5">
-                    {log.logged_by?.slice(0, 2).toUpperCase() || 'TM'}
+                <td className="px-6 py-5">
+                  {log.status || log.quality_status ? (
+                    <span className={`px-3 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest ${statusBadge(log.status || log.quality_status)}`}>
+                      {log.status || log.quality_status}
+                    </span>
+                  ) : (
+                    <div className="flex items-center gap-2 text-brand-steel/50 italic">
+                      <Info className="w-3 h-3" />
+                      Pending
+                    </div>
+                  )}
+                </td>
+
+                <td className="px-6 py-5 rounded-r-3xl">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-brand-navy flex items-center justify-center text-[10px] font-black text-brand-sky border border-white/5">
+                      {log.logged_by?.slice(0, 2).toUpperCase() || 'TM'}
+                    </div>
+                    <span className="font-black text-brand-sky uppercase italic text-[11px] tracking-vantage">
+                      {log.logged_by || 'Team'}
+                    </span>
                   </div>
-                  <span className="font-black text-brand-sky uppercase italic text-[11px] tracking-vantage">
-                    {log.logged_by || 'Team'}
-                  </span>
-                </div>
-              </td>
-            </tr>
-          )) : (
+                </td>
+              </tr>
+            );
+          }) : (
             <tr>
               <td colSpan={5} className="py-20 text-center glass-panel rounded-[2rem]">
                 <div className="flex flex-col items-center gap-4 text-brand-steel">

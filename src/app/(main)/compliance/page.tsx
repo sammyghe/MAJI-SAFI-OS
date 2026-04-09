@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase';
 import { ShieldCheck, AlertTriangle } from 'lucide-react';
 import ComplianceClient from './ComplianceClient';
 
+export const dynamic = 'force-dynamic';
+
 export default async function CompliancePage() {
   const cookieStore = await cookies();
   const userRole = cookieStore.get('maji_user_role')?.value;

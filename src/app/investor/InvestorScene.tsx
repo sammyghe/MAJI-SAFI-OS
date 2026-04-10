@@ -172,7 +172,7 @@ export default function InvestorScene({ onEnter }: { onEnter: () => void }) {
             color="#5483B3"
             anchorX="center"
             anchorY="middle"
-            opacity={0.5}
+            fillOpacity={0.5}
           >
             VERIFY CREDENTIALS & ENTER COMMAND CENTER
           </Text>

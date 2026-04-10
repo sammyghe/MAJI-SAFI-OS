@@ -13,6 +13,7 @@ import RealtimeManager from '@/components/RealtimeManager';
 import RecognitionsWidget from '@/components/RecognitionsWidget';
 import TransparencyFeed from '@/components/TransparencyFeed';
 import FounderDigest from '@/components/FounderDigest';
+import PulseMini from '@/components/PulseMini';
 
 
 interface DailyLog {
@@ -413,7 +414,12 @@ export default function Dashboard() {
           </div>
 
           <RecognitionsWidget tgId={tgId} />
-          <TransparencyFeed />
+
+          {/* Split Feed: Transparency + Pulse */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TransparencyFeed />
+            <PulseMini />
+          </div>
 
         </div>
       )}

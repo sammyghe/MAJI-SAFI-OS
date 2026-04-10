@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ToastContainer from "@/components/ToastContainer";
@@ -18,6 +18,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Maji Safi OS",
   description: "Hydrate. Elevate.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "MajiOS",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#021024",
 };
 
 export default function RootLayout({

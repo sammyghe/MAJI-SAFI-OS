@@ -20,11 +20,21 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Default founder user for dev/demo
+const DEFAULT_USER: User = {
+  id: '1',
+  name: 'Samuel Ghedamu',
+  role: 'founder',
+  department_slug: 'founder-office',
+  departments: ['founder-office', 'finance'],
+  phone: '+256700000000',
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Restore auth state from localStorage on mount
+  // Auto-login with default user on mount
   useEffect(() => {
     const savedUser = localStorage.getItem('maji-safi-user');
     if (savedUser) {
@@ -32,7 +42,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(JSON.parse(savedUser));
       } catch (e) {
         console.error('Failed to parse saved user:', e);
+        setUser(DEFAULT_USER);
+        localStorage.setItem('maji-safi-user', JSON.stringify(DEFAULT_USER));
       }
+    } else {
+      // Auto-login with default user
+      setUser(DEFAULT_USER);
+      localStorage.setItem('maji-safi-user', JSON.stringify(DEFAULT_USER));
     }
     setLoading(false);
   }, []);

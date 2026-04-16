@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Maji Safi OS – Inventory Workspace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700&amp;family=Space+Grotesk:wght@600&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-surface": "#dfe2eb",
+            "secondary-fixed": "#b1f0ce",
+            "on-primary-container": "#f3f7ff",
+            "on-primary-fixed-variant": "#004b74",
+            "on-error-container": "#ffdad6",
+            "on-secondary": "#003824",
+            "surface-bright": "#353940",
+            "surface-dim": "#10141a",
+            "on-secondary-container": "#87c6a5",
+            "surface-container": "#1c2026",
+            "error-container": "#93000a",
+            "on-tertiary-fixed": "#410005",
+            "outline": "#8a919b",
+            "on-primary-fixed": "#001d32",
+            "secondary-fixed-dim": "#95d4b3",
+            "tertiary-fixed-dim": "#ffb3af",
+            "surface": "#10141a",
+            "surface-container-low": "#181c22",
+            "surface-variant": "#31353c",
+            "background": "#10141a",
+            "on-error": "#690005",
+            "tertiary-container": "#e1112e",
+            "on-tertiary-container": "#fff5f4",
+            "outline-variant": "#404850",
+            "secondary-container": "#12533a",
+            "surface-container-highest": "#31353c",
+            "primary": "#94ccff",
+            "on-surface-variant": "#bfc7d1",
+            "surface-container-lowest": "#0a0e14",
+            "on-secondary-fixed": "#002114",
+            "tertiary": "#ffb3af",
+            "on-tertiary-fixed-variant": "#930018",
+            "inverse-surface": "#dfe2eb",
+            "on-primary": "#003352",
+            "tertiary-fixed": "#ffdad7",
+            "surface-container-high": "#262a31",
+            "surface-tint": "#94ccff",
+            "primary-fixed": "#cde5ff",
+            "on-tertiary": "#68000e",
+            "on-secondary-fixed-variant": "#0e5138",
+            "inverse-on-surface": "#2d3137",
+            "secondary": "#95d4b3",
+            "primary-container": "#0077b6",
+            "on-background": "#dfe2eb",
+            "primary-fixed-dim": "#94ccff",
+            "inverse-primary": "#006399",
+            "error": "#ffb4ab"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          "fontFamily": {
+            "headline": ["Manrope"],
+            "body": ["Space Grotesk"],
+            "label": ["Inter"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .ghost-border {
+      border: 1px solid rgba(64, 72, 80, 0.15);
+    }
+    .ledger-track {
+      scrollbar-width: thin;
+      scrollbar-color: #262a31 transparent;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-label selection:bg-primary-container selection:text-white">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#10141a] border-b border-[#262a31]/15">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#0077B6]" style="font-variation-settings: 'FILL' 1;">water_drop</span>
+<h1 class="text-xl font-bold tracking-tighter text-[#0077B6] font-headline">Maji Safi OS</h1>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden md:flex gap-4">
+<span class="text-slate-400 font-medium text-xs font-label hover:bg-[#262a31]/50 transition-colors px-2 py-1 cursor-pointer">Dashboard</span>
+<span class="text-[#0077B6] font-bold text-xs font-label px-2 py-1 cursor-pointer">Inventory</span>
+<span class="text-slate-400 font-medium text-xs font-label hover:bg-[#262a31]/50 transition-colors px-2 py-1 cursor-pointer">Logistics</span>
+</nav>
+<button class="bg-primary-container text-on-primary-container text-xs font-medium px-4 py-2 rounded-sm transition-transform active:scale-95 duration-150">
+        Quick-Add Event
+      </button>
+</div>
+</header>
+<!-- NavigationDrawer (Left) -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] z-40 w-[240px] bg-[#10141a]/80 backdrop-blur-xl border-r border-[#262a31]/15 hidden md:block">
+<div class="p-4">
+<p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-6 px-4">Departments</p>
+<ul class="space-y-1">
+<li class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-[#262a31]/30 transition-colors cursor-pointer group">
+<span class="material-symbols-outlined text-lg">group</span>
+<span class="text-sm font-label tracking-wide">Users</span>
+</li>
+<li class="flex items-center gap-3 px-4 py-3 text-[#0077B6] font-semibold border-r-2 border-[#0077B6] bg-[#262a31]/20 cursor-pointer">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">factory</span>
+<span class="text-sm font-label tracking-wide">Factory</span>
+</li>
+<li class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-[#262a31]/30 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-lg">package</span>
+<span class="text-sm font-label tracking-wide">Package</span>
+</li>
+<li class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-[#262a31]/30 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-lg">shopping_cart</span>
+<span class="text-sm font-label tracking-wide">Shopping Cart</span>
+</li>
+<li class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-[#262a31]/30 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-lg">payments</span>
+<span class="text-sm font-label tracking-wide">Finance</span>
+</li>
+<li class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-[#262a31]/30 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-lg">local_shipping</span>
+<span class="text-sm font-label tracking-wide">Logistics</span>
+</li>
+<li class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-[#262a31]/30 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-lg">business_center</span>
+<span class="text-sm font-label tracking-wide">Management</span>
+</li>
+</ul>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-[240px] lg:mr-[300px] mt-16 p-8 min-h-screen bg-surface-container-lowest">
+<!-- Hero Header Section -->
+<header class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h2 class="text-3xl font-bold font-headline tracking-tight text-on-surface mb-2">Inventory – Materials &amp; Supply</h2>
+<div class="flex items-center gap-4 text-outline text-xs font-label">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-secondary"></span> System Online</span>
+<span>Last Synced: 09:42:11 <span class="font-body text-[10px] opacity-40">[REF:001A]</span></span>
+</div>
+</div>
+<button class="bg-primary text-on-primary font-label text-xs font-semibold px-6 py-3 rounded-sm flex items-center gap-2 hover:brightness-110 transition-all shadow-[0_0_15px_rgba(148,204,255,0.1)] active:scale-95">
+<span class="material-symbols-outlined text-sm">refresh</span>
+        Run Reorder Check
+      </button>
+</header>
+<!-- Ledger Bento Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Inventory Ledger Table -->
+<section class="lg:col-span-3 bg-surface border border-outline-variant/15 rounded-md overflow-hidden">
+<div class="px-6 py-4 bg-surface-container-high border-b border-outline-variant/10 flex justify-between items-center">
+<h3 class="text-xs font-bold uppercase tracking-widest text-outline">Material Ledger Track</h3>
+<span class="text-[10px] font-body text-outline/50">[REF:INV_SQL_LIVE]</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-outline-variant/5">
+<th class="px-6 py-4 text-[10px] font-bold text-outline uppercase tracking-wider">SKU Unit</th>
+<th class="px-6 py-4 text-[10px] font-bold text-outline uppercase tracking-wider">Current Qty</th>
+<th class="px-6 py-4 text-[10px] font-bold text-outline uppercase tracking-wider">Min Threshold</th>
+<th class="px-6 py-4 text-[10px] font-bold text-outline uppercase tracking-wider">Reorder Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5 font-body">
+<!-- OK Item -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-5">
+<div class="flex flex-col">
+<span class="text-on-surface text-sm font-semibold">5L PET Jars</span>
+<span class="text-[9px] font-label text-outline/40 uppercase">Packaging Material</span>
+</div>
+</td>
+<td class="px-6 py-5 text-on-surface text-lg">2,450 <span class="text-[10px] font-label text-outline/40">[Ref:A1]</span></td>
+<td class="px-6 py-5 text-outline text-sm">500</td>
+<td class="px-6 py-5">
+<span class="bg-secondary-container text-secondary px-3 py-1 text-[10px] font-bold uppercase rounded-none tracking-tighter">OK</span>
+</td>
+</tr>
+<!-- OK Item -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-5 text-on-surface text-sm font-semibold">10L PET Jars</td>
+<td class="px-6 py-5 text-on-surface text-lg">1,200 <span class="text-[10px] font-label text-outline/40">[Ref:A2]</span></td>
+<td class="px-6 py-5 text-outline text-sm">300</td>
+<td class="px-6 py-5">
+<span class="bg-secondary-container text-secondary px-3 py-1 text-[10px] font-bold uppercase rounded-none tracking-tighter">OK</span>
+</td>
+</tr>
+<!-- Near Threshold Item -->
+<tr class="bg-primary/5 hover:bg-primary/10 transition-colors border-l-2 border-primary">
+<td class="px-6 py-5">
+<div class="flex flex-col">
+<span class="text-on-surface text-sm font-semibold">19L Poly Jars</span>
+<span class="text-[9px] font-label text-outline/40 uppercase">Premium SKU</span>
+</div>
+</td>
+<td class="px-6 py-5 text-primary text-xl font-bold tracking-tight">450 <span class="text-[10px] font-label text-outline/40">[Ref:A3]</span></td>
+<td class="px-6 py-5 text-outline text-sm">400</td>
+<td class="px-6 py-5">
+<span class="bg-primary-container text-on-primary-container px-3 py-1 text-[10px] font-bold uppercase rounded-none tracking-tighter flex items-center gap-1 w-fit">
+<span class="material-symbols-outlined text-[12px]">warning</span> NEAR LIMIT
+                  </span>
+</td>
+</tr>
+<!-- OK Item -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-5 text-on-surface text-sm font-semibold">Bottle Caps (Blue)</td>
+<td class="px-6 py-5 text-on-surface text-lg">15,000 <span class="text-[10px] font-label text-outline/40">[Ref:B1]</span></td>
+<td class="px-6 py-5 text-outline text-sm">2,000</td>
+<td class="px-6 py-5">
+<span class="bg-secondary-container text-secondary px-3 py-1 text-[10px] font-bold uppercase rounded-none tracking-tighter">OK</span>
+</td>
+</tr>
+<!-- OK Item -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-5 text-on-surface text-sm font-semibold">Maji Safi Labels</td>
+<td class="px-6 py-5 text-on-surface text-lg">8,200 <span class="text-[10px] font-label text-outline/40">[Ref:C1]</span></td>
+<td class="px-6 py-5 text-outline text-sm">1,000</td>
+<td class="px-6 py-5">
+<span class="bg-secondary-container text-secondary px-3 py-1 text-[10px] font-bold uppercase rounded-none tracking-tighter">OK</span>
+</td>
+</tr>
+<!-- OK Item -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-6 py-5 text-on-surface text-sm font-semibold">Cleaning Chemicals</td>
+<td class="px-6 py-5 text-on-surface text-lg">240L <span class="text-[10px] font-label text-outline/40">[Ref:D1]</span></td>
+<td class="px-6 py-5 text-outline text-sm">50L</td>
+<td class="px-6 py-5">
+<span class="bg-secondary-container text-secondary px-3 py-1 text-[10px] font-bold uppercase rounded-none tracking-tighter">OK</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Contextual Stats -->
+<div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-surface-container-high p-8 rounded-sm ghost-border relative overflow-hidden">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-3xl"></div>
+<p class="text-[10px] font-label text-outline uppercase tracking-widest mb-4">Storage Capacity</p>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-body font-bold text-on-surface">78.4</span>
+<span class="text-xl font-body text-outline">%</span>
+</div>
+<p class="text-[10px] font-label text-outline/50 mt-2">[REF:FAC_B1_VOL]</p>
+<div class="w-full bg-outline-variant/20 h-1 mt-6 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[78.4%]"></div>
+</div>
+</div>
+<div class="bg-surface-container-high p-8 rounded-sm ghost-border relative overflow-hidden">
+<p class="text-[10px] font-label text-outline uppercase tracking-widest mb-4">Monthly Burn Rate</p>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-body font-bold text-on-surface">1,402</span>
+<span class="text-xs font-label text-outline">UNITS/DAY</span>
+</div>
+<p class="text-[10px] font-label text-outline/50 mt-2">[REF:LOG_DLY_AVG]</p>
+</div>
+</div>
+<!-- Quick Action Card -->
+<div class="bg-surface-container border border-primary-container/20 p-8 rounded-sm flex flex-col justify-between">
+<div>
+<h4 class="text-sm font-bold text-primary mb-2">Automated Procurement</h4>
+<p class="text-xs text-on-surface-variant font-label leading-relaxed">System is configured to auto-generate purchase orders for 19L Poly Jars when stock hits 400.</p>
+</div>
+<button class="mt-6 border border-outline-variant text-on-surface text-xs font-medium px-4 py-2 hover:bg-surface-container-highest transition-colors">
+          Configure Rules
+        </button>
+</div>
+</div>
+</main>
+<!-- NavigationDrawer (Right - AI Log) -->
+<aside class="fixed right-0 top-16 h-[calc(100vh-64px)] z-40 w-[300px] bg-[#0a0e14]/90 backdrop-blur-md border-l border-[#262a31]/15 hidden lg:block">
+<div class="p-6">
+<div class="flex items-center gap-2 mb-8">
+<span class="material-symbols-outlined text-primary text-xl">psychology</span>
+<h3 class="text-sm font-body font-bold uppercase tracking-tight text-[#0077B6]">Shadow AI Log</h3>
+</div>
+<div class="space-y-6">
+<!-- AI Intelligence Card -->
+<div class="bg-surface-container-high/50 p-5 rounded-md border-l-4 border-primary">
+<div class="flex justify-between items-start mb-3">
+<span class="text-[10px] font-bold text-primary px-2 py-0.5 bg-primary/10 rounded-full">ACTIVE MONITOR</span>
+<span class="text-[9px] font-body text-outline/50">T-0.4s</span>
+</div>
+<p class="text-xs font-label text-on-surface leading-relaxed italic">
+            "I trigger reorder when threshold hit and suggest cheapest supplier. Current analysis: <span class="text-primary font-bold">19L Poly Jars</span> are deviating from safety stock targets. Recommendation: Initiate bulk order from <span class="underline decoration-primary">Pwani Plastics Ltd</span> to optimize freight costs."
+          </p>
+<div class="mt-4 pt-4 border-t border-outline-variant/10">
+<p class="text-[10px] font-body text-outline">EST. SAVINGS: <span class="text-secondary-fixed">$45.00/unit</span></p>
+</div>
+</div>
+<div class="space-y-4 opacity-50">
+<div class="flex gap-3">
+<div class="w-1 bg-outline-variant rounded-full"></div>
+<div>
+<p class="text-[10px] font-body text-outline uppercase mb-1">08:15 AM</p>
+<p class="text-xs font-label text-on-surface-variant">Validated daily chemical levels for Zone B.</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="w-1 bg-outline-variant rounded-full"></div>
+<div>
+<p class="text-[10px] font-body text-outline uppercase mb-1">06:00 AM</p>
+<p class="text-xs font-label text-on-surface-variant">Archived production logs from night shift.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 h-16 md:hidden bg-[#10141a] border-t border-[#262a31]/15">
+<div class="flex flex-col items-center justify-center text-slate-500 p-2">
+<span class="material-symbols-outlined text-2xl">group</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#0077B6] bg-[#0077B6]/10 rounded-xl p-2">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">factory</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 p-2">
+<span class="material-symbols-outlined text-2xl">shopping_cart</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 p-2">
+<span class="material-symbols-outlined text-2xl">payments</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 p-2">
+<span class="material-symbols-outlined text-2xl">local_shipping</span>
+</div>
+</nav>
+</body></html>

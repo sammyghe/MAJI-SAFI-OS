@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Executive – Strategic Briefing | Maji Safi OS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;family=Space+Grotesk:wght@500;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#dfe2eb",
+                        "secondary-fixed": "#b1f0ce",
+                        "on-primary-container": "#f3f7ff",
+                        "on-primary-fixed-variant": "#004b74",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary": "#003824",
+                        "surface-bright": "#353940",
+                        "surface-dim": "#10141a",
+                        "on-secondary-container": "#87c6a5",
+                        "surface-container": "#1c2026",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed": "#410005",
+                        "outline": "#8a919b",
+                        "on-primary-fixed": "#001d32",
+                        "secondary-fixed-dim": "#95d4b3",
+                        "tertiary-fixed-dim": "#ffb3af",
+                        "surface": "#10141a",
+                        "surface-container-low": "#181c22",
+                        "surface-variant": "#31353c",
+                        "background": "#10141a",
+                        "on-error": "#690005",
+                        "tertiary-container": "#e1112e",
+                        "on-tertiary-container": "#fff5f4",
+                        "outline-variant": "#404850",
+                        "secondary-container": "#12533a",
+                        "surface-container-highest": "#31353c",
+                        "primary": "#94ccff",
+                        "on-surface-variant": "#bfc7d1",
+                        "surface-container-lowest": "#0a0e14",
+                        "on-secondary-fixed": "#002114",
+                        "tertiary": "#ffb3af",
+                        "on-tertiary-fixed-variant": "#930018",
+                        "inverse-surface": "#dfe2eb",
+                        "on-primary": "#003352",
+                        "tertiary-fixed": "#ffdad7",
+                        "surface-container-high": "#262a31",
+                        "surface-tint": "#94ccff",
+                        "primary-fixed": "#cde5ff",
+                        "on-tertiary": "#68000e",
+                        "on-secondary-fixed-variant": "#0e5138",
+                        "inverse-on-surface": "#2d3137",
+                        "secondary": "#95d4b3",
+                        "primary-container": "#0077b6",
+                        "on-background": "#dfe2eb",
+                        "primary-fixed-dim": "#94ccff",
+                        "inverse-primary": "#006399",
+                        "error": "#ffb4ab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Space Grotesk"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ledger-border {
+            border: 1px solid rgba(64, 72, 80, 0.15);
+        }
+        .glow-accent {
+            box-shadow: 0 0 20px rgba(0, 119, 182, 0.05);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-label selection:bg-primary/30">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#10141a] border-b border-[#262a31]/15">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#0077B6] text-2xl" data-icon="water_drop">water_drop</span>
+<h1 class="text-xl font-bold tracking-tighter text-[#0077B6] font-headline">Maji Safi OS</h1>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-label text-xs font-medium text-slate-400 tracking-wider">SYSTEM STATUS: OPTIMAL</span>
+<button class="bg-primary-container text-on-primary-container px-4 py-1.5 rounded-sm font-label text-xs font-bold hover:brightness-110 transition-colors uppercase tracking-widest">
+                Quick-Add Event
+            </button>
+</div>
+</header>
+<!-- NavigationDrawer (Left) -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] z-40 bg-[#10141a]/80 backdrop-blur-xl border-r border-[#262a31]/15 w-[240px] hidden md:flex flex-col">
+<div class="p-6">
+<p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-8">Departments</p>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-[#262a31]/30 transition-colors rounded-sm group" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="group">group</span>
+<span class="font-label text-sm tracking-wide">Users</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-[#262a31]/30 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="factory">factory</span>
+<span class="font-label text-sm tracking-wide">Factory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-[#262a31]/30 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="package">package</span>
+<span class="font-label text-sm tracking-wide">Package</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-[#262a31]/30 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="shopping_cart">shopping_cart</span>
+<span class="font-label text-sm tracking-wide">Shopping Cart</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-[#262a31]/30 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="payments">payments</span>
+<span class="font-label text-sm tracking-wide">Finance</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:bg-[#262a31]/30 transition-colors rounded-sm" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="local_shipping">local_shipping</span>
+<span class="font-label text-sm tracking-wide">Logistics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-[#0077B6] font-semibold border-r-2 border-[#0077B6] bg-[#262a31]/30" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="business_center">business_center</span>
+<span class="font-label text-sm tracking-wide">Management</span>
+</a>
+</nav>
+</div>
+</aside>
+<!-- NavigationDrawer (Right - Shadow AI Log) -->
+<aside class="fixed right-0 top-16 h-[calc(100vh-64px)] z-40 w-[300px] bg-[#0a0e14]/90 backdrop-blur-md border-l border-[#262a31]/15 hidden lg:block overflow-y-auto">
+<div class="p-6">
+<div class="flex items-center justify-between mb-8">
+<h2 class="font-body text-sm font-bold text-[#0077B6] tracking-tighter uppercase">Shadow AI Log</h2>
+<span class="material-symbols-outlined text-[#0077B6] text-lg" data-icon="psychology">psychology</span>
+</div>
+<div class="space-y-6">
+<!-- AI Insight Card -->
+<div class="p-4 bg-surface-container-low ledger-border rounded-sm">
+<p class="text-[10px] text-primary/60 font-body mb-2 uppercase tracking-widest">Live Synthesis</p>
+<p class="text-on-surface text-sm leading-relaxed italic">"I synthesize the soul of every department."</p>
+</div>
+<!-- Feed Items -->
+<div class="space-y-4">
+<div class="relative pl-4 border-l border-secondary-container">
+<div class="absolute -left-1 top-0 w-2 h-2 bg-secondary rounded-full"></div>
+<p class="text-xs font-label text-slate-400">08:42 AM</p>
+<p class="text-sm font-body text-secondary-fixed mt-1">Quality: Batch #23 PASSED</p>
+<p class="text-[10px] text-outline/50 font-label">[Ref: Q-882-B]</p>
+</div>
+<div class="relative pl-4 border-l border-tertiary-container">
+<div class="absolute -left-1 top-0 w-2 h-2 bg-tertiary rounded-full"></div>
+<p class="text-xs font-label text-slate-400">09:15 AM</p>
+<p class="text-sm font-body text-tertiary mt-1">Inventory: 19L jars near threshold</p>
+<p class="text-[10px] text-outline/50 font-label">[Ref: INV-91-X]</p>
+</div>
+<div class="relative pl-4 border-l border-primary-container">
+<div class="absolute -left-1 top-0 w-2 h-2 bg-primary rounded-full"></div>
+<p class="text-xs font-label text-slate-400">09:30 AM</p>
+<p class="text-sm font-body text-on-surface mt-1">Finance: EOD close pending</p>
+<p class="text-[10px] text-outline/50 font-label">[Ref: FIN-ACC-004]</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-20 md:pb-8 px-6 md:pl-[272px] lg:pr-[332px] min-h-screen">
+<!-- Header Section -->
+<header class="mb-12">
+<h2 class="text-4xl md:text-5xl font-extrabold font-headline tracking-tighter text-on-surface mb-2">
+                Executive – Strategic Briefing
+            </h2>
+<div class="flex items-center gap-4 text-outline/60 text-xs font-label uppercase tracking-[0.2em]">
+<span>Maji Safi Operations</span>
+<span>/</span>
+<span>Operational Intelligence</span>
+<span>/</span>
+<span class="text-primary font-bold">24 OCT 2023</span>
+</div>
+</header>
+<!-- Executive Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+<!-- Morning Brief Primary Card (Bento Area) -->
+<section class="xl:col-span-8 space-y-8">
+<div class="bg-surface-container-low ledger-border p-8 rounded-sm relative overflow-hidden group">
+<!-- Background aesthetic element -->
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+<div class="relative flex justify-between items-start mb-10">
+<div>
+<h3 class="text-2xl font-headline font-bold mb-1">Morning Brief</h3>
+<p class="text-outline text-sm">AI-Powered Liquidity &amp; Production Vector</p>
+</div>
+<button class="flex items-center gap-2 bg-[#25D366] text-[#0a0e14] px-4 py-2 rounded-sm font-label text-xs font-bold hover:brightness-105 transition-all">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">send</span>
+                            Send Morning Brief to WhatsApp
+                        </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="space-y-1">
+<p class="text-outline text-[10px] font-label uppercase tracking-widest">Available Cash</p>
+<p class="text-3xl font-body font-bold text-on-surface">KSh 1,402,900</p>
+<p class="text-[10px] text-outline/50 font-label">[Ref: CB-MAIN-44]</p>
+</div>
+<div class="space-y-1">
+<p class="text-outline text-[10px] font-label uppercase tracking-widest">Output Efficiency</p>
+<p class="text-3xl font-body font-bold text-secondary">94.2%</p>
+<p class="text-[10px] text-outline/50 font-label">[Ref: FAC-PROD-Z]</p>
+</div>
+<div class="space-y-1">
+<p class="text-outline text-[10px] font-label uppercase tracking-widest">Inventory Level</p>
+<p class="text-3xl font-body font-bold text-on-surface">12.4k Units</p>
+<p class="text-[10px] text-outline/50 font-label">[Ref: STK-AGG-01]</p>
+</div>
+</div>
+<div class="mt-10 p-4 bg-error-container/10 border-l-2 border-error rounded-r-sm">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-error text-sm" data-icon="warning" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span class="text-error font-body text-[10px] font-bold uppercase tracking-widest">Top Alert</span>
+</div>
+<p class="text-sm font-label text-on-surface-variant">Logistics bottleneck detected at Mtwapa hub. 3 trucks delayed &gt; 2h.</p>
+</div>
+</div>
+<!-- Secondary Intelligence Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="bg-surface-container-low ledger-border p-6 rounded-sm">
+<h4 class="text-xs font-bold text-outline uppercase tracking-widest mb-4">Production Trend</h4>
+<div class="h-32 flex items-end gap-1.5 px-2">
+<div class="flex-1 bg-primary/20 h-[60%] rounded-t-xs"></div>
+<div class="flex-1 bg-primary/20 h-[75%] rounded-t-xs"></div>
+<div class="flex-1 bg-primary/40 h-[90%] rounded-t-xs"></div>
+<div class="flex-1 bg-primary/60 h-[85%] rounded-t-xs"></div>
+<div class="flex-1 bg-primary/20 h-[50%] rounded-t-xs"></div>
+<div class="flex-1 bg-primary-container h-full rounded-t-xs"></div>
+<div class="flex-1 bg-primary/40 h-[70%] rounded-t-xs"></div>
+</div>
+<div class="flex justify-between mt-3 text-[10px] font-body text-outline/50">
+<span>08:00</span>
+<span>NOW</span>
+</div>
+</div>
+<div class="bg-surface-container-low ledger-border p-6 rounded-sm flex flex-col justify-between">
+<div>
+<h4 class="text-xs font-bold text-outline uppercase tracking-widest mb-2">Finance Threshold</h4>
+<p class="text-2xl font-body font-bold text-secondary-fixed">+12.4% vs Projected</p>
+</div>
+<div class="pt-4 border-t border-outline-variant/10">
+<p class="text-[10px] font-label text-outline/60 leading-relaxed uppercase">
+                                Liquidity is currently exceeding the 7-day moving average. No external financing required for next procurement cycle.
+                            </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Shadow AI Executive Summary Column -->
+<section class="xl:col-span-4 space-y-8">
+<div class="bg-surface-container-high ledger-border p-6 rounded-sm glow-accent">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container text-lg" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<h3 class="text-lg font-headline font-bold">Shadow AI Summary</h3>
+</div>
+<div class="space-y-6">
+<div class="group cursor-default">
+<div class="flex justify-between text-[10px] font-bold text-outline uppercase tracking-widest mb-1.5">
+<span>Critical Alerts</span>
+<span class="text-tertiary">02</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-[20%]"></div>
+</div>
+</div>
+<div class="group cursor-default">
+<div class="flex justify-between text-[10px] font-bold text-outline uppercase tracking-widest mb-1.5">
+<span>Pending Approvals</span>
+<span class="text-primary">14</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[65%]"></div>
+</div>
+</div>
+<div class="group cursor-default">
+<div class="flex justify-between text-[10px] font-bold text-outline uppercase tracking-widest mb-1.5">
+<span>Optimization Gain</span>
+<span class="text-secondary-fixed">+$820</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-secondary-fixed h-full w-[40%]"></div>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-8 border-t border-outline-variant/10">
+<p class="text-xs text-outline/80 font-label italic leading-relaxed mb-4">
+                            "System has autonomously optimized the delivery route for Region 4, saving 12% in fuel overhead while maintaining 100% SLA."
+                        </p>
+<button class="w-full py-3 bg-surface-container-highest text-on-surface text-[10px] font-bold uppercase tracking-widest hover:bg-surface-variant transition-colors">
+                            Full Intelligence Report
+                        </button>
+</div>
+</div>
+<!-- Abstract Decorative Visual -->
+<div class="relative h-48 bg-surface-container-low rounded-sm ledger-border overflow-hidden group">
+<img class="w-full h-full object-cover opacity-40 grayscale group-hover:grayscale-0 transition-all duration-700" data-alt="abstract architectural forms with deep blue lighting and sharp geometric shadows creating a sense of precision and structure" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAYcKPX7Keor409k_xIKmNB20z9exqJsvXWGqZ-iTdJm_5xAJNkDbuqw_rZc9WBotenjiGXDcHzx_eiXVRzV7RMuIruDlsgIbtf0pS3rC5yH0iUqi6P6mVymWVGCTDT8Bafo4AKhNqC1S-uSxD36j2JPqpvhfpoiyTa8h1M7e_75u9VGI26S0UXzWWFFhRtm2zpMqw4AMTgYOTlSqRotZgEB0uwZN5NwD6ep-zj6jWHPb7g8bykRiECs68S4xy5_WlXzYlhIdE-KK6S"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low via-transparent to-transparent"></div>
+<div class="absolute bottom-4 left-4">
+<p class="text-xs font-bold font-headline uppercase tracking-[0.3em] text-primary">Strategic Core</p>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar (Mobile) -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 h-16 bg-[#10141a] border-t border-[#262a31]/15 md:hidden">
+<a class="flex flex-col items-center justify-center text-slate-500 p-2" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 p-2" href="#">
+<span class="material-symbols-outlined" data-icon="factory">factory</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 p-2" href="#">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-500 p-2" href="#">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#0077B6] bg-[#0077B6]/10 rounded-xl p-2" href="#">
+<span class="material-symbols-outlined" data-icon="business_center" style="font-variation-settings: 'FILL' 1;">business_center</span>
+</a>
+</nav>
+</body></html>

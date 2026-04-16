@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>HR – People Gateway | Maji Safi OS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;family=Space+Grotesk:wght@500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#dfe2eb",
+                        "secondary-fixed": "#b1f0ce",
+                        "on-primary-container": "#f3f7ff",
+                        "on-primary-fixed-variant": "#004b74",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary": "#003824",
+                        "surface-bright": "#353940",
+                        "surface-dim": "#10141a",
+                        "on-secondary-container": "#87c6a5",
+                        "surface-container": "#1c2026",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed": "#410005",
+                        "outline": "#8a919b",
+                        "on-primary-fixed": "#001d32",
+                        "secondary-fixed-dim": "#95d4b3",
+                        "tertiary-fixed-dim": "#ffb3af",
+                        "surface": "#10141a",
+                        "surface-container-low": "#181c22",
+                        "surface-variant": "#31353c",
+                        "background": "#10141a",
+                        "on-error": "#690005",
+                        "tertiary-container": "#e1112e",
+                        "on-tertiary-container": "#fff5f4",
+                        "outline-variant": "#404850",
+                        "secondary-container": "#12533a",
+                        "surface-container-highest": "#31353c",
+                        "primary": "#94ccff",
+                        "on-surface-variant": "#bfc7d1",
+                        "surface-container-lowest": "#0a0e14",
+                        "on-secondary-fixed": "#002114",
+                        "tertiary": "#ffb3af",
+                        "on-tertiary-fixed-variant": "#930018",
+                        "inverse-surface": "#dfe2eb",
+                        "on-primary": "#003352",
+                        "tertiary-fixed": "#ffdad7",
+                        "surface-container-high": "#262a31",
+                        "surface-tint": "#94ccff",
+                        "primary-fixed": "#cde5ff",
+                        "on-tertiary": "#68000e",
+                        "on-secondary-fixed-variant": "#0e5138",
+                        "inverse-on-surface": "#2d3137",
+                        "secondary": "#95d4b3",
+                        "primary-container": "#0077b6",
+                        "on-background": "#dfe2eb",
+                        "primary-fixed-dim": "#94ccff",
+                        "inverse-primary": "#006399",
+                        "error": "#ffb4ab"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Space Grotesk"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .ghost-border { border: 1px solid rgba(64, 72, 80, 0.15); }
+        .ledger-row:hover { background-color: rgba(38, 42, 49, 0.5); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-label selection:bg-primary/30 selection:text-primary">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#10141a] border-b border-[#262a31]/15">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#0077B6] text-2xl" data-icon="water_drop">water_drop</span>
+<h1 class="text-xl font-bold tracking-tighter text-[#0077B6] font-headline">Maji Safi OS</h1>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden md:flex gap-4">
+<button class="text-[#0077B6] font-bold text-xs uppercase tracking-widest font-label">HR Workspace</button>
+<button class="text-slate-400 hover:bg-[#262a31]/50 transition-colors px-2 py-1 text-xs uppercase tracking-widest font-label">Operations</button>
+<button class="text-slate-400 hover:bg-[#262a31]/50 transition-colors px-2 py-1 text-xs uppercase tracking-widest font-label">Finance</button>
+</nav>
+<button class="bg-primary-container text-on-primary-container px-4 py-2 rounded-sm text-xs font-medium hover:brightness-110 active:scale-95 transition-all">
+                Quick-Add Event
+            </button>
+</div>
+</header>
+<!-- NavigationDrawer (Left) -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] z-40 w-[240px] bg-[#10141a]/80 backdrop-blur-xl border-r border-[#262a31]/15 hidden md:block">
+<div class="p-6">
+<p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-8">Departments</p>
+<nav class="space-y-1">
+<a class="flex items-center justify-between p-3 text-[#0077B6] font-semibold border-r-2 border-[#0077B6] bg-[#262a31]/30 transition-all group" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="text-sm tracking-wide">Users</span>
+</div>
+<span class="font-body text-xs opacity-50">06</span>
+</a>
+<a class="flex items-center justify-between p-3 text-slate-500 hover:bg-[#262a31]/30 transition-all group" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="factory">factory</span>
+<span class="text-sm tracking-wide">Factory</span>
+</div>
+</a>
+<a class="flex items-center justify-between p-3 text-slate-500 hover:bg-[#262a31]/30 transition-all group" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="package">package</span>
+<span class="text-sm tracking-wide">Package</span>
+</div>
+</a>
+<a class="flex items-center justify-between p-3 text-slate-500 hover:bg-[#262a31]/30 transition-all group" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+<span class="text-sm tracking-wide">Shopping Cart</span>
+</div>
+</a>
+<a class="flex items-center justify-between p-3 text-slate-500 hover:bg-[#262a31]/30 transition-all group" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+<span class="text-sm tracking-wide">Finance</span>
+</div>
+</a>
+<a class="flex items-center justify-between p-3 text-slate-500 hover:bg-[#262a31]/30 transition-all group" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="text-sm tracking-wide">Logistics</span>
+</div>
+</a>
+<a class="flex items-center justify-between p-3 text-slate-500 hover:bg-[#262a31]/30 transition-all group" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="business_center">business_center</span>
+<span class="text-sm tracking-wide">Management</span>
+</div>
+</a>
+</nav>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-16 md:pl-[240px] lg:pr-[300px] min-h-screen">
+<div class="px-8 max-w-7xl mx-auto">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="w-2 h-2 bg-primary rounded-full animate-pulse"></span>
+<span class="text-[10px] uppercase tracking-[0.3em] text-primary font-bold">Personnel Ledger</span>
+</div>
+<h2 class="text-4xl font-extrabold font-headline tracking-tighter text-on-surface">HR – People Gateway</h2>
+<p class="text-slate-500 mt-2 font-label text-sm italic opacity-80">(every worker enters here first)</p>
+</div>
+<button class="flex items-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-sm font-label font-bold text-xs uppercase tracking-widest hover:brightness-110 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="person_add">person_add</span>
+                    New Worker
+                </button>
+</div>
+<!-- Dashboard Stats (Tonal Layering) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<div class="bg-surface-container-low ghost-border p-8 relative overflow-hidden group">
+<div class="relative z-10">
+<p class="text-xs text-outline font-label uppercase tracking-widest mb-1">Total Force</p>
+<h3 class="text-5xl font-body font-semibold text-primary">06 <span class="text-xs text-outline/40 font-label">[Ref-MS-001]</span></h3>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-9xl" data-icon="groups">groups</span>
+</div>
+</div>
+<div class="bg-surface-container-low ghost-border p-8 relative overflow-hidden group">
+<div class="relative z-10">
+<p class="text-xs text-outline font-label uppercase tracking-widest mb-1">Active Status</p>
+<h3 class="text-5xl font-body font-semibold text-secondary">100% <span class="text-xs text-outline/40 font-label">[Ref-HR-ST]</span></h3>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-9xl" data-icon="check_circle">check_circle</span>
+</div>
+</div>
+<div class="bg-surface-container-low ghost-border p-8 relative overflow-hidden group">
+<div class="relative z-10">
+<p class="text-xs text-outline font-label uppercase tracking-widest mb-1">Departments</p>
+<h3 class="text-5xl font-body font-semibold text-on-surface">03 <span class="text-xs text-outline/40 font-label">[Ref-ORG-04]</span></h3>
+</div>
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-9xl" data-icon="account_tree">account_tree</span>
+</div>
+</div>
+</div>
+<!-- Ledger Table (The Actual Budget Style) -->
+<div class="bg-surface-container-lowest ghost-border overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-high border-b border-outline-variant/30">
+<th class="py-4 px-6 text-[10px] uppercase tracking-widest font-bold text-outline">Name</th>
+<th class="py-4 px-6 text-[10px] uppercase tracking-widest font-bold text-outline">Role</th>
+<th class="py-4 px-6 text-[10px] uppercase tracking-widest font-bold text-outline">Primary Dept</th>
+<th class="py-4 px-6 text-[10px] uppercase tracking-widest font-bold text-outline">Departments</th>
+<th class="py-4 px-6 text-[10px] uppercase tracking-widest font-bold text-outline">PIN</th>
+<th class="py-4 px-6 text-[10px] uppercase tracking-widest font-bold text-outline text-right">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<tr class="ledger-row transition-colors group">
+<td class="py-5 px-6 font-headline font-bold text-sm">Sammy</td>
+<td class="py-5 px-6 text-xs text-on-surface-variant font-label">CEO</td>
+<td class="py-5 px-6 text-xs font-label">Executive</td>
+<td class="py-5 px-6 text-xs font-label text-outline">Executive/Finance</td>
+<td class="py-5 px-6 font-body text-primary font-semibold">1234 <span class="text-[10px] text-outline/30 ml-1">[Ref]</span></td>
+<td class="py-5 px-6 text-right">
+<span class="bg-secondary-container text-secondary text-[10px] font-bold px-2 py-1 uppercase tracking-tighter">active</span>
+</td>
+</tr>
+<tr class="ledger-row transition-colors group">
+<td class="py-5 px-6 font-headline font-bold text-sm">Ema</td>
+<td class="py-5 px-6 text-xs text-on-surface-variant font-label">COO</td>
+<td class="py-5 px-6 text-xs font-label">Executive</td>
+<td class="py-5 px-6 text-xs font-label text-outline">Executive/Finance</td>
+<td class="py-5 px-6 font-body text-primary font-semibold">5678 <span class="text-[10px] text-outline/30 ml-1">[Ref]</span></td>
+<td class="py-5 px-6 text-right">
+<span class="bg-secondary-container text-secondary text-[10px] font-bold px-2 py-1 uppercase tracking-tighter">active</span>
+</td>
+</tr>
+<tr class="ledger-row transition-colors group">
+<td class="py-5 px-6 font-headline font-bold text-sm">Bosco</td>
+<td class="py-5 px-6 text-xs text-on-surface-variant font-label">Head of Operations</td>
+<td class="py-5 px-6 text-xs font-label">Operations</td>
+<td class="py-5 px-6 text-xs font-label text-outline">Operations/Inventory/Commercial</td>
+<td class="py-5 px-6 font-body text-primary font-semibold">1111 <span class="text-[10px] text-outline/30 ml-1">[Ref]</span></td>
+<td class="py-5 px-6 text-right">
+<span class="bg-secondary-container text-secondary text-[10px] font-bold px-2 py-1 uppercase tracking-tighter">active</span>
+</td>
+</tr>
+<tr class="ledger-row transition-colors group">
+<td class="py-5 px-6 font-headline font-bold text-sm">Amos</td>
+<td class="py-5 px-6 text-xs text-on-surface-variant font-label">Water Quality Engineer</td>
+<td class="py-5 px-6 text-xs font-label">Operations</td>
+<td class="py-5 px-6 text-xs font-label text-outline">Operations</td>
+<td class="py-5 px-6 font-body text-primary font-semibold">2222 <span class="text-[10px] text-outline/30 ml-1">[Ref]</span></td>
+<td class="py-5 px-6 text-right">
+<span class="bg-secondary-container text-secondary text-[10px] font-bold px-2 py-1 uppercase tracking-tighter">active</span>
+</td>
+</tr>
+<tr class="ledger-row transition-colors group">
+<td class="py-5 px-6 font-headline font-bold text-sm">Martha</td>
+<td class="py-5 px-6 text-xs text-on-surface-variant font-label">Marketing Lead</td>
+<td class="py-5 px-6 text-xs font-label">Commercial</td>
+<td class="py-5 px-6 text-xs font-label text-outline">Commercial</td>
+<td class="py-5 px-6 font-body text-primary font-semibold">3333 <span class="text-[10px] text-outline/30 ml-1">[Ref]</span></td>
+<td class="py-5 px-6 text-right">
+<span class="bg-secondary-container text-secondary text-[10px] font-bold px-2 py-1 uppercase tracking-tighter">active</span>
+</td>
+</tr>
+<tr class="ledger-row transition-colors group">
+<td class="py-5 px-6 font-headline font-bold text-sm">Richard</td>
+<td class="py-5 px-6 text-xs text-on-surface-variant font-label">Compliance Officer</td>
+<td class="py-5 px-6 text-xs font-label">Executive</td>
+<td class="py-5 px-6 text-xs font-label text-outline">Executive/Operations</td>
+<td class="py-5 px-6 font-body text-primary font-semibold">4444 <span class="text-[10px] text-outline/30 ml-1">[Ref]</span></td>
+<td class="py-5 px-6 text-right">
+<span class="bg-secondary-container text-secondary text-[10px] font-bold px-2 py-1 uppercase tracking-tighter">active</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Floating Illustration Card (Bento Grid Style) -->
+<div class="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
+<div class="bg-surface-container h-64 ghost-border flex items-center justify-center p-8 relative overflow-hidden">
+<img alt="" class="absolute inset-0 w-full h-full object-cover opacity-20" data-alt="Modern high-tech industrial water purification facility interior with blue neon lights and clean steel pipes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBZDkS25BjMHKjk4-sNj70qX8GUrlc4Gu_F5h1VYC_S3Ih6vRolyT_sut26ghVPLefKxPVBcAkINLQEm6kEEd6Z4Db-cyXIUQchuyyoX2t2gYxddd2FOPnMtNWdFREpZkGOLaUc7_XkRtwPDeVeHIhc42UfgbYquWQe8F2W7K3NHUVfdKqE7_D6mXdfrvL1pQKrkGmErIfJqxmMq78lDd-m7dfSYu2rq10kf7Sfbs_R-uP-YaxmgBmEnbiwgz1c4A0LKJYg0SwFSX1H"/>
+<div class="relative z-10 text-center">
+<h4 class="text-xl font-headline font-bold mb-2">Corporate Identity Mapping</h4>
+<p class="text-sm text-outline max-w-sm mx-auto">Ensuring that every operative is aligned with the Maji Safi core mission and hydraulic integrity protocols.</p>
+</div>
+</div>
+<div class="bg-primary/5 ghost-border p-8 flex flex-col justify-center">
+<div class="flex items-center gap-4 mb-4">
+<span class="material-symbols-outlined text-primary" data-icon="verified_user">verified_user</span>
+<h4 class="text-lg font-headline font-bold">Secure Access Protocol</h4>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                        The People Gateway uses encrypted PIN-based authentication. Every entry is logged in the immutable ledger track for internal compliance auditing. [Ref-SEC-LOG]
+                    </p>
+</div>
+</div>
+</div>
+</main>
+<!-- Shadow AI Log (Right Drawer) -->
+<aside class="fixed right-0 top-16 h-[calc(100vh-64px)] z-40 w-[300px] bg-[#0a0e14]/90 backdrop-blur-md border-l border-[#262a31]/15 hidden lg:block">
+<div class="p-6">
+<div class="flex items-center justify-between mb-8">
+<p class="text-xs uppercase tracking-[0.2em] text-[#0077B6] font-body font-bold">Shadow AI Log</p>
+<span class="material-symbols-outlined text-primary text-sm animate-pulse" data-icon="psychology">psychology</span>
+</div>
+<div class="space-y-6">
+<!-- AI Insights Card -->
+<div class="bg-[#1c2026] p-4 border-l-2 border-[#0077B6]">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-xs text-outline" data-icon="description">description</span>
+<p class="text-[10px] font-body text-outline uppercase tracking-widest">Processing Data</p>
+</div>
+<ul class="space-y-3">
+<li class="group">
+<p class="text-[10px] text-[#0077B6] mb-1">employees.md</p>
+<p class="text-xs text-on-surface leading-tight">6 total records verified. Hierarchy consistency check: 100%.</p>
+</li>
+<li class="group">
+<p class="text-[10px] text-[#0077B6] mb-1">roles.md</p>
+<p class="text-xs text-on-surface leading-tight">Executive/Ops boundary detected for Compliance Officer.</p>
+</li>
+<li class="group">
+<p class="text-[10px] text-[#0077B6] mb-1">onboarding.md</p>
+<p class="text-xs text-on-surface leading-tight">PIN generation sequence active for new personnel.</p>
+</li>
+</ul>
+</div>
+<div class="pt-4">
+<p class="text-[10px] text-outline font-label uppercase tracking-widest mb-4">Activity Stream</p>
+<div class="space-y-4">
+<div class="flex gap-3">
+<div class="w-1 h-8 bg-outline-variant"></div>
+<div>
+<p class="text-xs text-on-surface font-semibold">Sammy (CEO) logged in</p>
+<p class="text-[9px] font-body text-outline">14:22:11 [Ref-LOG-88]</p>
+</div>
+</div>
+<div class="flex gap-3">
+<div class="w-1 h-8 bg-secondary-container"></div>
+<div>
+<p class="text-xs text-on-surface font-semibold">Ledger auto-sync complete</p>
+<p class="text-[9px] font-body text-outline">13:58:45 [Ref-LOG-87]</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- BottomNavBar (Mobile) -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 h-16 bg-[#10141a] border-t border-[#262a31]/15 md:hidden">
+<button class="flex flex-col items-center justify-center text-[#0077B6] bg-[#0077B6]/10 rounded-xl p-2 w-12 h-12">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-500 p-2 hover:text-[#0077B6] transition-colors">
+<span class="material-symbols-outlined" data-icon="factory">factory</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-500 p-2 hover:text-[#0077B6] transition-colors">
+<span class="material-symbols-outlined" data-icon="shopping_cart">shopping_cart</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-500 p-2 hover:text-[#0077B6] transition-colors">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-500 p-2 hover:text-[#0077B6] transition-colors">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+</button>
+</nav>
+<!-- Modal Placeholder (Hidden logic) -->
+<div class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 pointer-events-none opacity-0 transition-opacity" id="modal-new-worker">
+<div class="bg-surface-container ghost-border max-w-lg w-full p-8">
+<h3 class="text-2xl font-headline font-bold mb-6">Provision New Operative</h3>
+<div class="space-y-4">
+<div>
+<label class="text-[10px] uppercase tracking-widest text-outline font-bold block mb-1">Full Identity Name</label>
+<input class="w-full bg-surface-container-lowest border-b border-outline-variant focus:border-primary transition-colors py-2 outline-none" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="text-[10px] uppercase tracking-widest text-outline font-bold block mb-1">Primary Designation</label>
+<select class="w-full bg-surface-container-lowest border-b border-outline-variant focus:border-primary transition-colors py-2 outline-none appearance-none">
+<option>Operations</option>
+<option>Finance</option>
+<option>Commercial</option>
+</select>
+</div>
+<div>
+<label class="text-[10px] uppercase tracking-widest text-outline font-bold block mb-1">Security PIN</label>
+<input class="w-full bg-surface-container-lowest border-b border-outline-variant focus:border-primary transition-colors py-2 outline-none font-body" placeholder="####" type="text"/>
+</div>
+</div>
+</div>
+<div class="flex justify-end gap-4 mt-8">
+<button class="px-6 py-2 text-xs font-bold uppercase tracking-widest text-outline hover:text-on-surface">Cancel</button>
+<button class="bg-primary text-on-primary px-6 py-2 rounded-sm text-xs font-bold uppercase tracking-widest">Commit to Ledger</button>
+</div>
+</div>
+</div>
+</body></html>

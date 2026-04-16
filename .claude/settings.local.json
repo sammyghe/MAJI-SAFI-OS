@@ -2,7 +2,27 @@
   "permissions": {
     "allow": [
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npx -y @hcengineering/mcp --help)",
+      "Bash(npx -y @huly.io/mcp-server --help)",
+      "Bash(npx -y huly-mcp --help)",
+      "Bash(npm search:*)",
+      "Bash(npx -y @firfi/huly-mcp --help)",
+      "Skill(update-config)",
+      "Bash(HULY_URL=https://huly.io HULY_TOKEN=\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHRyYSI6e30sImFjY291bnQiOiJjYjEwZWFkOC1iNDk5LTQzZTctOThhNi01MTcxMDNjYzM3OTgiLCJ3b3Jrc3BhY2UiOiJiMzI2NzFkYi01ZGNkLTQyMGItOGU1NC1jYmYyYjhmNTQyYjYifQ.afKF4W17R2iFfzOckvNQKwkAXxNkXfUJynTaJppiKBA\" HULY_WORKSPACE=\"Maji Safi Office\" npx -y @firfi/huly-mcp)",
+      "Bash(claude mcp:*)",
+      "Bash(kill %1)",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "mcp__huly__get_workspace_info",
+      "mcp__huly__create_project",
+      "mcp__huly__create_issue",
+      "mcp__huly__create_channel",
+      "mcp__huly__list_channels",
+      "mcp__huly__list_teamspaces",
+      "mcp__huly__create_teamspace",
+      "mcp__huly__create_document",
+      "mcp__huly__link_document_to_issue"
     ]
   }
 }

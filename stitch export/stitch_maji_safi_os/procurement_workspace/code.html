@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Procurement – Strategic Sourcing | Maji Safi OS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@700&amp;family=Space+Grotesk:wght@400;600&amp;family=Inter:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "on-surface": "#dfe2eb",
+                  "secondary-fixed": "#b1f0ce",
+                  "on-primary-container": "#f3f7ff",
+                  "on-primary-fixed-variant": "#004b74",
+                  "on-error-container": "#ffdad6",
+                  "on-secondary": "#003824",
+                  "surface-bright": "#353940",
+                  "surface-dim": "#10141a",
+                  "on-secondary-container": "#87c6a5",
+                  "surface-container": "#1c2026",
+                  "error-container": "#93000a",
+                  "on-tertiary-fixed": "#410005",
+                  "outline": "#8a919b",
+                  "on-primary-fixed": "#001d32",
+                  "secondary-fixed-dim": "#95d4b3",
+                  "tertiary-fixed-dim": "#ffb3af",
+                  "surface": "#10141a",
+                  "surface-container-low": "#181c22",
+                  "surface-variant": "#31353c",
+                  "background": "#10141a",
+                  "on-error": "#690005",
+                  "tertiary-container": "#e1112e",
+                  "on-tertiary-container": "#fff5f4",
+                  "outline-variant": "#404850",
+                  "secondary-container": "#12533a",
+                  "surface-container-highest": "#31353c",
+                  "primary": "#94ccff",
+                  "on-surface-variant": "#bfc7d1",
+                  "surface-container-lowest": "#0a0e14",
+                  "on-secondary-fixed": "#002114",
+                  "tertiary": "#ffb3af",
+                  "on-tertiary-fixed-variant": "#930018",
+                  "inverse-surface": "#dfe2eb",
+                  "on-primary": "#003352",
+                  "tertiary-fixed": "#ffdad7",
+                  "surface-container-high": "#262a31",
+                  "surface-tint": "#94ccff",
+                  "primary-fixed": "#cde5ff",
+                  "on-tertiary": "#68000e",
+                  "on-secondary-fixed-variant": "#0e5138",
+                  "inverse-on-surface": "#2d3137",
+                  "secondary": "#95d4b3",
+                  "primary-container": "#0077b6",
+                  "on-background": "#dfe2eb",
+                  "primary-fixed-dim": "#94ccff",
+                  "inverse-primary": "#006399",
+                  "error": "#ffb4ab"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.125rem",
+                  "lg": "0.25rem",
+                  "xl": "0.5rem",
+                  "full": "0.75rem"
+          },
+          "fontFamily": {
+                  "headline": ["Manrope"],
+                  "body": ["Space Grotesk"],
+                  "label": ["Inter"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .ghost-border {
+      border: 1px solid rgba(64, 72, 80, 0.15);
+    }
+    body {
+      background-color: #10141a;
+      color: #dfe2eb;
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#10141a] border-b border-[#262a31]/15">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#0077B6] text-2xl">water_drop</span>
+<h1 class="text-xl font-bold tracking-tighter text-[#0077B6] font-headline">Maji Safi OS</h1>
+</div>
+<div class="flex items-center gap-6">
+<nav class="hidden md:flex gap-6 font-label text-xs font-medium">
+<a class="text-slate-400 hover:bg-[#262a31]/50 transition-colors px-3 py-2 rounded-sm" href="#">Dashboard</a>
+<a class="text-[#0077B6] font-bold px-3 py-2 rounded-sm bg-[#0077B6]/5" href="#">Procurement</a>
+<a class="text-slate-400 hover:bg-[#262a31]/50 transition-colors px-3 py-2 rounded-sm" href="#">Inventory</a>
+</nav>
+<button class="bg-primary-container text-on-primary-container px-4 py-2 rounded-sm font-label text-xs font-medium hover:brightness-110 active:scale-95 transition-all">
+        Quick-Add Event
+      </button>
+</div>
+</header>
+<!-- Left NavigationDrawer -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] z-40 w-[240px] bg-[#10141a]/80 backdrop-blur-xl border-r border-[#262a31]/15 hidden md:block">
+<div class="p-6">
+<p class="text-slate-500 font-label text-[10px] uppercase tracking-[0.2em] mb-6">Departments</p>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-[#262a31]/30 transition-all rounded-sm font-label text-sm tracking-wide" href="#">
+<span class="material-symbols-outlined text-lg">group</span> Users
+        </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-[#262a31]/30 transition-all rounded-sm font-label text-sm tracking-wide" href="#">
+<span class="material-symbols-outlined text-lg">factory</span> Factory
+        </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-[#0077B6] font-semibold border-r-2 border-[#0077B6] bg-[#262a31]/30 transition-all rounded-sm font-label text-sm tracking-wide" href="#">
+<span class="material-symbols-outlined text-lg">package</span> Package
+        </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-[#262a31]/30 transition-all rounded-sm font-label text-sm tracking-wide" href="#">
+<span class="material-symbols-outlined text-lg">shopping_cart</span> Shopping Cart
+        </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-[#262a31]/30 transition-all rounded-sm font-label text-sm tracking-wide" href="#">
+<span class="material-symbols-outlined text-lg">payments</span> Finance
+        </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-[#262a31]/30 transition-all rounded-sm font-label text-sm tracking-wide" href="#">
+<span class="material-symbols-outlined text-lg">local_shipping</span> Logistics
+        </a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-[#262a31]/30 transition-all rounded-sm font-label text-sm tracking-wide" href="#">
+<span class="material-symbols-outlined text-lg">business_center</span> Management
+        </a>
+</nav>
+</div>
+</aside>
+<!-- Right AI Drawer -->
+<aside class="fixed right-0 top-16 h-[calc(100vh-64px)] z-40 w-[300px] bg-[#0a0e14]/90 backdrop-blur-md border-l border-[#262a31]/15 hidden lg:block">
+<div class="p-6">
+<div class="flex items-center justify-between mb-8">
+<p class="text-[#0077B6] font-body text-sm font-bold">Shadow AI Log</p>
+<span class="material-symbols-outlined text-[#0077B6]">psychology</span>
+</div>
+<div class="space-y-6">
+<div class="p-4 bg-surface-container-low ghost-border rounded-sm">
+<p class="text-xs text-slate-400 font-label mb-2 uppercase tracking-tighter">Current Insight</p>
+<p class="text-on-surface font-body text-sm leading-relaxed">
+            I compare quotes and track lead times. Based on current data, <span class="text-primary">Global Filtration Ltd.</span> is offering 12% lower cost than incumbents for Q4.
+          </p>
+<div class="mt-4 flex justify-between items-center">
+<span class="text-[10px] font-label text-outline/50">[Ref: PROC-AI-042]</span>
+<span class="text-[10px] font-body text-secondary">Active Optimization</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/10">
+<p class="text-xs text-slate-500 font-label mb-4 italic">“Lead time variability in the logistics sector has increased by 4.2 days this month. Recommendation: Diversify regional suppliers.”</p>
+<button class="w-full text-xs font-label text-[#0077B6] flex items-center justify-center gap-2 hover:bg-[#0077B6]/5 py-2 transition-colors">
+            View Full Analysis <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-[240px] lg:mr-[300px] mt-16 p-8 min-h-screen">
+<!-- Hero Header -->
+<header class="mb-12">
+<nav class="mb-4 flex items-center gap-2 text-[10px] font-label text-outline/60 uppercase tracking-widest">
+<span>Operations</span>
+<span class="material-symbols-outlined text-[10px]">chevron_right</span>
+<span>Procurement</span>
+</nav>
+<h2 class="text-5xl font-headline font-bold tracking-tight text-on-surface">Procurement – Strategic Sourcing</h2>
+</header>
+<!-- Top Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+<!-- Placeholder Card -->
+<div class="lg:col-span-2 relative overflow-hidden bg-surface-container-low ghost-border p-8 rounded-sm group">
+<div class="absolute inset-0 bg-gradient-to-br from-[#0077B6]/5 to-transparent pointer-events-none"></div>
+<div class="relative z-10">
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">stars</span>
+<span class="font-label text-xs font-medium tracking-widest text-primary uppercase">Strategic Roadmap</span>
+</div>
+<h3 class="text-3xl font-headline font-bold mb-4">Phase 2 Placeholder</h3>
+<p class="text-on-surface-variant font-label text-sm max-w-md leading-relaxed mb-8">
+            Strategic Sourcing coming soon. We are integrating real-time market indices and automated RFP generation into the Maji Safi ecosystem.
+          </p>
+<div class="flex items-center gap-4">
+<div class="h-1 w-24 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-2/3"></div>
+</div>
+<span class="font-body text-xs text-outline">65% Readiness [Ref: OPS-PH2]</span>
+</div>
+</div>
+<!-- Decorative Background Image with Overlay -->
+<div class="absolute right-0 top-0 h-full w-1/3 opacity-20 grayscale group-hover:grayscale-0 transition-all duration-700">
+<img alt="Abstract industrial high-precision machinery" class="h-full w-full object-cover" data-alt="Close-up of high-precision industrial metal components and blue fluid lines in a modern clean factory setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDlgvvWay7pXVHmvyWonp26T8F88ThUuKQysaoeC-sDE4BSbrTPBtghl4Kcr8PIgw1vLpcq1_XhLbMqu_Vg6E37u5ydGjmaoMk6ZrUQcEFZDQT-7Lptqx2PMOqj2EcA2TfDJ4t6D2vLM3WAgd4sLna5ll23IB9Jked1fM_RoHKVnnhwDHqb4nOd2FZg6T3T5IQJFkl3GcDEUFizhCp5TRxaDBVdalnv0RsHz284vdUo3g7XGw12LzfA2XHIi4upnKuQJSNidPGPNZ6"/>
+</div>
+</div>
+<!-- Quick Stats Card -->
+<div class="bg-surface-container-lowest ghost-border p-8 rounded-sm flex flex-col justify-between">
+<div>
+<span class="font-label text-[10px] text-outline/60 uppercase tracking-widest block mb-1">Active RFQs</span>
+<div class="flex items-baseline gap-2">
+<span class="font-body text-4xl font-semibold text-on-surface">14</span>
+<span class="font-label text-xs text-outline/40">[Ref: Q3-ACT]</span>
+</div>
+</div>
+<div class="mt-8 pt-8 border-t border-outline-variant/10">
+<span class="font-label text-[10px] text-outline/60 uppercase tracking-widest block mb-1">Savings realized</span>
+<div class="flex items-baseline gap-2">
+<span class="font-body text-4xl font-semibold text-secondary">$122,400.00</span>
+<span class="font-label text-xs text-outline/40">[Ref: FY24-S]</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Data Ledger Section -->
+<section class="bg-surface-container-lowest ghost-border rounded-sm overflow-hidden">
+<div class="px-8 py-6 border-b border-outline-variant/10 flex justify-between items-center">
+<h4 class="font-headline font-bold text-lg">Supplier Quote Ledger</h4>
+<div class="flex gap-4">
+<button class="text-xs font-label text-outline hover:text-on-surface transition-colors">Export .CSV</button>
+<button class="text-xs font-label text-outline hover:text-on-surface transition-colors">Filter</button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low/50">
+<th class="px-8 py-4 font-label text-[10px] font-semibold text-outline uppercase tracking-widest border-b border-outline-variant/10">Supplier</th>
+<th class="px-8 py-4 font-label text-[10px] font-semibold text-outline uppercase tracking-widest border-b border-outline-variant/10">Product</th>
+<th class="px-8 py-4 font-label text-[10px] font-semibold text-outline uppercase tracking-widest border-b border-outline-variant/10 text-right">Price (USD)</th>
+<th class="px-8 py-4 font-label text-[10px] font-semibold text-outline uppercase tracking-widest border-b border-outline-variant/10 text-right">Lead Time</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5">
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-8 py-5 font-label text-sm text-on-surface">
+<div class="flex flex-col">
+<span class="font-medium">HydraFlow Systems</span>
+<span class="text-[10px] text-outline/50">[Ref: VEND-001]</span>
+</div>
+</td>
+<td class="px-8 py-5 font-label text-sm text-on-surface-variant">Industrial Filtration Mesh X4</td>
+<td class="px-8 py-5 font-body text-sm font-semibold text-on-surface text-right">12,450.00</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface text-right">
+<div class="inline-flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                    14 Days
+                </div>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-8 py-5 font-label text-sm text-on-surface">
+<div class="flex flex-col">
+<span class="font-medium">Precision Valve Corp.</span>
+<span class="text-[10px] text-outline/50">[Ref: VEND-042]</span>
+</div>
+</td>
+<td class="px-8 py-5 font-label text-sm text-on-surface-variant">Quarter-Turn Actuators (Titanium)</td>
+<td class="px-8 py-5 font-body text-sm font-semibold text-on-surface text-right">4,890.00</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface text-right">
+<div class="inline-flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                    45 Days
+                </div>
+</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors group">
+<td class="px-8 py-5 font-label text-sm text-on-surface">
+<div class="flex flex-col">
+<span class="font-medium">Global Filtration Ltd.</span>
+<span class="text-[10px] text-outline/50">[Ref: VEND-119]</span>
+</div>
+</td>
+<td class="px-8 py-5 font-label text-sm text-on-surface-variant">Membrane Bio-Reactor Units</td>
+<td class="px-8 py-5 font-body text-sm font-semibold text-on-surface text-right">85,200.50</td>
+<td class="px-8 py-5 font-body text-sm text-on-surface text-right">
+<div class="inline-flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+                    28 Days
+                </div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Bottom Action Footer -->
+<footer class="mt-12 flex justify-between items-center text-[10px] font-label text-outline/40">
+<div>MAJI SAFI OS // PROCUREMENT MODULE // v.2.4.1</div>
+<div class="flex gap-6">
+<a class="hover:text-on-surface transition-colors" href="#">Privacy Protocol</a>
+<a class="hover:text-on-surface transition-colors" href="#">System Health</a>
+</div>
+</footer>
+</main>
+<!-- Mobile Bottom Nav (Suppressed on Web) -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 h-16 md:hidden bg-[#10141a] border-t border-[#262a31]/15 shadow-2xl">
+<div class="flex flex-col items-center justify-center text-slate-500 p-2">
+<span class="material-symbols-outlined">group</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 p-2">
+<span class="material-symbols-outlined">factory</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#0077B6] bg-[#0077B6]/10 rounded-xl p-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">package</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 p-2">
+<span class="material-symbols-outlined">shopping_cart</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-500 p-2">
+<span class="material-symbols-outlined">local_shipping</span>
+</div>
+</nav>
+</body></html>

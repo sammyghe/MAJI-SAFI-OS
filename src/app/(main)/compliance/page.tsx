@@ -1,63 +1,46 @@
-'use client';
+import { supabase } from '@/lib/supabase';
+import ComplianceClient from './ComplianceClient';
+import Link from 'next/link';
 
-export default function CompliancePage() {
-  const documents = [
-    { name: 'UNBS License', daysLeft: 180 },
-    { name: 'Food Safety Cert', daysLeft: 150 },
-    { name: 'Environmental Permit', daysLeft: 90 },
-    { name: 'Water Testing Report', daysLeft: 30 },
-  ];
+export const dynamic = 'force-dynamic';
+
+export default async function CompliancePage() {
+  let records: any[] = [];
+  try {
+    const { data } = await supabase
+      .from('compliance_records')
+      .select('*')
+      .eq('location_id', 'buziga')
+      .order('expiry_date', { ascending: true });
+    records = data ?? [];
+  } catch (_) {}
 
   return (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold text-white mb-2 font-headline">Compliance</h1>
-      <p className="text-zinc-400 text-sm mb-8 font-label">UNBS documents, HR records, legal registry</p>
-
-      {/* Documents */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm font-label">
-            <thead>
-              <tr className="border-b border-zinc-700">
-                <th className="px-4 py-3 text-left text-zinc-300 font-semibold">Document</th>
-                <th className="px-4 py-3 text-left text-zinc-300 font-semibold">Status</th>
-                <th className="px-4 py-3 text-right text-zinc-300 font-semibold">Days Left</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documents.map((doc, i) => {
-                let statusColor = 'text-green-400';
-                if (doc.daysLeft <= 7) statusColor = 'text-red-400';
-                else if (doc.daysLeft <= 30) statusColor = 'text-yellow-400';
-
-                return (
-                  <tr key={i} className="border-b border-zinc-800 hover:bg-zinc-800/30">
-                    <td className="px-4 py-3 text-white">{doc.name}</td>
-                    <td className={`px-4 py-3 text-sm font-semibold ${statusColor}`}>
-                      {doc.daysLeft <= 7 ? 'ALERT' : doc.daysLeft <= 30 ? 'Warning' : 'Valid'}
-                    </td>
-                    <td className="px-4 py-3 text-right text-zinc-300">{doc.daysLeft}d</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+    <div className="px-8 py-10 max-w-7xl mx-auto">
+      {/* Header */}
+      <header className="mb-12">
+        <div className="flex justify-between items-end flex-wrap gap-4">
+          <div>
+            <span className="text-primary text-xs font-medium tracking-[0.2em] uppercase mb-2 block font-label">
+              Compliance Gateway
+            </span>
+            <h2 className="text-4xl font-extrabold tracking-tight font-headline">
+              Compliance – UNBS &amp; HR
+            </h2>
+          </div>
+          <div className="flex gap-4">
+            <Link
+              href="/compliance/team"
+              className="bg-surface-container-high text-on-surface text-xs font-bold px-4 py-2 font-label hover:bg-surface-container-highest transition-colors flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-sm">group</span>
+              Team Directory
+            </Link>
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-white mb-4 font-headline">CAPA Log</h3>
-          <p className="text-zinc-400 text-center font-label">No corrective actions logged</p>
-        </div>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-white mb-4 font-headline">Team Directory</h3>
-          <p className="text-zinc-400 text-center font-label">
-            <a href="/compliance/team" className="text-[#0077B6] hover:underline">View team members</a>
-          </p>
-        </div>
-      </div>
+      <ComplianceClient initialRecords={records} />
     </div>
   );
 }

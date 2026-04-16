@@ -22,7 +22,8 @@
       "mcp__huly__list_teamspaces",
       "mcp__huly__create_teamspace",
       "mcp__huly__create_document",
-      "mcp__huly__link_document_to_issue"
+      "mcp__huly__link_document_to_issue",
+      "Bash(git -C \"c:/Users/user/Desktop/Mjai safi OS\" log --oneline -10)"
     ]
   }
 }

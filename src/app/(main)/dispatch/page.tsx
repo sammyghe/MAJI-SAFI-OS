@@ -3,16 +3,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
-import { AlertTriangle, DollarSign } from 'lucide-react';
 
 export default function DispatchPage() {
   const { user } = useAuth();
   const [sales, setSales] = useState<any[]>([]);
-  const [formData, setFormData] = useState({
-    distributor: '',
-    jars: '',
-    amount_ugx: '',
-  });
+  const [formData, setFormData] = useState({ distributor: '', jars: '', amount_ugx: '' });
   const [cashState, setCashState] = useState({
     systemTotal: 0,
     countedAmount: '0',
@@ -22,11 +17,8 @@ export default function DispatchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showEOD, setShowEOD] = useState(false);
-  const [showForceClose, setShowForceClose] = useState(false);
 
-  useEffect(() => {
-    loadSales();
-  }, []);
+  useEffect(() => { loadSales(); }, []);
 
   const loadSales = async () => {
     try {
@@ -37,11 +29,9 @@ export default function DispatchPage() {
         .eq('location_id', 'buziga')
         .eq('sale_date', today)
         .order('created_at', { ascending: false });
-
       if (error) throw error;
-
-      setSales(data || []);
-      const total = (data || []).reduce((sum, s) => sum + (s.amount_ugx || 0), 0);
+      setSales(data ?? []);
+      const total = (data ?? []).reduce((sum, s) => sum + (s.amount_ugx ?? 0), 0);
       setCashState((prev) => ({ ...prev, systemTotal: total }));
     } catch (err) {
       console.error('Error loading sales:', err);
@@ -52,29 +42,20 @@ export default function DispatchPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
-      if (!formData.distributor || !formData.jars || !formData.amount_ugx) {
-        throw new Error('All fields required');
-      }
-
-      const { error: insertError } = await supabase.from('sales_ledger').insert([
-        {
-          distributor: formData.distributor,
-          jars_sold: parseInt(formData.jars),
-          amount_ugx: parseInt(formData.amount_ugx),
-          location_id: 'buziga',
-          logged_by: user?.name || 'Unknown',
-        },
-      ]);
-
+      if (!formData.distributor || !formData.jars || !formData.amount_ugx) throw new Error('All fields required');
+      const { error: insertError } = await supabase.from('sales_ledger').insert([{
+        distributor: formData.distributor,
+        jars_sold: parseInt(formData.jars),
+        amount_ugx: parseInt(formData.amount_ugx),
+        location_id: 'buziga',
+        logged_by: user?.name ?? 'Unknown',
+      }]);
       if (insertError) throw insertError;
-
       setFormData({ distributor: '', jars: '', amount_ugx: '' });
       await loadSales();
-      setShowEOD(true);
     } catch (err: any) {
-      setError(err.message || 'Error logging sale');
+      setError(err.message ?? 'Error logging sale');
     } finally {
       setLoading(false);
     }
@@ -82,210 +63,291 @@ export default function DispatchPage() {
 
   const handleEODCheck = () => {
     const counted = parseInt(cashState.countedAmount) || 0;
-    const mismatched = Math.abs(counted - cashState.systemTotal) > 0;
-    setCashState((prev) => ({ ...prev, mismatched }));
+    setCashState((prev) => ({ ...prev, mismatched: Math.abs(counted - prev.systemTotal) > 0 }));
   };
 
   const handleEODClose = async () => {
     if (cashState.mismatched && !cashState.forceCloseReason) {
-      setError('Force close requires a reason from founders');
+      setError('Force close requires a reason');
       return;
     }
-
     try {
       if (cashState.mismatched) {
-        // Log override
-        await supabase.from('finance_overrides').insert([
-          {
-            reason: cashState.forceCloseReason,
-            user_id: user?.id,
-            location_id: 'buziga',
-          },
-        ]);
+        await supabase.from('finance_overrides').insert([{
+          reason: cashState.forceCloseReason,
+          user_id: user?.id,
+          location_id: 'buziga',
+        }]);
       }
-
-      // TODO: Mark EOD closed in system
       alert('EOD reconciliation closed. Cash audit logged.');
       setShowEOD(false);
-      setCashState((prev) => ({ ...prev, countedAmount: '0', forceCloseReason: '' }));
-    } catch (err) {
+      setCashState((prev) => ({ ...prev, countedAmount: '0', forceCloseReason: '', mismatched: false }));
+    } catch {
       setError('Error closing EOD');
     }
   };
 
-  const jarsDispatched = sales.reduce((sum, s) => sum + (s.jars_sold || 0), 0);
+  const jarsDispatched = sales.reduce((sum, s) => sum + (s.jars_sold ?? 0), 0);
+  const uniqueDistributors = new Set(sales.map((s) => s.distributor)).size;
 
   return (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold text-white mb-2 font-headline">Dispatch</h1>
-      <p className="text-zinc-400 text-sm mb-8 font-label">Sales logging, cash collection, EOD reconciliation</p>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: 'Jars Dispatched', value: jarsDispatched.toString(), suffix: '' },
-          { label: 'Cash Collected', value: `UGX ${cashState.systemTotal.toLocaleString()}`, suffix: '' },
-          { label: 'Distributors', value: new Set(sales.map((s) => s.distributor)).size.toString(), suffix: '' },
-          {
-            label: 'Mismatch',
-            value: cashState.mismatched ? 'YES' : 'NONE',
-            suffix: '',
-            color: cashState.mismatched ? 'red' : 'green',
-          },
-        ].map((stat, i) => {
-          const bgColor =
-            stat.color === 'red'
-              ? 'bg-red-500/10 border-red-500/30'
-              : stat.color === 'green'
-                ? 'bg-green-500/10 border-green-500/30'
-                : 'bg-zinc-900 border-zinc-800';
-          const textColor = stat.color === 'red' ? 'text-red-400' : stat.color === 'green' ? 'text-green-400' : 'text-white';
-
-          return (
-            <div key={i} className={`p-4 border rounded-lg ${bgColor}`}>
-              <p className="text-xs text-zinc-400 font-label">{stat.label}</p>
-              <p className={`text-2xl font-bold font-headline ${textColor}`}>{stat.value}</p>
-            </div>
-          );
-        })}
+    <div className="px-8 py-10 max-w-7xl mx-auto">
+      {/* Header + Hero Stat */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12">
+        <div>
+          <div className="flex items-center gap-2 text-outline mb-2">
+            <span className="text-[10px] tracking-widest uppercase font-label">Commercial Ledger</span>
+            <span className="w-8 h-[1px] bg-outline-variant/30" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-extrabold font-headline tracking-tighter text-on-surface">
+            Dispatch – Sales &amp; Cash
+          </h1>
+        </div>
+        <div className="bg-surface-container-low p-6 border-l-4 border-primary-container min-w-[260px]">
+          <p className="text-xs text-outline font-label mb-1">Total Cash Today</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-body font-semibold text-primary">
+              {cashState.systemTotal.toLocaleString()}
+            </span>
+            <span className="text-xs font-body text-outline/50">
+              UGX <span className="ml-1">[source: sales_ledger, buziga]</span>
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Add Sale Form + Sales Table */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        {/* Add Sale Form */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-white mb-4 font-headline">Log Sale</h3>
-          <form onSubmit={handleAddSale} className="space-y-3">
-            <input
-              type="text"
-              value={formData.distributor}
-              onChange={(e) => setFormData({ ...formData, distributor: e.target.value })}
-              placeholder="Distributor name"
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white text-sm font-label"
-            />
-            <input
-              type="number"
-              value={formData.jars}
-              onChange={(e) => setFormData({ ...formData, jars: e.target.value })}
-              placeholder="Jars sold"
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white text-sm font-label"
-            />
-            <input
-              type="number"
-              value={formData.amount_ugx}
-              onChange={(e) => setFormData({ ...formData, amount_ugx: e.target.value })}
-              placeholder="Amount (UGX)"
-              className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white text-sm font-label"
-            />
-            {error && <p className="text-red-400 text-xs font-label">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2 bg-[#0077B6] hover:brightness-110 disabled:opacity-50 text-white rounded font-semibold text-xs font-label"
-            >
-              {loading ? 'Logging...' : 'Add Sale'}
-            </button>
-          </form>
-        </div>
+      {/* Quick stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: 'Jars Dispatched', value: jarsDispatched.toString(), ref: 'sales_ledger' },
+          { label: 'Distributors', value: uniqueDistributors.toString(), ref: 'sales_ledger' },
+          { label: 'Cash Collected', value: `${cashState.systemTotal.toLocaleString()} UGX`, ref: 'sales_ledger' },
+          {
+            label: 'Cash Mismatch',
+            value: cashState.mismatched ? 'YES' : 'NONE',
+            ref: 'finance_overrides',
+            alert: cashState.mismatched,
+          },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className={`bg-surface-container-low ghost-border p-5 ${stat.alert ? 'border-l-2 border-tertiary-container' : ''}`}
+          >
+            <p className="text-[10px] text-outline font-label uppercase tracking-widest mb-2">{stat.label}</p>
+            <p className={`text-2xl font-body font-bold ${stat.alert ? 'text-tertiary' : 'text-on-surface'}`}>
+              {stat.value}
+            </p>
+            <p className="text-[10px] text-outline/40 font-label mt-1">[source: {stat.ref}]</p>
+          </div>
+        ))}
+      </div>
 
-        {/* Sales Table */}
-        <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-          <h3 className="text-lg font-bold text-white p-4 border-b border-zinc-700 font-headline">Today's Sales</h3>
-          {sales.length === 0 ? (
-            <p className="text-zinc-400 text-center font-label p-6">No sales logged yet</p>
-          ) : (
+      {/* Main content */}
+      <div className="grid grid-cols-12 gap-6 mb-8">
+        {/* Distribution Table */}
+        <div className="col-span-12">
+          <div className="bg-surface-container-low border border-outline-variant/10 overflow-hidden mb-8">
+            <div className="p-6 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container">
+              <h3 className="font-headline font-bold text-lg">Active Distribution Ledger</h3>
+              <span className="text-[10px] font-body text-outline/50 uppercase tracking-widest">
+                {new Date().toLocaleDateString()}
+              </span>
+            </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-xs font-label">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-zinc-700">
-                    <th className="px-3 py-2 text-left text-zinc-300 font-semibold">Distributor</th>
-                    <th className="px-3 py-2 text-left text-zinc-300 font-semibold">Jars</th>
-                    <th className="px-3 py-2 text-left text-zinc-300 font-semibold">Amount (UGX)</th>
-                    <th className="px-3 py-2 text-left text-zinc-300 font-semibold">Time</th>
+                  <tr className="bg-surface-container-lowest">
+                    {['Distributor', 'Jars Sold', 'Cash (UGX)', 'Time', 'Logged By'].map((h) => (
+                      <th key={h} className="px-6 py-4 text-[10px] font-label text-outline uppercase tracking-widest">{h}</th>
+                    ))}
                   </tr>
                 </thead>
-                <tbody>
-                  {sales.map((sale) => (
-                    <tr key={sale.id} className="border-b border-zinc-800 hover:bg-zinc-800/30">
-                      <td className="px-3 py-2 text-white">{sale.distributor}</td>
-                      <td className="px-3 py-2 text-zinc-300">{sale.jars_sold}</td>
-                      <td className="px-3 py-2 text-zinc-300">{sale.amount_ugx.toLocaleString()}</td>
-                      <td className="px-3 py-2 text-zinc-400 text-[10px]">{new Date(sale.created_at).toLocaleTimeString()}</td>
+                <tbody className="divide-y divide-outline-variant/10">
+                  {sales.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-outline/50 font-label text-sm">
+                        No sales logged yet today
+                      </td>
+                    </tr>
+                  ) : sales.map((s) => (
+                    <tr key={s.id} className="hover:bg-surface-container-high/50 transition-colors">
+                      <td className="px-6 py-5 text-sm font-medium">{s.distributor}</td>
+                      <td className="px-6 py-5 text-sm font-body">{s.jars_sold}</td>
+                      <td className="px-6 py-5 text-right font-body font-semibold text-secondary">
+                        {s.amount_ugx.toLocaleString()}
+                        <span className="text-[10px] text-outline/40 font-label ml-1">[Ref: {s.id?.slice(0, 6)}]</span>
+                      </td>
+                      <td className="px-6 py-5 text-sm font-body text-outline/70">
+                        {new Date(s.created_at).toLocaleTimeString()}
+                      </td>
+                      <td className="px-6 py-5 text-sm font-label text-on-surface-variant">{s.logged_by}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          )}
+          </div>
+        </div>
+
+        {/* Log Sale Form */}
+        <div className="col-span-12 lg:col-span-7 bg-surface-container ghost-border p-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+            <span className="material-symbols-outlined text-9xl">payments</span>
+          </div>
+          <h4 className="font-headline font-bold text-xl mb-6">Log Sale</h4>
+          <form onSubmit={handleAddSale} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Distributor Name</label>
+                <input
+                  type="text"
+                  value={formData.distributor}
+                  onChange={(e) => setFormData({ ...formData, distributor: e.target.value })}
+                  placeholder="e.g. Buziga Distributors"
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Jars Sold</label>
+                <input
+                  type="number"
+                  value={formData.jars}
+                  onChange={(e) => setFormData({ ...formData, jars: e.target.value })}
+                  placeholder="e.g., 50"
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase text-outline font-label tracking-widest">Amount Collected (UGX)</label>
+              <input
+                type="number"
+                value={formData.amount_ugx}
+                onChange={(e) => setFormData({ ...formData, amount_ugx: e.target.value })}
+                placeholder="e.g., 150000"
+                className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+              />
+            </div>
+            {error && (
+              <div className="p-3 bg-tertiary-container/10 border-l-2 border-tertiary-container">
+                <p className="text-tertiary text-xs font-label">{error}</p>
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full mt-4 bg-primary text-on-primary font-bold text-xs py-3 font-label transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50"
+            >
+              {loading ? 'Logging...' : 'Record Sale'}
+            </button>
+          </form>
+        </div>
+
+        {/* EOD Panel */}
+        <div className="col-span-12 lg:col-span-5 grid grid-rows-2 gap-6">
+          <div className="bg-secondary-container/10 p-6 border border-secondary/20">
+            <div className="flex justify-between items-start mb-4">
+              <span className="text-secondary-fixed material-symbols-outlined">analytics</span>
+              <span className="rounded-none bg-secondary-container px-2 py-0.5 text-[10px] font-bold text-secondary uppercase font-label">
+                Today
+              </span>
+            </div>
+            <p className="text-on-surface-variant text-sm font-label mb-1">Revenue vs Target</p>
+            <h5 className="text-3xl font-body font-bold text-secondary">
+              {jarsDispatched} / 500
+            </h5>
+            <p className="text-[10px] text-outline/50 mt-2 font-label">
+              [source: sales_ledger, buziga]
+            </p>
+          </div>
+          <div className="bg-surface-container-low p-6 ghost-border flex flex-col justify-between">
+            <div>
+              <p className="text-xs font-bold text-outline uppercase tracking-widest font-label mb-2">
+                End of Day Close
+              </p>
+              <p className="text-xs text-on-surface-variant font-label leading-relaxed">
+                Close the day by reconciling physical cash against system total.
+                Only founders can force-close a mismatch.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowEOD(true)}
+              className="mt-4 bg-primary-container text-on-primary-container text-xs font-bold px-4 py-3 font-label hover:brightness-110 transition-all"
+            >
+              Open EOD Reconciliation
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* EOD Reconciliation Modal */}
+      {/* EOD Modal */}
       {showEOD && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-8 max-w-md">
-            <h2 className="text-2xl font-bold text-white mb-4 font-headline">EOD Cash Reconciliation</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-container-low border border-outline-variant/20 p-8 max-w-md w-full">
+            <h2 className="text-2xl font-bold font-headline mb-6">EOD Cash Reconciliation</h2>
 
-            <div className="bg-zinc-800 p-4 rounded-lg mb-4">
-              <p className="text-xs text-zinc-400 font-label mb-1">System Total:</p>
-              <p className="text-xl font-bold text-[#0077B6] font-headline">UGX {cashState.systemTotal.toLocaleString()}</p>
+            <div className="bg-surface-container-lowest p-4 mb-5 ghost-border">
+              <p className="text-[10px] text-outline font-label uppercase tracking-widest mb-1">System Total</p>
+              <p className="text-2xl font-bold text-primary-container font-body">
+                UGX {cashState.systemTotal.toLocaleString()}
+              </p>
+              <p className="text-[10px] text-outline/50 font-label mt-1">[source: sales_ledger, buziga]</p>
             </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-zinc-300 mb-2 font-label">Physical Count (UGX)</label>
+            <div className="space-y-1 mb-5">
+              <label className="text-[10px] uppercase text-outline font-label tracking-widest">Physical Count (UGX)</label>
               <input
                 type="number"
                 value={cashState.countedAmount}
                 onChange={(e) => setCashState({ ...cashState, countedAmount: e.target.value })}
-                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white text-sm font-label"
+                className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
               />
             </div>
 
             <button
               onClick={handleEODCheck}
-              className="w-full py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded font-semibold text-sm mb-4 font-label"
+              className="w-full py-2 bg-surface-container-high text-on-surface text-xs font-bold font-label mb-4 hover:bg-surface-container-highest transition-colors"
             >
               Check Mismatch
             </button>
 
             {cashState.mismatched && (
-              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded">
-                <div className="flex gap-2 mb-3">
-                  <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-red-400 font-semibold text-xs font-label">Cash Mismatch Detected</p>
-                    <p className="text-red-300 text-xs font-label mt-1">
-                      Difference: UGX {Math.abs(parseInt(cashState.countedAmount) - cashState.systemTotal).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-
-                {user?.role === 'founder' && (
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-300 mb-2 font-label">Force Close Reason (Required)</label>
+              <div className="mb-4 p-4 bg-tertiary-container/10 border-l-2 border-tertiary-container">
+                <p className="text-tertiary-container font-body text-[10px] font-bold uppercase tracking-widest mb-2">
+                  Cash Mismatch — UGX {Math.abs(parseInt(cashState.countedAmount) - cashState.systemTotal).toLocaleString()}
+                </p>
+                {user?.role === 'founder' ? (
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase text-outline font-label tracking-widest">
+                      Force Close Reason (Required)
+                    </label>
                     <textarea
                       value={cashState.forceCloseReason}
                       onChange={(e) => setCashState({ ...cashState, forceCloseReason: e.target.value })}
-                      className="w-full px-2 py-2 bg-zinc-800 border border-zinc-700 rounded text-white text-xs font-label"
                       rows={2}
                       placeholder="Explain the discrepancy..."
+                      className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface resize-none"
                     />
                   </div>
+                ) : (
+                  <p className="text-xs font-label text-on-surface-variant">
+                    A founder must be present to force-close a mismatched EOD.
+                  </p>
                 )}
               </div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 mt-2">
               <button
                 onClick={() => setShowEOD(false)}
-                className="flex-1 py-2 bg-zinc-700 hover:bg-zinc-600 text-white rounded font-semibold text-sm font-label"
+                className="flex-1 py-2 bg-surface-container-high text-on-surface text-xs font-bold font-label hover:bg-surface-container-highest"
               >
                 Cancel
               </button>
               <button
                 onClick={handleEODClose}
                 disabled={cashState.mismatched && !cashState.forceCloseReason}
-                className="flex-1 py-2 bg-[#0077B6] hover:brightness-110 disabled:opacity-50 text-white rounded font-semibold text-sm font-label"
+                className="flex-1 py-2 bg-primary-container text-on-primary-container text-xs font-bold font-label hover:brightness-110 disabled:opacity-50"
               >
                 Confirm Close
               </button>

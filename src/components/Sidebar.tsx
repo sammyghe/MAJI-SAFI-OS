@@ -19,7 +19,6 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
-  Droplet,
 } from 'lucide-react';
 
 const departments = [
@@ -91,20 +90,25 @@ export default function Sidebar() {
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Load sidebar width from localStorage
+  // Load sidebar width from localStorage and set CSS variable
   useEffect(() => {
     setMounted(true);
     const savedWidth = localStorage.getItem('maji-safi.sidebarWidth');
     if (savedWidth) {
-      setWidth(parseInt(savedWidth, 10));
+      const w = parseInt(savedWidth, 10);
+      setWidth(w);
+      document.documentElement.style.setProperty('--sidebar-w', `${w}px`);
+    } else {
+      document.documentElement.style.setProperty('--sidebar-w', '240px');
     }
   }, []);
 
-  // Save sidebar width to localStorage
+  // Save sidebar width to localStorage and update CSS variable
   const handleResizeStop = (_e: any, _direction: string, _ref: any, delta: any) => {
     const newWidth = width + delta.width;
     setWidth(newWidth);
     localStorage.setItem('maji-safi.sidebarWidth', newWidth.toString());
+    document.documentElement.style.setProperty('--sidebar-w', `${newWidth}px`);
   };
 
   if (!mounted) return null;
@@ -145,20 +149,11 @@ export default function Sidebar() {
         bottomLeft: false,
       }}
       onResizeStop={handleResizeStop}
-      className="fixed left-0 top-0 h-full z-40 bg-zinc-950 border-r border-zinc-800 flex flex-col overflow-hidden"
+      className="fixed left-0 top-16 h-[calc(100vh-64px)] z-40 bg-zinc-950 border-r border-[#262a31]/30 flex flex-col overflow-hidden"
     >
-      {/* Header */}
-      <div className="px-6 py-6 border-b border-zinc-800">
-        <div className="flex items-center gap-2 mb-2">
-          <Droplet className="w-5 h-5 text-[#0077B6]" />
-          <h1 className="text-lg font-bold text-white font-headline">Maji Safi</h1>
-        </div>
-        <p className="text-xs text-zinc-400 font-label">Hydrate. Elevate.</p>
-      </div>
-
       {/* Primary Departments */}
       <nav className="flex-1 overflow-y-auto px-3 py-6 space-y-1">
-        <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest px-3 mb-4">
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] px-3 mb-6">
           Departments
         </p>
 
@@ -170,16 +165,13 @@ export default function Sidebar() {
             <Link
               key={dept.slug}
               href={getDepartmentPath(dept.slug)}
-              className={`flex items-center gap-3 px-3 py-2 rounded-sm transition-all duration-150 relative group ${
+              className={`flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative ${
                 isActive
-                  ? 'text-white bg-zinc-800/50'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/30'
+                  ? 'text-[#0077B6] font-semibold border-r-2 border-[#0077B6] bg-[#262a31]/30'
+                  : 'text-slate-500 hover:text-slate-200 hover:bg-[#262a31]/20'
               }`}
             >
-              {isActive && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0077B6] rounded-r-sm" />
-              )}
-              <Icon className="w-4 h-4 flex-shrink-0" />
+              <Icon className="w-[15px] h-[15px] flex-shrink-0" />
               <span className="text-sm font-label tracking-wide">{dept.name}</span>
             </Link>
           );
@@ -187,18 +179,18 @@ export default function Sidebar() {
       </nav>
 
       {/* More Section */}
-      <div className="border-t border-zinc-800 px-3 py-4">
+      <div className="border-t border-[#262a31]/30 px-3 py-4">
         <button
           onClick={() => setIsMoreOpen(!isMoreOpen)}
-          className="flex items-center gap-3 w-full px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800/30 rounded-sm transition-colors text-sm font-label"
+          className="flex items-center gap-3 w-full px-3 py-2 text-slate-500 hover:text-slate-200 hover:bg-[#262a31]/20 transition-colors text-sm font-label"
         >
-          <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex-1 text-left">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] flex-1 text-left">
             More
           </span>
           {isMoreOpen ? (
-            <ChevronDown className="w-4 h-4" />
+            <ChevronDown className="w-3.5 h-3.5" />
           ) : (
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3.5 h-3.5" />
           )}
         </button>
 
@@ -212,16 +204,13 @@ export default function Sidebar() {
                 <Link
                   key={item.slug}
                   href={getDepartmentPath(item.slug)}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-sm transition-all duration-150 relative group ${
+                  className={`flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative ${
                     isActive
-                      ? 'text-white bg-zinc-800/50'
-                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/30'
+                      ? 'text-[#0077B6] font-semibold border-r-2 border-[#0077B6] bg-[#262a31]/30'
+                      : 'text-slate-500 hover:text-slate-200 hover:bg-[#262a31]/20'
                   }`}
                 >
-                  {isActive && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0077B6] rounded-r-sm" />
-                  )}
-                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <Icon className="w-[15px] h-[15px] flex-shrink-0" />
                   <span className="text-sm font-label tracking-wide">{item.name}</span>
                 </Link>
               );

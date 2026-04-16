@@ -1,7 +1,7 @@
 // Maji Safi OS — Service Worker
 // Provides offline shell + background sync for PWA install
 
-const CACHE_NAME = 'maji-safi-v2';
+const CACHE_NAME = 'maji-safi-v3';
 
 const PRECACHE_URLS = [
   '/manifest.webmanifest',

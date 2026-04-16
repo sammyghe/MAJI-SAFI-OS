@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx vercel:*)",
+      "Bash(rm -f \"public/Gemini_Generated_Image_3dhq4l3dhq4l3dhq.png\")",
+      "Bash(rm -f \"stitch export/stitch_maji_safi_os/commercial_workspace/screen.png\")",
+      "Bash(rm -f \"stitch export/stitch_maji_safi_os/executive_workspace/screen.png\")",
+      "Bash(rm -f \"stitch export/stitch_maji_safi_os/finance_workspace/screen.png\")",
+      "Bash(rm -f \"stitch export/stitch_maji_safi_os/hr_workspace/screen.png\")"
+    ]
+  }
+}

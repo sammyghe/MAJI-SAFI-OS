@@ -52,11 +52,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-    const response = NextResponse.json({ ok: true, department_slug: data.department_slug });
-    response.cookies.set('maji_user_role', role, { httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });
-    return response;
-  } catch {
-    return NextResponse.json({ ok: false, error: 'Server error' }, { status: 500 });
-  }
-}

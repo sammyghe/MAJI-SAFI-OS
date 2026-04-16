@@ -101,7 +101,7 @@ export default function Sidebar() {
   }, []);
 
   // Save sidebar width to localStorage
-  const handleResizeStop = (e: any, direction: string, ref: HTMLDivElement, delta: any) => {
+  const handleResizeStop = (_e: any, _direction: string, _ref: any, delta: any) => {
     const newWidth = width + delta.width;
     setWidth(newWidth);
     localStorage.setItem('maji-safi.sidebarWidth', newWidth.toString());

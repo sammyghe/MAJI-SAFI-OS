@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
-import { Alert } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 export default function FounderOfficePage() {
   const { user } = useAuth();
@@ -57,7 +57,7 @@ export default function FounderOfficePage() {
 
       {/* Critical Alerts */}
       <div className="mb-8 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
-        <Alert className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+        <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
         <div>
           <p className="text-red-400 font-semibold font-label">No data loaded yet</p>
           <p className="text-sm text-red-300 font-label">Complete Supabase schema to view real metrics</p>

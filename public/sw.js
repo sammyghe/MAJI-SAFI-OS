@@ -1,10 +1,9 @@
 // Maji Safi OS — Service Worker
 // Provides offline shell + background sync for PWA install
 
-const CACHE_NAME = 'maji-safi-v1';
+const CACHE_NAME = 'maji-safi-v2';
 
 const PRECACHE_URLS = [
-  '/',
   '/manifest.webmanifest',
 ];
 
@@ -16,7 +15,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate: clean up old caches
+// Activate: clean up old caches (v2 clears stale v1 cache that was serving old splash screen)
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -41,6 +40,6 @@ self.addEventListener('fetch', (event) => {
         }
         return response;
       })
-      .catch(() => caches.match(event.request).then((r) => r ?? caches.match('/')))
+      .catch(() => caches.match(event.request).then((r) => r ?? caches.match('/login')))
   );
 });

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
+import { showToast } from '@/components/ToastContainer';
 
 interface LedgerRow {
   id: string;
@@ -24,7 +25,7 @@ function fmtUGX(n: number) {
   return n.toLocaleString();
 }
 
-function PctBar({ pct, alert }: { pct: number; alert?: boolean }) {
+function PctBar({ pct }: { pct: number }) {
   return (
     <div className="flex flex-col items-center gap-1">
       <span className={`font-body text-xs ${pct >= 90 ? 'text-tertiary' : pct >= 70 ? 'text-primary' : 'text-secondary'}`}>
@@ -45,6 +46,19 @@ export default function FinancePage() {
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
   const [cash, setCash] = useState<CashRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeForm, setActiveForm] = useState<'budget' | 'expense' | 'cash'>('budget');
+  const [formSaving, setFormSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [budgetForm, setBudgetForm] = useState({ category: CATEGORIES[0], amount: '' });
+  const [expenseForm, setExpenseForm] = useState({ category: CATEGORIES[0], amount: '' });
+  const [cashForm, setCashForm] = useState({ amount: '' });
+
+  // EOD state
+  const [showEOD, setShowEOD] = useState(false);
+  const [salesTotal, setSalesTotal] = useState(0);
+  const [eodReason, setEodReason] = useState('');
+  const [eodSaving, setEodSaving] = useState(false);
+
   const period = new Date().toISOString().slice(0, 7); // YYYY-MM
 
   useEffect(() => { loadData(); }, []);
@@ -74,15 +88,161 @@ export default function FinancePage() {
     }
   };
 
-  // Map DB rows by category, fall back to "No data" for missing categories
+  const loadSalesTotal = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    const { data } = await supabase
+      .from('sales_ledger')
+      .select('amount_ugx')
+      .eq('location_id', 'buziga')
+      .eq('sale_date', today);
+    setSalesTotal((data ?? []).reduce((s: number, r: any) => s + (r.amount_ugx ?? 0), 0));
+  };
+
   const getRow = (cat: string) => ledger.find((r) => r.category === cat);
 
   const totalBudgeted = ledger.reduce((s, r) => s + (r.budgeted ?? 0), 0);
   const totalSpent = ledger.reduce((s, r) => s + (r.spent ?? 0), 0);
   const totalRemaining = totalBudgeted - totalSpent;
   const totalPct = totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0;
+  const overBudget = ledger.filter((r) => r.spent > r.budgeted);
 
-  const noData = (field: string) => `No data — enter it. [source: transactions — no ${field} row for ${period}]`;
+  // ── Set Monthly Budget ──────────────────────────────────────────────────────
+  const handleSetBudget = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    if (!budgetForm.amount || isNaN(Number(budgetForm.amount))) {
+      setFormError('Enter a valid amount');
+      return;
+    }
+    setFormSaving(true);
+    try {
+      const existing = getRow(budgetForm.category);
+      if (existing) {
+        const { error } = await supabase
+          .from('transactions')
+          .update({ budgeted: parseInt(budgetForm.amount) })
+          .eq('id', existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('transactions')
+          .insert([{
+            location_id: 'buziga',
+            category: budgetForm.category,
+            period,
+            budgeted: parseInt(budgetForm.amount),
+            spent: 0,
+          }]);
+        if (error) throw error;
+      }
+      await loadData();
+      setBudgetForm({ category: CATEGORIES[0], amount: '' });
+      showToast({ type: 'success', message: `Budget set: ${budgetForm.category} — UGX ${parseInt(budgetForm.amount).toLocaleString()}` });
+    } catch (err: any) {
+      setFormError(err.message ?? 'Error saving budget');
+    } finally {
+      setFormSaving(false);
+    }
+  };
+
+  // ── Log Expense ─────────────────────────────────────────────────────────────
+  const handleLogExpense = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    if (!expenseForm.amount || isNaN(Number(expenseForm.amount))) {
+      setFormError('Enter a valid amount');
+      return;
+    }
+    setFormSaving(true);
+    try {
+      const amount = parseInt(expenseForm.amount);
+      const existing = getRow(expenseForm.category);
+      if (existing) {
+        const { error } = await supabase
+          .from('transactions')
+          .update({ spent: existing.spent + amount })
+          .eq('id', existing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('transactions')
+          .insert([{
+            location_id: 'buziga',
+            category: expenseForm.category,
+            period,
+            budgeted: 0,
+            spent: amount,
+          }]);
+        if (error) throw error;
+      }
+      await loadData();
+      setExpenseForm({ category: CATEGORIES[0], amount: '' });
+      showToast({ type: 'success', message: `Expense logged: ${expenseForm.category} — UGX ${amount.toLocaleString()}` });
+    } catch (err: any) {
+      setFormError(err.message ?? 'Error logging expense');
+    } finally {
+      setFormSaving(false);
+    }
+  };
+
+  // ── Record Daily Cash ────────────────────────────────────────────────────────
+  const handleLogCash = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    if (!cashForm.amount || isNaN(Number(cashForm.amount))) {
+      setFormError('Enter a valid amount');
+      return;
+    }
+    setFormSaving(true);
+    try {
+      const { error } = await supabase
+        .from('daily_cash')
+        .insert([{ amount: parseInt(cashForm.amount), location_id: 'buziga' }]);
+      if (error) throw error;
+      await loadData();
+      setCashForm({ amount: '' });
+      showToast({ type: 'success', message: `Daily cash recorded: UGX ${parseInt(cashForm.amount).toLocaleString()}` });
+    } catch (err: any) {
+      setFormError(err.message ?? 'Error recording cash');
+    } finally {
+      setFormSaving(false);
+    }
+  };
+
+  // ── EOD Close ────────────────────────────────────────────────────────────────
+  const openEOD = async () => {
+    await loadSalesTotal();
+    setEodReason('');
+    setShowEOD(true);
+  };
+
+  const cashCounted = cash?.amount ?? 0;
+  const isMismatch = showEOD && Math.abs(cashCounted - salesTotal) > 0;
+
+  const handleEODClose = async () => {
+    if (isMismatch && !eodReason.trim()) return;
+    setEodSaving(true);
+    try {
+      if (isMismatch) {
+        const { error } = await supabase.from('finance_overrides').insert([{
+          reason: eodReason,
+          user_id: user?.id,
+          location_id: 'buziga',
+          cash_counted: cashCounted,
+          cash_expected: salesTotal,
+        }]);
+        if (error) throw error;
+      }
+      showToast({ type: 'success', message: 'EOD reconciliation closed. Audit logged.' });
+      setShowEOD(false);
+    } catch (err: any) {
+      showToast({ type: 'error', message: err.message ?? 'Error closing EOD' });
+    } finally {
+      setEodSaving(false);
+    }
+  };
+
+  const canOpenEOD = cash !== null;
 
   return (
     <div className="px-8 py-10 max-w-7xl mx-auto">
@@ -97,21 +257,44 @@ export default function FinancePage() {
               Finance – Envelope Ledger
             </h2>
           </div>
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] text-outline/60 uppercase mb-1 font-label">Fiscal Status</span>
+          <div className="flex flex-col items-end gap-2">
+            <span className="text-[10px] text-outline/60 uppercase font-label">Fiscal Status</span>
             <button
-              disabled={totalSpent === 0}
-              className="bg-surface-container-high text-outline cursor-not-allowed px-6 py-3 text-xs font-bold font-label flex items-center gap-2"
+              onClick={openEOD}
+              disabled={!canOpenEOD}
+              className={`px-6 py-3 text-xs font-bold font-label flex items-center gap-2 transition-all ${
+                canOpenEOD
+                  ? 'bg-primary-container text-on-primary-container hover:brightness-110'
+                  : 'bg-surface-container-high text-outline cursor-not-allowed'
+              }`}
             >
-              <span className="material-symbols-outlined text-sm">lock</span>
+              <span className="material-symbols-outlined text-sm">{canOpenEOD ? 'task_alt' : 'lock'}</span>
               End of Day Close
             </button>
+            {!canOpenEOD && (
+              <p className="text-[10px] text-outline/50 font-label">Record daily cash to unlock</p>
+            )}
           </div>
         </div>
       </header>
 
+      {/* Over-budget alert */}
+      {overBudget.length > 0 && (
+        <div className="mb-8 p-4 bg-tertiary-container/10 border-l-2 border-tertiary-container flex items-start gap-3">
+          <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">warning</span>
+          <div>
+            <p className="text-tertiary font-body text-[10px] font-bold uppercase tracking-widest">
+              {overBudget.length} envelope{overBudget.length > 1 ? 's' : ''} over budget
+            </p>
+            <p className="text-sm font-label text-on-surface-variant mt-1">
+              {overBudget.map((r) => r.category).join(', ')}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Bento grid */}
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-12 gap-6 mb-8">
         {/* Cash Position */}
         <div className="col-span-12 lg:col-span-8 bg-surface-container-low ghost-border p-8 relative overflow-hidden">
           <div className="flex justify-between items-start mb-8 flex-wrap gap-4">
@@ -129,7 +312,7 @@ export default function FinancePage() {
                     <span className="text-xs font-label font-normal opacity-50 ml-1">UGX</span>
                   </span>
                   <p className="text-[10px] text-outline/50 uppercase font-label tracking-widest mt-1">
-                    [source: daily_cash row {cash.id}, {cash.recorded_at.slice(0, 10)}]
+                    [source: daily_cash row {cash.id?.slice(0, 8)}, {cash.recorded_at.slice(0, 10)}]
                   </p>
                 </>
               ) : (
@@ -139,7 +322,7 @@ export default function FinancePage() {
           </div>
           {/* Burn bars visual */}
           <div className="h-32 w-full flex items-end gap-1">
-            {CATEGORIES.slice(0, 8).map((cat, i) => {
+            {CATEGORIES.map((cat, i) => {
               const row = getRow(cat);
               const pct = row && row.budgeted > 0 ? (row.spent / row.budgeted) * 100 : 0;
               return (
@@ -180,7 +363,7 @@ export default function FinancePage() {
                 </div>
                 <div className="flex justify-between items-baseline border-t border-outline-variant pt-4 mt-4">
                   <span className="text-sm font-bold text-primary font-label">Remaining</span>
-                  <span className="font-body text-2xl text-primary font-bold">
+                  <span className={`font-body text-2xl font-bold ${totalRemaining < 0 ? 'text-tertiary' : 'text-primary'}`}>
                     {fmtUGX(totalRemaining)}
                     <span className="text-[10px] text-outline/50 font-normal ml-1">[Ref-Σ]</span>
                   </span>
@@ -195,88 +378,321 @@ export default function FinancePage() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Envelope Ledger Table */}
-        <div className="col-span-12 bg-surface-container-lowest ghost-border overflow-hidden">
-          <div className="p-6 border-b border-outline-variant/10 flex justify-between items-center">
-            <h3 className="text-sm font-bold font-headline uppercase tracking-widest">Envelope Ledger Detail</h3>
-            <div className="flex gap-2">
-              <span className="px-2 py-1 bg-surface-container-high rounded-none text-[10px] font-body text-outline">
-                UGX / {period}
-              </span>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-surface-container-low/50">
-                  {['Envelope Name', 'Budgeted (UGX)', 'Spent (UGX)', 'Remaining (UGX)', '% Used'].map((h) => (
-                    <th key={h} className={`px-6 py-4 text-[10px] font-bold text-outline uppercase tracking-wider font-label ${h !== 'Envelope Name' ? 'text-right' : ''}`}>
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-outline-variant/10">
-                {CATEGORIES.map((cat) => {
-                  const row = getRow(cat);
-                  if (!row) {
-                    return (
-                      <tr key={cat} className="hover:bg-surface-container-high/30 transition-colors">
-                        <td className="px-6 py-4 font-label text-sm">{cat}</td>
-                        <td className="px-6 py-4 text-right font-label text-xs text-outline/40 italic" colSpan={4}>
-                          No data — enter it.
-                          <span className="ml-1 text-[10px]">[source: transactions — no {cat} row for {period}]</span>
-                        </td>
-                      </tr>
-                    );
-                  }
-                  const remaining = row.budgeted - row.spent;
-                  const pct = row.budgeted > 0 ? (row.spent / row.budgeted) * 100 : 0;
-                  return (
-                    <tr key={cat} className="hover:bg-surface-container-high/30 transition-colors">
-                      <td className="px-6 py-4 font-label text-sm">{cat}</td>
-                      <td className="px-6 py-4 text-right font-body text-sm font-semibold">
-                        {fmtUGX(row.budgeted)}
-                        <span className="text-[10px] text-outline/40 ml-1">[source: transactions row {row.id}, {period}]</span>
-                      </td>
-                      <td className="px-6 py-4 text-right font-body text-sm">
-                        {fmtUGX(row.spent)}
-                        <span className="text-[10px] text-outline/40 ml-1">[source: transactions row {row.id}, {period}]</span>
-                      </td>
-                      <td className={`px-6 py-4 text-right font-body text-sm ${remaining < 0 ? 'text-tertiary' : ''}`}>
-                        {fmtUGX(remaining)}
-                        <span className="text-[10px] text-outline/40 ml-1">[source: transactions row {row.id}, {period}]</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <PctBar pct={pct} />
-                      </td>
-                    </tr>
-                  );
-                })}
-                {/* Totals row */}
-                {totalBudgeted > 0 && (
-                  <tr className="bg-surface-container-high/50 font-bold">
-                    <td className="px-6 py-4 font-label text-sm">TOTAL</td>
-                    <td className="px-6 py-4 text-right font-body text-sm">{fmtUGX(totalBudgeted)}</td>
-                    <td className="px-6 py-4 text-right font-body text-sm">{fmtUGX(totalSpent)}</td>
-                    <td className={`px-6 py-4 text-right font-body text-sm ${totalRemaining < 0 ? 'text-tertiary' : 'text-secondary'}`}>
-                      {fmtUGX(totalRemaining)}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <PctBar pct={totalPct} />
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+      {/* ── Data Entry Row ──────────────────────────────────────────────────── */}
+      <div className="mb-8 bg-surface-container-low ghost-border overflow-hidden">
+        {/* Tab bar */}
+        <div className="flex border-b border-outline-variant/10">
+          {[
+            { key: 'budget', label: 'Set Monthly Budget', icon: 'account_balance' },
+            { key: 'expense', label: 'Log Expense', icon: 'receipt_long' },
+            { key: 'cash', label: 'Record Daily Cash', icon: 'payments' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => { setActiveForm(tab.key as any); setFormError(''); }}
+              className={`flex items-center gap-2 px-6 py-4 text-xs font-bold font-label uppercase tracking-widest transition-colors ${
+                activeForm === tab.key
+                  ? 'border-b-2 border-primary text-primary bg-surface-container'
+                  : 'text-outline hover:text-on-surface hover:bg-surface-container-high/20'
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-8">
+          {/* Set Monthly Budget */}
+          {activeForm === 'budget' && (
+            <form onSubmit={handleSetBudget} className="max-w-lg">
+              <p className="text-xs text-on-surface-variant font-label mb-6 leading-relaxed">
+                Set or update the monthly budget for an envelope. If a row exists for this period it will be updated; otherwise a new row is created.
+              </p>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase text-outline font-label tracking-widest">Category</label>
+                  <select
+                    value={budgetForm.category}
+                    onChange={(e) => setBudgetForm({ ...budgetForm, category: e.target.value })}
+                    className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-sm font-label py-2 text-on-surface"
+                  >
+                    {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase text-outline font-label tracking-widest">Budgeted Amount (UGX)</label>
+                  <input
+                    type="number"
+                    value={budgetForm.amount}
+                    onChange={(e) => setBudgetForm({ ...budgetForm, amount: e.target.value })}
+                    placeholder="e.g. 500000"
+                    className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-sm font-label py-2 text-on-surface"
+                  />
+                </div>
+              </div>
+              {formError && <p className="text-tertiary text-xs font-label mb-3">{formError}</p>}
+              <button
+                type="submit"
+                disabled={formSaving}
+                className="bg-primary text-on-primary text-xs font-bold px-6 py-3 font-label hover:brightness-110 transition-all disabled:opacity-50"
+              >
+                {formSaving ? 'Saving...' : 'Set Budget'}
+              </button>
+            </form>
+          )}
+
+          {/* Log Expense */}
+          {activeForm === 'expense' && (
+            <form onSubmit={handleLogExpense} className="max-w-lg">
+              <p className="text-xs text-on-surface-variant font-label mb-6 leading-relaxed">
+                Log a spend against an envelope. The amount is added to the current "spent" total for this category and period.
+              </p>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase text-outline font-label tracking-widest">Category</label>
+                  <select
+                    value={expenseForm.category}
+                    onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
+                    className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-sm font-label py-2 text-on-surface"
+                  >
+                    {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase text-outline font-label tracking-widest">Amount Spent (UGX)</label>
+                  <input
+                    type="number"
+                    value={expenseForm.amount}
+                    onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                    placeholder="e.g. 80000"
+                    className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-sm font-label py-2 text-on-surface"
+                  />
+                </div>
+              </div>
+              {/* Show current row balance if exists */}
+              {getRow(expenseForm.category) && (
+                <div className="mb-4 px-4 py-3 bg-surface-container-highest text-[10px] font-label text-outline/70">
+                  Current: Spent {fmtUGX(getRow(expenseForm.category)!.spent)} / Budgeted {fmtUGX(getRow(expenseForm.category)!.budgeted)} UGX
+                  <span className="ml-2 text-outline/40">[source: transactions row {getRow(expenseForm.category)!.id?.slice(0, 8)}, {period}]</span>
+                </div>
+              )}
+              {formError && <p className="text-tertiary text-xs font-label mb-3">{formError}</p>}
+              <button
+                type="submit"
+                disabled={formSaving}
+                className="bg-primary text-on-primary text-xs font-bold px-6 py-3 font-label hover:brightness-110 transition-all disabled:opacity-50"
+              >
+                {formSaving ? 'Saving...' : 'Log Expense'}
+              </button>
+            </form>
+          )}
+
+          {/* Record Daily Cash */}
+          {activeForm === 'cash' && (
+            <form onSubmit={handleLogCash} className="max-w-lg">
+              <p className="text-xs text-on-surface-variant font-label mb-6 leading-relaxed">
+                Record the physical cash count at end of day. Each entry is timestamped. The latest entry is used for EOD reconciliation.
+              </p>
+              {cash && (
+                <div className="mb-4 px-4 py-3 bg-surface-container-highest text-[10px] font-label text-outline/70">
+                  Last recorded: UGX {fmtUGX(cash.amount)} on {new Date(cash.recorded_at).toLocaleString()}
+                  <span className="ml-2 text-outline/40">[source: daily_cash row {cash.id?.slice(0, 8)}, {cash.recorded_at.slice(0, 10)}]</span>
+                </div>
+              )}
+              <div className="space-y-1 mb-4">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Physical Cash Count (UGX)</label>
+                <input
+                  type="number"
+                  value={cashForm.amount}
+                  onChange={(e) => setCashForm({ amount: e.target.value })}
+                  placeholder="e.g. 1250000"
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-sm font-label py-2 text-on-surface"
+                />
+              </div>
+              {formError && <p className="text-tertiary text-xs font-label mb-3">{formError}</p>}
+              <button
+                type="submit"
+                disabled={formSaving}
+                className="bg-primary text-on-primary text-xs font-bold px-6 py-3 font-label hover:brightness-110 transition-all disabled:opacity-50"
+              >
+                {formSaving ? 'Saving...' : 'Record Cash'}
+              </button>
+            </form>
+          )}
         </div>
       </div>
 
-      <p className="text-[10px] text-outline/40 mt-6 font-label">
+      {/* Envelope Ledger Table */}
+      <div className="col-span-12 bg-surface-container-lowest ghost-border overflow-hidden mb-6">
+        <div className="p-6 border-b border-outline-variant/10 flex justify-between items-center">
+          <h3 className="text-sm font-bold font-headline uppercase tracking-widest">Envelope Ledger Detail</h3>
+          <span className="px-2 py-1 bg-surface-container-high text-[10px] font-body text-outline">
+            UGX / {period}
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-container-low/50">
+                {['Envelope Name', 'Budgeted (UGX)', 'Spent (UGX)', 'Remaining (UGX)', '% Used'].map((h) => (
+                  <th
+                    key={h}
+                    className={`px-6 py-4 text-[10px] font-bold text-outline uppercase tracking-wider font-label ${h !== 'Envelope Name' ? 'text-right' : ''}`}
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant/10">
+              {CATEGORIES.map((cat) => {
+                const row = getRow(cat);
+                if (!row) {
+                  return (
+                    <tr key={cat} className="hover:bg-surface-container-high/30 transition-colors">
+                      <td className="px-6 py-4 font-label text-sm">{cat}</td>
+                      <td className="px-6 py-4 text-right font-label text-xs text-outline/40 italic" colSpan={4}>
+                        No data — enter it.
+                        <span className="ml-1 text-[10px]">[source: transactions — no {cat} row for {period}]</span>
+                      </td>
+                    </tr>
+                  );
+                }
+                const remaining = row.budgeted - row.spent;
+                const pct = row.budgeted > 0 ? (row.spent / row.budgeted) * 100 : 0;
+                return (
+                  <tr key={cat} className={`hover:bg-surface-container-high/30 transition-colors ${row.spent > row.budgeted ? 'border-l-2 border-tertiary-container' : ''}`}>
+                    <td className="px-6 py-4 font-label text-sm">{cat}</td>
+                    <td className="px-6 py-4 text-right font-body text-sm font-semibold">
+                      {fmtUGX(row.budgeted)}
+                      <span className="text-[10px] text-outline/40 ml-1">[source: transactions row {row.id?.slice(0, 8)}, {period}]</span>
+                    </td>
+                    <td className="px-6 py-4 text-right font-body text-sm">
+                      {fmtUGX(row.spent)}
+                      <span className="text-[10px] text-outline/40 ml-1">[source: transactions row {row.id?.slice(0, 8)}, {period}]</span>
+                    </td>
+                    <td className={`px-6 py-4 text-right font-body text-sm ${remaining < 0 ? 'text-tertiary font-bold' : ''}`}>
+                      {fmtUGX(remaining)}
+                      <span className="text-[10px] text-outline/40 ml-1">[source: transactions row {row.id?.slice(0, 8)}, {period}]</span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <PctBar pct={pct} />
+                    </td>
+                  </tr>
+                );
+              })}
+              {/* Totals row */}
+              {totalBudgeted > 0 && (
+                <tr className="bg-surface-container-high/50 font-bold">
+                  <td className="px-6 py-4 font-label text-sm">TOTAL</td>
+                  <td className="px-6 py-4 text-right font-body text-sm">{fmtUGX(totalBudgeted)}</td>
+                  <td className="px-6 py-4 text-right font-body text-sm">{fmtUGX(totalSpent)}</td>
+                  <td className={`px-6 py-4 text-right font-body text-sm ${totalRemaining < 0 ? 'text-tertiary' : 'text-secondary'}`}>
+                    {fmtUGX(totalRemaining)}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <PctBar pct={totalPct} />
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p className="text-[10px] text-outline/40 font-label">
         Anti-hallucination policy: every number above has a source tag. If a source tag reads &quot;no row found&quot;, the data has not been entered yet.
       </p>
+
+      {/* ── EOD Modal ─────────────────────────────────────────────────────────── */}
+      {showEOD && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-container-low border border-outline-variant/20 p-8 max-w-md w-full">
+            <h2 className="text-2xl font-bold font-headline mb-2">EOD Cash Reconciliation</h2>
+            <p className="text-xs text-outline/60 font-label mb-6">
+              Comparing physical cash count against today&apos;s dispatch total.
+            </p>
+
+            <div className="space-y-3 mb-6">
+              <div className="bg-surface-container-lowest p-4 ghost-border flex justify-between items-center">
+                <div>
+                  <p className="text-[10px] text-outline font-label uppercase tracking-widest">Daily Cash (physical count)</p>
+                  <p className="text-[10px] text-outline/50 font-label mt-0.5">
+                    [source: daily_cash row {cash?.id?.slice(0, 8)}, {cash?.recorded_at?.slice(0, 10)}]
+                  </p>
+                </div>
+                <p className="text-xl font-bold text-primary-container font-body">
+                  UGX {fmtUGX(cashCounted)}
+                </p>
+              </div>
+              <div className="bg-surface-container-lowest p-4 ghost-border flex justify-between items-center">
+                <div>
+                  <p className="text-[10px] text-outline font-label uppercase tracking-widest">System Total (dispatch)</p>
+                  <p className="text-[10px] text-outline/50 font-label mt-0.5">[source: sales_ledger, buziga, today]</p>
+                </div>
+                <p className="text-xl font-bold font-body">
+                  UGX {fmtUGX(salesTotal)}
+                </p>
+              </div>
+
+              {/* Diff */}
+              <div className={`p-4 flex justify-between items-center ${isMismatch ? 'bg-tertiary-container/10 border-l-2 border-tertiary-container' : 'bg-secondary-container/10 border-l-2 border-secondary'}`}>
+                <p className={`text-xs font-bold font-label uppercase tracking-widest ${isMismatch ? 'text-tertiary' : 'text-secondary'}`}>
+                  {isMismatch ? `Mismatch — UGX ${fmtUGX(Math.abs(cashCounted - salesTotal))}` : 'Balanced'}
+                </p>
+                <span className={`material-symbols-outlined ${isMismatch ? 'text-tertiary' : 'text-secondary'}`}>
+                  {isMismatch ? 'warning' : 'check_circle'}
+                </span>
+              </div>
+            </div>
+
+            {isMismatch && (
+              <div className="mb-5">
+                {user?.role === 'founder' ? (
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase text-outline font-label tracking-widest">
+                      Force Close Reason (Required for founders)
+                    </label>
+                    <textarea
+                      value={eodReason}
+                      onChange={(e) => setEodReason(e.target.value)}
+                      rows={2}
+                      placeholder="Explain the discrepancy..."
+                      className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-sm font-label py-2 text-on-surface resize-none"
+                    />
+                    <p className="text-[10px] text-outline/50 font-label">
+                      This reason is permanently recorded in the audit log under finance_overrides.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xs font-label text-on-surface-variant p-3 bg-surface-container-highest">
+                    A founder must be present to force-close a mismatched EOD.
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEOD(false)}
+                className="flex-1 py-3 bg-surface-container-high text-on-surface text-xs font-bold font-label hover:bg-surface-container-highest"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEODClose}
+                disabled={eodSaving || (isMismatch && (user?.role !== 'founder' || !eodReason.trim()))}
+                className="flex-1 py-3 bg-primary-container text-on-primary-container text-xs font-bold font-label hover:brightness-110 disabled:opacity-50 transition-all"
+              >
+                {eodSaving ? 'Closing...' : isMismatch ? 'Force Close' : 'Confirm Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

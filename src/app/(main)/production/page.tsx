@@ -7,7 +7,6 @@ import { useAuth } from '@/components/AuthProvider';
 export default function ProductionPage() {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
-    batch_id: '',
     jar_count: '',
     product_type: '20L Refill',
     notes: '',
@@ -65,7 +64,6 @@ export default function ProductionPage() {
       if (insertError) throw insertError;
 
       setFormData({
-        batch_id: '',
         jar_count: '',
         product_type: '20L Refill',
         notes: '',
@@ -90,15 +88,6 @@ export default function ProductionPage() {
         {/* Form */}
         <div className="lg:col-span-1">
           <form onSubmit={handleSubmit} className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 space-y-4">
-            <div>
-              <label className="block text-sm font-semibold text-zinc-300 mb-2 font-label">Batch ID</label>
-              <input
-                type="text"
-                disabled
-                className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-zinc-400 text-sm font-label"
-                placeholder="Auto-generated"
-              />
-            </div>
             <div>
               <label className="block text-sm font-semibold text-zinc-300 mb-2 font-label">Jar Count</label>
               <input

@@ -1,53 +1,57 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { NextRequest, NextResponse } from 'next/server';
 
-/**
- * POST /api/pin
- * Body: { role: string; pin: string }
- * Returns: { ok: true; department_slug: string } or { ok: false; error: string }
- *
- * PIN comparison uses a simple hash here. In production, replace with bcrypt:
- *   import bcrypt from 'bcryptjs';
- *   const match = await bcrypt.compare(pin, row.pin_hash);
- */
-
-function simpleHash(input: string): string {
-  // Deterministic but NOT cryptographically safe — swap for bcrypt in production
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    const char = input.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0;
-  }
-  return String(Math.abs(hash));
-}
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { role, pin } = (await req.json()) as { role?: string; pin?: string };
-    if (!role || !pin) {
-      return NextResponse.json({ ok: false, error: 'Missing role or pin' }, { status: 400 });
+    const { pin } = await request.json();
+
+    if (!pin || pin.length !== 4) {
+      return NextResponse.json(
+        { error: 'Invalid PIN format' },
+        { status: 400 }
+      );
     }
 
+    // Query team_members table by PIN
     const { data, error } = await supabase
-      .from('user_pins')
+      .from('team_members')
       .select('*')
-      .eq('role', role)
-      .eq('is_active', true)
-      .single();
+      .eq('pin', pin)
+      .eq('status', 'active')
+      .maybeSingle();
 
-    if (error || !data) {
-      return NextResponse.json({ ok: false, error: 'Role not found' }, { status: 404 });
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json(
+        { error: 'Authentication failed' },
+        { status: 401 }
+      );
     }
 
-    // Compare — swap simpleHash for bcrypt.compare in production
-    const hash = simpleHash(pin);
-    if (data.pin_hash !== hash) {
-      return NextResponse.json({ ok: false, error: 'Invalid PIN' }, { status: 401 });
+    if (!data) {
+      return NextResponse.json(
+        { error: 'Invalid PIN' },
+        { status: 401 }
+      );
     }
 
-    // Update last login
-    await supabase.from('user_pins').update({ last_login: new Date().toISOString() }).eq('role', role);
+    // Return user data
+    return NextResponse.json({
+      id: data.id,
+      name: data.name,
+      role: data.role,
+      department_slug: data.department_slug,
+      departments: data.departments || [],
+      phone: data.phone,
+    });
+  } catch (error) {
+    console.error('PIN auth error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
 
     const response = NextResponse.json({ ok: true, department_slug: data.department_slug });
     response.cookies.set('maji_user_role', role, { httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 });

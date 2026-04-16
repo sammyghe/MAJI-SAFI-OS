@@ -1,172 +1,237 @@
-"use client";
+'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Resizable } from 're-resizable';
 import {
-  LayoutDashboard,
-  Settings,
-  ShieldCheck,
+  Users,
+  Factory,
   Package,
-  Wallet,
-  Droplets,
-  ChevronRight,
-  Beaker,
+  Zap,
+  CheckCircle2,
   Truck,
-  Box,
-  Scale,
-  MessageCircle,
-  Cog,
-  Smartphone
+  TrendingUp,
+  DollarSign,
+  Shield,
+  Settings,
+  Users2,
+  FileText,
+  ChevronDown,
+  ChevronRight,
+  Droplet,
 } from 'lucide-react';
 
-const DEPT_COLORS: Record<string, string> = {
-  '/':                       '#7F77DD',
-  '/suppliers':              '#0077B6',
-  '/pulse':                  '#8B5CF6',
-  '/department/operations':  '#0077B6',
-  '/department/quality':     '#00B4D8',
-  '/department/sales':       '#0096C7',
-  '/department/inventory':   '#48CAE4',
-  '/department/finance':     '#023E8A',
-  '/department/compliance':  '#03045E',
-  '/settings':               '#5483B3',
-};
-
-const navGroups = [
+const departments = [
   {
-    label: "Intelligence",
-    items: [
-      { name: 'Global Overview', href: '/', icon: LayoutDashboard },
-      { name: 'Supply Chain',   href: '/suppliers', icon: Truck },
-      { name: 'Pulse',          href: '/pulse', icon: MessageCircle, badge: 'Live' },
-    ]
+    slug: 'founder-office',
+    name: 'Founder Office',
+    icon: Users,
+    description: 'Strategy & Leadership',
   },
   {
-    label: "Sectors",
-    items: [
-      { name: 'Operations',  href: '/department/operations',  icon: Settings },
-      { name: 'Quality',     href: '/department/quality',     icon: Beaker },
-      { name: 'Sales',       href: '/department/sales',       icon: Truck },
-      { name: 'Inventory',   href: '/department/inventory',   icon: Box },
-      { name: 'Finance',     href: '/department/finance',     icon: Wallet },
-      { name: 'Compliance',  href: '/department/compliance',  icon: Scale },
-    ]
+    slug: 'production',
+    name: 'Production',
+    icon: Factory,
+    description: 'Fill jars, log batches',
   },
   {
-    label: "Admin",
-    items: [
-      { name: 'Settings',    href: '/settings', icon: Cog },
-    ]
-  }
+    slug: 'quality',
+    name: 'Quality',
+    icon: CheckCircle2,
+    description: 'UNBS tests, QC',
+  },
+  {
+    slug: 'inventory',
+    name: 'Inventory',
+    icon: Package,
+    description: 'Stock levels, reorders',
+  },
+  {
+    slug: 'dispatch',
+    name: 'Dispatch',
+    icon: Truck,
+    description: 'Sales, cash collection',
+  },
+  {
+    slug: 'marketing',
+    name: 'Marketing',
+    icon: TrendingUp,
+    description: 'Prospects, pipeline',
+  },
+  {
+    slug: 'finance',
+    name: 'Finance',
+    icon: DollarSign,
+    description: 'P&L, cash, ledger',
+  },
+  {
+    slug: 'compliance',
+    name: 'Compliance',
+    icon: Shield,
+    description: 'UNBS, HR, legal',
+  },
+  {
+    slug: 'technology',
+    name: 'Technology',
+    icon: Zap,
+    description: 'System health, logs',
+  },
 ];
 
+const moreItems = [
+  { slug: 'settings', name: 'Settings', icon: Settings },
+  { slug: 'team', name: 'Team', icon: Users2 },
+  { slug: 'audit-log', name: 'Audit Log', icon: FileText },
+];
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [search, setSearch] = useState('');
-  const [showInstallToast, setShowInstallToast] = useState(false);
+  const [width, setWidth] = useState(240);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
+  // Load sidebar width from localStorage
   useEffect(() => {
-    setSearch(window.location.search);
+    setMounted(true);
+    const savedWidth = localStorage.getItem('maji-safi.sidebarWidth');
+    if (savedWidth) {
+      setWidth(parseInt(savedWidth, 10));
+    }
   }, []);
 
-  const handleInstall = () => {
-    // Navigate to settings page for full PWA install UX
-    window.location.href = '/settings#install';
+  // Save sidebar width to localStorage
+  const handleResizeStop = (e: any, direction: string, ref: HTMLDivElement, delta: any) => {
+    const newWidth = width + delta.width;
+    setWidth(newWidth);
+    localStorage.setItem('maji-safi.sidebarWidth', newWidth.toString());
+  };
+
+  if (!mounted) return null;
+
+  // Hide sidebar on /login
+  if (pathname === '/login') {
+    return null;
+  }
+
+  const getDepartmentPath = (slug: string) => {
+    if (slug === 'settings') return '/settings';
+    if (slug === 'team') return '/compliance/team';
+    if (slug === 'audit-log') return '/compliance/audit-log';
+    return `/${slug}`;
+  };
+
+  const isActiveDept = (slug: string) => {
+    const deptPath = getDepartmentPath(slug);
+    return pathname.startsWith(deptPath);
   };
 
   return (
-    <aside className="w-72 flex-shrink-0 border-r border-white/5 bg-brand-deep/40 backdrop-blur-3xl hidden md:flex flex-col h-full sticky top-0 relative z-20">
-      {/* Brand Header */}
-      <div className="p-8 pb-4">
-        <Link href="/" className="flex items-center gap-4 group">
-          <div className="p-3 bg-gradient-to-br from-brand-steel to-brand-navy rounded-2xl shadow-lg group-hover:shadow-brand-sky/20 transition-all duration-500">
-            <Droplets className="w-7 h-7 text-brand-pale animate-pulse" />
-          </div>
-          <div>
-            <h1 className="text-xl font-black tracking-tighter text-white uppercase italic">
-              MajiSafi<span className="text-brand-sky">OS</span>
-            </h1>
-            <p className="text-[10px] font-bold text-brand-steel tracking-widest uppercase">Pure Productivity</p>
-          </div>
-        </Link>
+    <Resizable
+      defaultSize={{
+        width: width,
+        height: '100vh',
+      }}
+      minWidth={200}
+      maxWidth="33.33vw"
+      enable={{
+        right: true,
+        left: false,
+        top: false,
+        bottom: false,
+        topRight: false,
+        bottomRight: false,
+        topLeft: false,
+        bottomLeft: false,
+      }}
+      onResizeStop={handleResizeStop}
+      className="fixed left-0 top-0 h-full z-40 bg-zinc-950 border-r border-zinc-800 flex flex-col overflow-hidden"
+    >
+      {/* Header */}
+      <div className="px-6 py-6 border-b border-zinc-800">
+        <div className="flex items-center gap-2 mb-2">
+          <Droplet className="w-5 h-5 text-[#0077B6]" />
+          <h1 className="text-lg font-bold text-white font-headline">Maji Safi</h1>
+        </div>
+        <p className="text-xs text-zinc-400 font-label">Hydrate. Elevate.</p>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-6 py-4 space-y-8 scrollbar-hide">
-        {navGroups.map((group) => (
-          <div key={group.label} className="space-y-3">
-            <p className="px-4 text-[11px] font-black text-brand-steel uppercase tracking-[0.2em]">
-              {group.label}
-            </p>
-            <div className="space-y-1">
-              {group.items.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  (item.name === 'Operations' &&
-                    pathname.startsWith('/department') &&
-                    !pathname.includes('compliance') &&
-                    !pathname.includes('hr'));
+      {/* Primary Departments */}
+      <nav className="flex-1 overflow-y-auto px-3 py-6 space-y-1">
+        <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest px-3 mb-4">
+          Departments
+        </p>
 
-                const accentColor = DEPT_COLORS[item.href] ?? '#5483B3';
-                const hrefWithParams = `${item.href}${search}`;
+        {departments.map((dept) => {
+          const Icon = dept.icon;
+          const isActive = isActiveDept(dept.slug);
 
-                return (
-                  <Link
-                    key={item.name}
-                    href={hrefWithParams}
-                    className={`glass-nav-item flex items-center justify-between px-4 py-3 rounded-2xl font-semibold text-sm group ${
-                      isActive ? 'active' : 'text-brand-steel hover:text-white'
-                    }`}
-                    style={isActive ? { borderLeftColor: accentColor, borderLeftWidth: '2px', borderLeftStyle: 'solid' } : {}}
-                  >
-                    <div className="flex items-center gap-3">
-                      <item.icon
-                        className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-brand-pale' : 'opacity-60'}`}
-                        style={isActive ? { color: accentColor } : {}}
-                      />
-                      {item.name}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {'badge' in item && item.badge && (
-                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                          {item.badge}
-                        </span>
-                      )}
-                      {isActive && <ChevronRight className="w-4 h-4 text-brand-pale" />}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+          return (
+            <Link
+              key={dept.slug}
+              href={getDepartmentPath(dept.slug)}
+              className={`flex items-center gap-3 px-3 py-2 rounded-sm transition-all duration-150 relative group ${
+                isActive
+                  ? 'text-white bg-zinc-800/50'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/30'
+              }`}
+            >
+              {isActive && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0077B6] rounded-r-sm" />
+              )}
+              <Icon className="w-4 h-4 flex-shrink-0" />
+              <span className="text-sm font-label tracking-wide">{dept.name}</span>
+            </Link>
+          );
+        })}
       </nav>
 
-      {/* Install App Button */}
-      <div className="px-6 pb-3">
+      {/* More Section */}
+      <div className="border-t border-zinc-800 px-3 py-4">
         <button
-          onClick={handleInstall}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-brand-steel hover:text-white hover:bg-white/5 transition-all duration-300 text-sm font-semibold group"
+          onClick={() => setIsMoreOpen(!isMoreOpen)}
+          className="flex items-center gap-3 w-full px-3 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800/30 rounded-sm transition-colors text-sm font-label"
         >
-          <Smartphone className="w-5 h-5 opacity-60 group-hover:opacity-100 transition-opacity" />
-          Install App
+          <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex-1 text-left">
+            More
+          </span>
+          {isMoreOpen ? (
+            <ChevronDown className="w-4 h-4" />
+          ) : (
+            <ChevronRight className="w-4 h-4" />
+          )}
         </button>
+
+        {isMoreOpen && (
+          <div className="mt-2 space-y-1">
+            {moreItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = isActiveDept(item.slug);
+
+              return (
+                <Link
+                  key={item.slug}
+                  href={getDepartmentPath(item.slug)}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-sm transition-all duration-150 relative group ${
+                    isActive
+                      ? 'text-white bg-zinc-800/50'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-800/30'
+                  }`}
+                >
+                  {isActive && (
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0077B6] rounded-r-sm" />
+                  )}
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm font-label tracking-wide">{item.name}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Footer Profile */}
-      <div className="p-6 mt-auto border-t border-white/5">
-        <div className="glass-panel p-4 rounded-3xl flex items-center gap-3 bg-white/5 border-white/10">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-brand-steel to-brand-navy border border-white/20 flex items-center justify-center text-white font-bold shadow-inner">
-            MS
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-black text-white truncate">System Admin</p>
-            <p className="text-[10px] text-brand-steel font-bold truncate">sammy@gmail.com</p>
-          </div>
-        </div>
-      </div>
-    </aside>
+      {/* Resize Handle Indicator */}
+      <div className="absolute right-0 top-0 bottom-0 w-1 hover:bg-[#0077B6]/30 cursor-col-resize transition-colors" />
+    </Resizable>
   );
 }

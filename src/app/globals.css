@@ -1,41 +1,107 @@
 @import "tailwindcss";
 
 :root {
+  /* Original Brand Palette */
   --background: #020617;
   --foreground: #f8fafc;
-  
-  /* Brand Palette */
   --brand-deep: #021024;
   --brand-navy: #052659;
   --brand-steel: #5483B3;
   --brand-sky: #7DA0CA;
   --brand-pale: #C1E8FF;
   
+  /* Stitch Design System Colors (Material Design 3) */
+  --on-surface: #dfe2eb;
+  --secondary-fixed: #b1f0ce;
+  --on-primary-container: #f3f7ff;
+  --on-primary-fixed-variant: #004b74;
+  --on-error-container: #ffdad6;
+  --on-secondary: #003824;
+  --surface-bright: #353940;
+  --surface-dim: #10141a;
+  --on-secondary-container: #87c6a5;
+  --surface-container: #1c2026;
+  --error-container: #93000a;
+  --on-tertiary-fixed: #410005;
+  --outline: #8a919b;
+  --on-primary-fixed: #001d32;
+  --secondary-fixed-dim: #95d4b3;
+  --tertiary-fixed-dim: #ffb3af;
+  --surface: #10141a;
+  --surface-container-low: #181c22;
+  --surface-variant: #31353c;
+  --background-stitch: #10141a;
+  --on-error: #690005;
+  --tertiary-container: #e1112e;
+  --on-tertiary-container: #fff5f4;
+  --outline-variant: #404850;
+  --secondary-container: #12533a;
+  --surface-container-highest: #31353c;
+  --primary-stitch: #94ccff;
+  --on-surface-variant: #bfc7d1;
+  --surface-container-lowest: #0a0e14;
+  --on-secondary-fixed: #002114;
+  --tertiary: #ffb3af;
+  --on-tertiary-fixed-variant: #930018;
+  --inverse-surface: #dfe2eb;
+  --on-primary: #003352;
+  --tertiary-fixed: #ffdad7;
+  --surface-container-high: #262a31;
+  --surface-tint: #94ccff;
+  --primary-fixed: #cde5ff;
+  --on-tertiary: #68000e;
+  --on-secondary-fixed-variant: #0e5138;
+  --inverse-on-surface: #2d3137;
+  --secondary: #95d4b3;
+  --primary-container: #0077b6;
+  --on-background: #dfe2eb;
+  --primary-fixed-dim: #94ccff;
+  --inverse-primary: #006399;
+  --error: #ffb4ab;
+  
   --card-bg: rgba(5, 38, 89, 0.15);
   --glass-border: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: #10141a;
+  --color-foreground: #dfe2eb;
   --color-brand-deep: var(--brand-deep);
   --color-brand-navy: var(--brand-navy);
   --color-brand-steel: var(--brand-steel);
   --color-brand-sky: var(--brand-sky);
   --color-brand-pale: var(--brand-pale);
   
+  --color-on-surface: var(--on-surface);
+  --color-secondary-fixed: var(--secondary-fixed);
+  --color-on-primary-container: var(--on-primary-container);
+  --color-surface-container: var(--surface-container);
+  --color-primary: var(--primary-stitch);
+  --color-primary-container: var(--primary-container);
+  --color-surface: var(--surface);
+  --color-surface-variant: var(--surface-variant);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  --color-error: var(--error);
+  --color-tertiary: var(--tertiary);
+  --color-secondary: var(--secondary);
+  
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-headline: var(--font-montserrat);
+  --font-body: var(--font-space-grotesk);
+  --font-label: var(--font-inter);
   
   --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
   --radius-card: 2rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #10141a;
+  color: #dfe2eb;
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui;
   -webkit-font-smoothing: antialiased;
+  min-height: max(884px, 100dvh);
 }
 
 /* Glassmorphism Utilities */
@@ -45,6 +111,35 @@ body {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-glass);
+}
+
+.glass-card {
+  background: rgba(28, 32, 38, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.ghost-border {
+  border: 1px solid rgba(64, 72, 80, 0.15);
+}
+
+.glass-panel {
+  background: rgba(26, 32, 43, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+}
+
+.ledger-border {
+  border: 1px solid rgba(64, 72, 80, 0.15);
+}
+
+.glow-accent {
+  box-shadow: 0 0 20px rgba(0, 119, 182, 0.05);
 }
 
 .glass-nav-item {

@@ -36,8 +36,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <TopBar />
       <Sidebar />
       <main
-        className="min-h-screen overflow-auto bg-[#10141a]"
-        style={{ paddingTop: '64px', paddingLeft: 'var(--sidebar-w, 240px)' }}
+        className="bg-[#10141a] overflow-y-auto"
+        style={{ paddingTop: '64px', paddingLeft: 'var(--sidebar-w, 240px)', height: '100vh' }}
       >
         {children}
       </main>

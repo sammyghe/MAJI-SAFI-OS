@@ -134,7 +134,7 @@ export default function Sidebar() {
     <Resizable
       defaultSize={{
         width: width,
-        height: '100vh',
+        height: 'calc(100vh - 64px)',
       }}
       minWidth={200}
       maxWidth="33.33vw"

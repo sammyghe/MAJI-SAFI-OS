@@ -87,7 +87,7 @@ export default function RootLayout({
           }
         ` }} />
       </head>
-      <body className="h-screen bg-[#10141a] text-[#dfe2eb] overflow-hidden relative">
+      <body className="bg-[#10141a] text-[#dfe2eb] relative">
         <AuthProvider>
           <ToastContainer />
           {/* Child layouts like (main)/layout and /investor control the actual flex flows */}

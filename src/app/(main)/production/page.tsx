@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
+import DeptTeamPanel from '@/components/DeptTeamPanel';
 
 const PRODUCT_TYPES = ['20L Refill', '20L Single-Use', '20L Reusable Jar', '5L Single-Use'];
 
@@ -428,6 +429,7 @@ export default function ProductionPage() {
           </div>
         </div>
       )}
+      <DeptTeamPanel departmentSlug="production" />
     </div>
   );
 }

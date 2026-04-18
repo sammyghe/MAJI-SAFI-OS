@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Settings, Save, RefreshCw, Shield, Bell, Zap, Users, QrCode } from 'lucide-react';
+import { Settings, Save, RefreshCw, Shield, Bell, Zap, Users, QrCode, Building2, GitBranch } from 'lucide-react';
 import { QRCodeCanvas as QRCode } from 'qrcode.react';
 
 interface CompanySetting {
@@ -22,6 +22,7 @@ const APP_URL = typeof window !== 'undefined' ? window.location.origin : '';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<CompanySetting[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -46,6 +47,7 @@ export default function SettingsPage() {
     }
 
     fetchSettings();
+    fetchTeam();
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
@@ -62,6 +64,16 @@ export default function SettingsPage() {
       })));
     }
     setLoading(false);
+  };
+
+  const fetchTeam = async () => {
+    const { data } = await supabase
+      .from('team_members')
+      .select('id, name, role, department_slug, departments, access_level, contract_status')
+      .eq('location_id', 'buziga')
+      .in('contract_status', ['active', 'probation'])
+      .order('access_level', { ascending: false });
+    setTeamMembers(data ?? []);
   };
 
   const handleChange = (key: string, value: string) => {
@@ -98,6 +110,81 @@ export default function SettingsPage() {
         </h1>
         <p className="text-brand-steel font-bold text-xs uppercase tracking-widest mt-1">Admin · Maji Safi OS Configuration</p>
       </div>
+
+      {/* Company Info Card */}
+      <section className="glass-panel rounded-[2rem] p-8 space-y-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Building2 className="w-5 h-5 text-brand-sky" />
+          <h2 className="text-lg font-black text-white uppercase tracking-widest">Company Identity</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[
+            { label: 'Legal Name', value: 'Safiflow Ventures Group Limited' },
+            { label: 'Trading As', value: 'Maji Safi' },
+            { label: 'Registration', value: 'G241004-1234 (October 2024)' },
+            { label: 'Location', value: 'Lukuli Road, Buziga, Kampala, Uganda' },
+            { label: 'Product', value: '20L Refill · 20L Single-Use · 20L Reusable Jar · 5L Single-Use' },
+            { label: 'Commercial Launch', value: 'May 3, 2026' },
+            { label: 'Tagline', value: 'Hydrate. Elevate.' },
+            { label: 'Break-even', value: '~220–240 jars/day at launch pricing' },
+          ].map((item) => (
+            <div key={item.label} className="bg-brand-navy/20 rounded-xl px-4 py-3 border border-white/5">
+              <p className="text-[10px] text-brand-steel font-bold uppercase tracking-widest mb-1">{item.label}</p>
+              <p className="text-sm text-white font-bold">{item.value}</p>
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+          <div className="bg-brand-navy/20 rounded-xl px-4 py-4 border border-white/5">
+            <p className="text-[10px] text-brand-steel font-bold uppercase tracking-widest mb-2">Mission</p>
+            <p className="text-sm text-white/80">Provide affordable, UNBS-certified purified water to Kampala households through a lean, technology-driven operations platform.</p>
+          </div>
+          <div className="bg-brand-navy/20 rounded-xl px-4 py-4 border border-white/5">
+            <p className="text-[10px] text-brand-steel font-bold uppercase tracking-widest mb-2">Values</p>
+            <div className="space-y-1">
+              {['Quality First — 100% UNBS compliance', 'Data-Driven — every decision sourced', 'Lean Operations — no waste, tight loops', 'Community — affordable water for all'].map((v) => (
+                <p key={v} className="text-xs text-white/70">• {v}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Org Chart */}
+      <section className="glass-panel rounded-[2rem] p-8 space-y-6">
+        <div className="flex items-center gap-3 mb-4">
+          <GitBranch className="w-5 h-5 text-brand-sky" />
+          <h2 className="text-lg font-black text-white uppercase tracking-widest">Org Chart</h2>
+        </div>
+        {teamMembers.length === 0 ? (
+          <p className="text-brand-steel text-sm font-bold">No team members found — add via Team Management.</p>
+        ) : (
+          <div className="space-y-4">
+            {['founder', 'manager', 'supervisor', 'operator', 'viewer'].map((level) => {
+              const group = teamMembers.filter((m) => m.access_level === level);
+              if (group.length === 0) return null;
+              return (
+                <div key={level}>
+                  <p className="text-[10px] text-brand-steel font-bold uppercase tracking-widest mb-2">{level}</p>
+                  <div className="flex flex-wrap gap-3">
+                    {group.map((m) => (
+                      <div key={m.id} className="bg-brand-navy/30 border border-white/10 rounded-xl px-4 py-3 min-w-[160px]">
+                        <p className="text-sm font-black text-white">{m.name}</p>
+                        <p className="text-[10px] text-brand-steel mt-0.5">{m.role}</p>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {(m.departments ?? [m.department_slug]).map((d: string) => (
+                            <span key={d} className="text-[8px] bg-brand-sky/10 text-brand-sky px-1.5 py-0.5 rounded font-mono">{d}</span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* Company Settings */}
       <section className="glass-panel rounded-[2rem] p-8 space-y-6">

@@ -1,0 +1,28 @@
+{
+  "name": "Maji Safi OS",
+  "short_name": "MajiSafi",
+  "description": "Hydrate. Elevate. — Maji Safi Operations Platform",
+  "start_url": "/login",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#10141a",
+  "theme_color": "#0077B6",
+  "scope": "/",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/maji safi logo (3).png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/maji safi logo (3).png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["business", "productivity"]
+}

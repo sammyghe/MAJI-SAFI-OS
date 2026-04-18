@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/components/ToastContainer';
+import DeptTeamPanel from '@/components/DeptTeamPanel';
 
 interface StockItem {
   id: string;
@@ -539,6 +540,7 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
+      <DeptTeamPanel departmentSlug="inventory" />
     </div>
   );
 }

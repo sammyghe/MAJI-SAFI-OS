@@ -48,10 +48,13 @@ export default function TeamPage() {
   const [editForm, setEditForm] = useState({ ...emptyForm });
   const [editSaving, setEditSaving] = useState(false);
 
+  const isFounder = user?.role === 'founder';
   const isFounderOrCompliance =
-    user?.role === 'founder' ||
+    isFounder ||
     user?.department_slug === 'compliance' ||
     (Array.isArray(user?.departments) && user.departments.includes('compliance'));
+
+  const [showPins, setShowPins] = useState(false);
 
   useEffect(() => { loadMembers(); }, []);
 
@@ -181,13 +184,23 @@ export default function TeamPage() {
           <h2 className="font-headline text-4xl font-extrabold tracking-tight mb-2">Team Management</h2>
           <p className="text-slate-400 font-label text-sm">Uganda Employment Act compliant — no delete, only deactivate</p>
         </div>
-        <button
-          onClick={() => setShowAdd(true)}
-          className="bg-primary-container text-on-primary-container px-6 py-2.5 font-label text-sm font-semibold hover:brightness-110 flex items-center gap-2 transition-all"
-        >
-          <span className="material-symbols-outlined text-lg">person_add</span>
-          Add Team Member
-        </button>
+        <div className="flex gap-3">
+          {isFounder && (
+            <button
+              onClick={() => setShowPins(!showPins)}
+              className={`px-5 py-2.5 font-label text-sm font-semibold transition-all border ${showPins ? 'bg-tertiary-container/20 border-tertiary text-tertiary' : 'border-outline-variant/30 text-outline hover:text-on-surface'}`}
+            >
+              {showPins ? 'Hide PINs' : 'Reveal PINs'}
+            </button>
+          )}
+          <button
+            onClick={() => setShowAdd(true)}
+            className="bg-primary-container text-on-primary-container px-6 py-2.5 font-label text-sm font-semibold hover:brightness-110 flex items-center gap-2 transition-all"
+          >
+            <span className="material-symbols-outlined text-lg">person_add</span>
+            Add Team Member
+          </button>
+        </div>
       </div>
 
       {/* Stats row */}
@@ -261,8 +274,11 @@ export default function TeamPage() {
                         {m.access_level ?? 'operator'}
                       </span>
                     </td>
-                    <td className="px-5 py-4 text-sm font-label text-outline/50">
-                      {'•'.repeat(Math.min(m.pin?.length ?? 4, 6))}
+                    <td className="px-5 py-4 text-sm font-label font-mono">
+                      {isFounder && showPins
+                        ? <span className="text-tertiary">{m.pin}</span>
+                        : <span className="text-outline/50">{'•'.repeat(Math.min(m.pin?.length ?? 4, 6))}</span>
+                      }
                     </td>
                     <td className="px-5 py-4">
                       <span className={`text-[10px] px-2 py-0.5 font-label font-bold uppercase ${

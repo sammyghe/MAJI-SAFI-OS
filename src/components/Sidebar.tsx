@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Resizable } from 're-resizable';
+import { useAuth } from '@/components/AuthProvider';
 import {
   Users,
   Factory,
@@ -19,18 +20,19 @@ import {
   FileText,
   ChevronDown,
   ChevronRight,
+  BarChart2,
 } from 'lucide-react';
 
-const departments = [
-  { slug: 'founder-office', name: 'Founder Office', icon: Users, description: 'Strategy & Leadership' },
-  { slug: 'production', name: 'Production', icon: Factory, description: 'Fill jars, log batches' },
-  { slug: 'quality', name: 'Quality', icon: CheckCircle2, description: 'UNBS tests, QC' },
-  { slug: 'inventory', name: 'Inventory', icon: Package, description: 'Stock levels, reorders' },
-  { slug: 'dispatch', name: 'Dispatch', icon: Truck, description: 'Sales, cash collection' },
-  { slug: 'marketing', name: 'Marketing', icon: TrendingUp, description: 'Prospects, pipeline' },
-  { slug: 'finance', name: 'Finance', icon: DollarSign, description: 'P&L, cash, ledger' },
-  { slug: 'compliance', name: 'Compliance', icon: Shield, description: 'UNBS, HR, legal' },
-  { slug: 'technology', name: 'Technology', icon: Zap, description: 'System health, logs' },
+const ALL_DEPARTMENTS = [
+  { slug: 'founder-office', name: 'Founder Office', icon: Users },
+  { slug: 'production', name: 'Production', icon: Factory },
+  { slug: 'quality', name: 'Quality', icon: CheckCircle2 },
+  { slug: 'inventory', name: 'Inventory', icon: Package },
+  { slug: 'dispatch', name: 'Dispatch', icon: Truck },
+  { slug: 'marketing', name: 'Marketing', icon: TrendingUp },
+  { slug: 'finance', name: 'Finance', icon: DollarSign },
+  { slug: 'compliance', name: 'Compliance', icon: Shield },
+  { slug: 'technology', name: 'Technology', icon: Zap },
 ];
 
 const moreItems = [
@@ -46,6 +48,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [width, setWidth] = useState(240);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -84,6 +87,19 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     return pathname.startsWith(deptPath);
   };
 
+  // Access filtering
+  const visibleDepts = ALL_DEPARTMENTS.filter((dept) => {
+    if (!user) return true; // loading state — show all
+    if (user.role === 'founder') return true;
+    const userDepts: string[] = [
+      ...(user.departments ?? []),
+      user.department_slug,
+    ].filter(Boolean);
+    if (user.role === 'manager') return userDepts.includes(dept.slug);
+    // operator/supervisor/viewer: own dept only
+    return userDepts.includes(dept.slug);
+  });
+
   return (
     <div
       className={`fixed top-16 left-0 z-40 h-[calc(100vh-64px)] transition-transform duration-300
@@ -108,7 +124,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               Departments
             </p>
 
-            {departments.map((dept) => {
+            {visibleDepts.map((dept) => {
               const Icon = dept.icon;
               const isActive = isActiveDept(dept.slug);
 
@@ -128,6 +144,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 </Link>
               );
             })}
+
+            {/* Investor link — founders only */}
+            {user?.role === 'founder' && (
+              <a
+                href="/investor"
+                target="_blank"
+                rel="noreferrer"
+                onClick={onClose}
+                className="flex items-center gap-3 px-3 py-2.5 transition-all duration-150 text-slate-500 hover:text-slate-200 hover:bg-[#262a31]/20"
+              >
+                <BarChart2 className="w-[15px] h-[15px] flex-shrink-0" />
+                <span className="text-sm font-label tracking-wide">Investor View</span>
+              </a>
+            )}
           </div>
 
           {/* More Section */}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
+import DeptTeamPanel from '@/components/DeptTeamPanel';
 
 const THRESHOLDS: Record<string, { min: number; max: number }> = {
   TDS:       { min: 0,   max: 150 },
@@ -364,6 +365,7 @@ export default function QualityPage() {
           </p>
         </div>
       </div>
+      <DeptTeamPanel departmentSlug="quality" />
     </div>
   );
 }

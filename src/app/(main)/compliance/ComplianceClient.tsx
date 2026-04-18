@@ -4,6 +4,17 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/components/ToastContainer';
 
+interface CapaRecord {
+  id: string;
+  batch_id?: string;
+  test_type?: string;
+  reading?: number;
+  status: string;
+  resolution_notes?: string;
+  created_at: string;
+  resolved_at?: string;
+}
+
 export default function ComplianceClient({ initialRecords }: { initialRecords: any[] }) {
   const [records, setRecords] = useState<any[]>(initialRecords);
   const [uploading, setUploading] = useState<string | null>(null);
@@ -91,6 +102,39 @@ export default function ComplianceClient({ initialRecords }: { initialRecords: a
     }
   };
 
+  const [capaRecords, setCapaRecords] = useState<CapaRecord[]>([]);
+  const [capaLoading, setCapaLoading] = useState(false);
+  const [resolvingCapa, setResolvingCapa] = useState<string | null>(null);
+  const [resolveNote, setResolveNote] = useState('');
+
+  useEffect(() => {
+    setCapaLoading(true);
+    supabase
+      .from('capa_records')
+      .select('*')
+      .eq('location_id', 'buziga')
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(({ data }) => { setCapaRecords(data ?? []); setCapaLoading(false); });
+  }, []);
+
+  const handleResolveCapa = async (capaId: string) => {
+    if (!resolveNote.trim()) { showToast({ type: 'error', message: 'Resolution note required' }); return; }
+    try {
+      const { error } = await supabase
+        .from('capa_records')
+        .update({ status: 'closed', resolution_notes: resolveNote.trim(), resolved_at: new Date().toISOString() })
+        .eq('id', capaId);
+      if (error) throw error;
+      setCapaRecords((prev) => prev.map((c) => c.id === capaId ? { ...c, status: 'closed', resolution_notes: resolveNote.trim() } : c));
+      setResolvingCapa(null);
+      setResolveNote('');
+      showToast({ type: 'success', message: 'CAPA closed.' });
+    } catch (err: any) {
+      showToast({ type: 'error', message: err.message });
+    }
+  };
+
   const expiringSoon = records.filter((r) => {
     const days = (new Date(r.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
     return days > 0 && days < 30;
@@ -132,12 +176,15 @@ export default function ComplianceClient({ initialRecords }: { initialRecords: a
             )}
             {records.map((record) => {
               const daysLeft = Math.ceil((new Date(record.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-              const isExpiring = daysLeft > 0 && daysLeft < 30;
               const isExpired = daysLeft <= 0;
+              const isExpiring = daysLeft > 0 && daysLeft <= 7;
+              const isWarning = daysLeft > 7 && daysLeft <= 30;
+              // Color: green >30d, amber 7-30d, red <7d, gray expired/unknown
+              const expiryColor = isExpired ? 'text-gray-500' : isExpiring ? 'text-red-400' : isWarning ? 'text-amber-400' : 'text-green-400';
               return (
                 <div
                   key={record.id}
-                  className={`px-6 py-5 flex items-center justify-between transition-colors hover:bg-surface-container-high/30 cursor-pointer ${isExpiring ? 'border-l-2 border-tertiary-container' : ''}`}
+                  className={`px-6 py-5 flex items-center justify-between transition-colors hover:bg-surface-container-high/30 cursor-pointer ${isExpired ? 'border-l-2 border-gray-500' : isExpiring ? 'border-l-2 border-red-500/60' : isWarning ? 'border-l-2 border-amber-500/60' : ''}`}
                   onClick={() => openEdit(record)}
                 >
                   <div className="flex-1 min-w-0 mr-4">
@@ -146,9 +193,8 @@ export default function ComplianceClient({ initialRecords }: { initialRecords: a
                       <span className={`text-[10px] font-bold uppercase font-label ${record.status === 'active' ? 'text-secondary' : record.status === 'expired' ? 'text-tertiary' : 'text-outline/50'}`}>
                         {record.status === 'active' ? '● Active' : record.status === 'expired' ? '● Expired' : '○ Missing'}
                       </span>
-                      <span className={`text-[10px] font-label ${isExpired ? 'text-tertiary' : isExpiring ? 'text-tertiary-container' : 'text-outline/50'}`}>
-                        {isExpired ? `Expired ${record.expiry_date}` : `Exp: ${record.expiry_date}`}
-                        {isExpiring && ` · ${daysLeft}d left`}
+                      <span className={`text-[10px] font-label font-bold ${expiryColor}`}>
+                        {isExpired ? `Expired ${record.expiry_date}` : `Exp: ${record.expiry_date} · ${daysLeft}d`}
                       </span>
                     </div>
                   </div>
@@ -237,6 +283,92 @@ export default function ComplianceClient({ initialRecords }: { initialRecords: a
               </button>
             </form>
           </div>
+        </div>
+      </div>
+
+      {/* CAPA Section */}
+      <div className="bg-surface-container-low ghost-border overflow-hidden">
+        <div className="px-6 py-4 border-b border-outline-variant/10 flex items-center justify-between bg-surface-container">
+          <div>
+            <h3 className="text-sm font-bold font-headline uppercase tracking-widest">CAPA Records</h3>
+            <p className="text-[10px] text-outline/50 font-label mt-0.5">Corrective Actions from QC Failures — UNBS Audit Trail</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`text-[10px] font-label font-bold uppercase px-2 py-0.5 ${capaRecords.filter((c) => c.status === 'open').length > 0 ? 'text-tertiary bg-tertiary-container/20' : 'text-secondary bg-secondary-container/20'}`}>
+              {capaRecords.filter((c) => c.status === 'open').length} Open
+            </span>
+          </div>
+        </div>
+        <div className="divide-y divide-outline-variant/10">
+          {capaLoading ? (
+            <p className="px-6 py-8 text-sm text-outline/50 font-label italic text-center">Loading CAPA records...</p>
+          ) : capaRecords.length === 0 ? (
+            <p className="px-6 py-8 text-sm text-outline/50 font-label italic text-center">No CAPA records — no QC failures logged.</p>
+          ) : capaRecords.map((capa) => {
+            const isOpen = capa.status === 'open';
+            const isInProgress = capa.status === 'in_progress';
+            return (
+              <div key={capa.id} className="px-6 py-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1 flex-wrap">
+                      <span className={`text-[10px] font-bold uppercase font-label px-2 py-0.5 ${
+                        capa.status === 'open' ? 'text-tertiary bg-tertiary-container/20' :
+                        capa.status === 'in_progress' ? 'text-primary bg-primary-container/20' :
+                        'text-secondary bg-secondary-container/20'
+                      }`}>
+                        {capa.status === 'in_progress' ? 'In Progress' : capa.status.charAt(0).toUpperCase() + capa.status.slice(1)}
+                      </span>
+                      {capa.batch_id && (
+                        <span className="text-[10px] font-label text-outline/60">Batch: {capa.batch_id}</span>
+                      )}
+                      {capa.test_type && (
+                        <span className="text-[10px] font-label text-outline/60">{capa.test_type}</span>
+                      )}
+                      {capa.reading !== null && capa.reading !== undefined && (
+                        <span className="text-[10px] font-label text-tertiary">Reading: {capa.reading} ppm</span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-outline/40 font-label">{new Date(capa.created_at).toLocaleString()}</p>
+                    {capa.resolution_notes && (
+                      <p className="text-xs text-outline/70 font-label mt-2 italic">Resolution: {capa.resolution_notes}</p>
+                    )}
+                  </div>
+                  {(isOpen || isInProgress) && (
+                    <button
+                      onClick={() => { setResolvingCapa(capa.id); setResolveNote(''); }}
+                      className="text-[10px] font-label text-primary hover:text-on-surface border border-primary/30 px-3 py-1.5 flex-shrink-0 transition-colors"
+                    >
+                      Resolve
+                    </button>
+                  )}
+                </div>
+                {resolvingCapa === capa.id && (
+                  <div className="mt-3 flex gap-2">
+                    <input
+                      type="text"
+                      value={resolveNote}
+                      onChange={(e) => setResolveNote(e.target.value)}
+                      placeholder="Resolution note (required for UNBS audit)"
+                      className="flex-1 bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                    />
+                    <button
+                      onClick={() => handleResolveCapa(capa.id)}
+                      className="text-[10px] px-4 py-2 bg-secondary-container text-on-secondary-container font-label font-bold"
+                    >
+                      Close CAPA
+                    </button>
+                    <button
+                      onClick={() => setResolvingCapa(null)}
+                      className="text-[10px] px-3 py-2 bg-surface-container text-outline font-label"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 

@@ -1,221 +1,274 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import Logo from '@/components/Logo';
-import { Lock, TrendingUp, Calendar as CalendarIcon, Quote, Target, ArrowRight } from 'lucide-react';
 
-const InvestorScene = dynamic(() => import('./InvestorScene'), { ssr: false });
+interface KPI {
+  label: string;
+  value: string;
+  sub: string;
+  color: string;
+}
 
 export default function InvestorPage() {
-  const router = useRouter();
-  const [password, setPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [error, setError] = useState(false);
-  
-  // Data states
-  const [projects, setProjects] = useState<any[]>([]);
-  const [recognitions, setRecognitions] = useState<any[]>([]);
-  
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password === 'maji-investor-2026') {
-      setIsAuthenticated(true);
-      setError(false);
-    } else {
-      setError(true);
+  const [kpis, setKpis] = useState<KPI[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState('');
+
+  useEffect(() => {
+    loadKpis();
+  }, []);
+
+  const loadKpis = async () => {
+    try {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+      const today = now.toISOString().split('T')[0];
+
+      const [
+        { data: prodData },
+        { data: qcData },
+        { data: salesData },
+        { data: teamData },
+        { data: distData },
+        { data: cashData },
+      ] = await Promise.all([
+        supabase
+          .from('production_logs')
+          .select('jar_count')
+          .eq('location_id', 'buziga')
+          .gte('production_date', monthStart),
+        supabase
+          .from('water_tests')
+          .select('result')
+          .eq('location_id', 'buziga')
+          .gte('tested_at', monthStart),
+        supabase
+          .from('sales_ledger')
+          .select('amount_ugx')
+          .eq('location_id', 'buziga')
+          .gte('sale_date', monthStart),
+        supabase
+          .from('team_members')
+          .select('id')
+          .eq('location_id', 'buziga')
+          .in('contract_status', ['active', 'probation']),
+        supabase
+          .from('distributors')
+          .select('id, status')
+          .eq('location_id', 'buziga')
+          .eq('status', 'active'),
+        supabase
+          .from('daily_cash')
+          .select('physical_cash_count_ugx')
+          .eq('location_id', 'buziga')
+          .eq('date', today)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      const totalJars = prodData?.reduce((s, r) => s + (r.jar_count || 0), 0) ?? 0;
+      const totalRevenue = salesData?.reduce((s, r) => s + (r.amount_ugx || 0), 0) ?? 0;
+      const passRate =
+        qcData && qcData.length > 0
+          ? Math.round((qcData.filter((q) => q.result === 'PASS').length / qcData.length) * 100)
+          : null;
+      const teamSize = teamData?.length ?? 0;
+      const activeDistributors = distData?.length ?? 0;
+      const cashPosition = cashData?.physical_cash_count_ugx ?? null;
+
+      const monthLabel = now.toLocaleString('en-GB', { month: 'long', year: 'numeric' });
+
+      setKpis([
+        {
+          label: 'Jars Produced',
+          value: totalJars > 0 ? totalJars.toLocaleString() : 'No data yet',
+          sub: `Month to date — ${monthLabel}`,
+          color: totalJars > 0 ? '#0077B6' : '#888',
+        },
+        {
+          label: 'Revenue (UGX)',
+          value: totalRevenue > 0 ? `UGX ${totalRevenue.toLocaleString()}` : 'No data yet',
+          sub: `Sales ledger — ${monthLabel}`,
+          color: totalRevenue > 0 ? '#0077B6' : '#888',
+        },
+        {
+          label: 'QC Pass Rate',
+          value: passRate !== null ? `${passRate}%` : 'No data yet',
+          sub: qcData && qcData.length > 0 ? `${qcData.length} tests this month` : 'No tests recorded',
+          color: passRate === 100 ? '#22c55e' : passRate !== null ? '#f59e0b' : '#888',
+        },
+        {
+          label: 'Active Distributors',
+          value: activeDistributors > 0 ? activeDistributors.toString() : '0',
+          sub: 'T1 wholesale partners — buziga',
+          color: activeDistributors > 0 ? '#0077B6' : '#888',
+        },
+        {
+          label: 'Team Size',
+          value: teamSize > 0 ? teamSize.toString() : '0',
+          sub: 'Active + probation contracts',
+          color: '#0077B6',
+        },
+        {
+          label: 'Cash Position',
+          value: cashPosition !== null ? `UGX ${cashPosition.toLocaleString()}` : 'No count today',
+          sub: `Daily cash count — ${today}`,
+          color: cashPosition !== null ? '#0077B6' : '#888',
+        },
+      ]);
+
+      setLastUpdated(now.toLocaleTimeString('en-GB'));
+    } catch (err) {
+      console.error('Investor KPI load error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      // Fetch timeline projects
-      supabase
-        .from('maji_projects')
-        .select('*')
-        .order('deadline', { ascending: true })
-        .then(({ data }) => setProjects(data || []));
-
-      // Fetch recognitions (will return empty if table missing)
-      supabase
-        .from('recognitions')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(4)
-        .then(({ data }) => setRecognitions(data || []));
-    }
-  }, [isAuthenticated]);
-
-  if (isAuthenticated) {
-    return (
-      <div className="fixed inset-0 z-50 overflow-hidden">
-        <InvestorScene onEnter={() => router.push('/')} />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-
-    return (
-      <div className="relative z-10 flex min-h-screen items-center justify-center p-4">
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-8 rounded-[2rem] shadow-2xl w-full max-w-md text-center">
-          <div className="flex justify-center mb-8">
-            <Logo href="/investor" />
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Investor Portal</h2>
-          <p className="text-gray-400 text-sm mb-8">Enter your access key to view high-level KPIs and strategic timelines.</p>
-          
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="relative">
-              <Lock className="w-5 h-5 absolute left-3 top-3 text-gray-400" />
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Access Key" 
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-cyan-500 transition-colors"
-              />
-            </div>
-            {error && <p className="text-red-400 text-xs text-left">Invalid access key.</p>}
-            <button 
-              type="submit" 
-              className="w-full py-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-white font-bold transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)]"
-            >
-              Access Data Room
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  // Static mock aggregates for Phase Streak/KPIs to hide granular ops
-  const metrics = [
-    { label: 'Monthly Output (Jars)', value: '14,250', trend: '+12% M/M' },
-    { label: 'Est. Gross Revenue', value: 'UGX 427.5M', trend: 'On Target' },
-    { label: 'Current Phase Streak', value: '45 Days', trend: 'Phase 1 Locked' }
-  ];
-
-  const milestones = [
-    { title: 'UNBS Testing Phase', date: 'April 2026', status: 'completed' },
-    { title: 'UNBS Official Certification', date: 'May 2026', status: 'active' },
-    { title: 'T1 Wholesale Rollout', date: 'July 2026', status: 'pending' },
-    { title: 'Facility Expansion (Phase 2)', date: 'Q4 2026', status: 'pending' },
-  ];
+  const cardStyle: React.CSSProperties = {
+    background: '#fff',
+    borderRadius: 16,
+    padding: '28px 32px',
+    boxShadow: '0 2px 12px rgba(0,0,0,0.07)',
+    border: '1px solid #e5e7eb',
+  };
 
   return (
-    <div className="relative z-10 p-4 md:p-8 overflow-auto h-full max-w-7xl mx-auto w-full">
-      
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
-        <Logo href="/investor" />
-        <div className="bg-cyan-500/10 border border-cyan-500/30 px-5 py-2 rounded-full text-cyan-400 text-sm font-semibold flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4" /> Secure Viewing Session
+    <div style={{ minHeight: '100vh', background: '#f8fafc', fontFamily: 'Open Sans, sans-serif' }}>
+      {/* Header */}
+      <div style={{ background: '#10141a', color: '#fff', padding: '40px 48px 36px' }}>
+        <div style={{ maxWidth: 960, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/maji safi logo (3).png"
+              alt="Maji Safi"
+              style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }}
+            />
+            <div>
+              <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 22, color: '#7EC8E3', letterSpacing: -0.5 }}>
+                Maji Safi
+              </div>
+              <div style={{ fontSize: 11, color: '#94a3b8', letterSpacing: 2, textTransform: 'uppercase' }}>
+                Hydrate. Elevate.
+              </div>
+            </div>
+          </div>
+          <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 32, marginBottom: 8 }}>
+            Investor Snapshot
+          </h1>
+          <p style={{ color: '#94a3b8', fontSize: 14 }}>
+            Safiflow Ventures Group Limited · Reg G241004-1234 · Lukuli Road, Buziga, Kampala
+          </p>
         </div>
       </div>
 
-      <div className="mb-12">
-        <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Executive Summary</h2>
-        <p className="text-gray-400">High-level telemetry, milestones, and strategic initiatives.</p>
-      </div>
+      {/* Main content */}
+      <div style={{ maxWidth: 960, margin: '0 auto', padding: '48px 24px' }}>
 
-      {/* KPI Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        {metrics.map((m, i) => (
-          <div key={i} className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-[2rem] shadow-2xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-400/5 rounded-full blur-3xl group-hover:bg-cyan-400/10 transition-colors" />
-            <p className="text-gray-400 text-sm font-medium mb-1">{m.label}</p>
-            <p className="text-3xl font-black text-white mb-3">{m.value}</p>
-            <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold bg-cyan-500/10 w-max px-2 py-1 rounded-md">
-              <TrendingUp className="w-3 h-3" /> {m.trend}
-            </div>
-          </div>
-        ))}
-      </div>
+        {/* Mission */}
+        <div style={{ ...cardStyle, marginBottom: 40, borderLeft: '4px solid #0077B6' }}>
+          <p style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 13, color: '#0077B6', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>
+            Mission
+          </p>
+          <p style={{ fontSize: 16, color: '#1e293b', lineHeight: 1.7 }}>
+            Provide affordable, UNBS-certified purified water to Kampala households through a lean, technology-driven operations platform — launching commercially May 3, 2026.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* Milestones & Timeline */}
-        <div className="space-y-8">
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-[2rem] shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <Target className="w-5 h-5 text-cyan-400" /> Strategic Milestones
-            </h3>
-            <div className="space-y-6">
-              {milestones.map((ms, i) => (
-                <div key={i} className="flex gap-4 items-start">
-                  <div className="mt-1">
-                    <div className={`w-3 h-3 rounded-full ${ms.status === 'completed' ? 'bg-cyan-400' : ms.status === 'active' ? 'bg-white shadow-[0_0_10px_white] animate-pulse' : 'bg-white/20'}`} />
-                    {i !== milestones.length - 1 && <div className="w-0.5 h-full bg-white/10 mx-auto mt-2 min-h-[2rem]" />}
-                  </div>
-                  <div>
-                    <p className={`font-bold ${ms.status === 'pending' ? 'text-gray-400' : 'text-white'}`}>{ms.title}</p>
-                    <p className="text-xs text-cyan-400 font-semibold">{ms.date}</p>
-                  </div>
+        {/* KPI grid */}
+        <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 18, color: '#1e293b' }}>
+            Key Metrics
+          </h2>
+          {lastUpdated && (
+            <span style={{ fontSize: 11, color: '#94a3b8' }}>
+              Last updated: {lastUpdated}
+            </span>
+          )}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20, marginBottom: 48 }}>
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} style={{ ...cardStyle, opacity: 0.5 }}>
+                  <div style={{ height: 14, background: '#e5e7eb', borderRadius: 4, marginBottom: 16, width: '60%' }} />
+                  <div style={{ height: 32, background: '#e5e7eb', borderRadius: 4, marginBottom: 12, width: '80%' }} />
+                  <div style={{ height: 11, background: '#f1f5f9', borderRadius: 4, width: '70%' }} />
+                </div>
+              ))
+            : kpis.map((kpi) => (
+                <div key={kpi.label} style={cardStyle}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 10 }}>
+                    {kpi.label}
+                  </p>
+                  <p style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 28, color: kpi.color, marginBottom: 6, lineHeight: 1.1 }}>
+                    {kpi.value}
+                  </p>
+                  <p style={{ fontSize: 12, color: '#94a3b8' }}>{kpi.sub}</p>
                 </div>
               ))}
-            </div>
-          </div>
         </div>
 
-        {/* Culture & Forward Looking */}
-        <div className="space-y-8">
-          {/* Active Capital Projects */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-[2rem] shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 text-cyan-400" /> Active Initiatives
-            </h3>
-            <div className="space-y-4">
-              {projects.length > 0 ? projects.map((proj, idx) => (
-                <div key={idx} className="bg-white/5 border border-white/10 p-4 rounded-xl hover:border-cyan-500/30 transition-colors flex items-center justify-between">
-                  <div>
-                    <p className="font-bold text-white text-sm">{proj.name}</p>
-                    <p className="text-xs text-gray-400">{proj.description}</p>
-                  </div>
-                  {proj.deadline && (
-                    <div className="text-xs text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded-md ml-3 flex-shrink-0">
-                      {new Date(proj.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric'})}
-                    </div>
-                  )}
-                </div>
-              )) : (
-                <p className="text-sm text-gray-500 italic">No public initiatives tracked.</p>
-              )}
-            </div>
-          </div>
-
-          {/* Positive Quotes / Public Recognitions */}
-          <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-[2rem] shadow-2xl">
-            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <Quote className="w-5 h-5 text-cyan-400" /> Culture Highlights
-            </h3>
-            <div className="space-y-4">
-              {recognitions.length > 0 ? recognitions.map((rec, idx) => (
-                <div key={idx} className="bg-white/5 border border-white/10 p-4 rounded-xl">
-                  <p className="italic text-gray-300 text-sm mb-2">"{rec.message}"</p>
-                  <p className="text-xs font-bold text-cyan-400 flex items-center gap-1">
-                    <ArrowRight className="w-3 h-3" /> Team Member, {rec.department}
-                  </p>
-                </div>
-              )) : (
-                <div className="bg-white/5 border border-white/10 p-4 rounded-xl">
-                  <p className="italic text-gray-300 text-sm mb-2">"Quality output maintained at 98.5% efficiency this week. The new filtration standard is holding perfectly."</p>
-                  <p className="text-xs font-bold text-cyan-400 flex items-center gap-1">
-                    <ArrowRight className="w-3 h-3" /> Anonymous Highlight
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-          
+        {/* Growth chart placeholder */}
+        <div style={{ ...cardStyle, marginBottom: 40, textAlign: 'center', padding: '48px 32px' }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>📈</div>
+          <p style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 15, color: '#334155', marginBottom: 8 }}>
+            Growth Chart
+          </p>
+          <p style={{ fontSize: 13, color: '#94a3b8' }}>
+            Data collection in progress — chart will populate after 30 days of operations.
+          </p>
         </div>
+
+        {/* Company details */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 20, marginBottom: 48 }}>
+          {[
+            { label: 'Product Line', value: '20L Refill · 20L Single-Use · 20L Reusable Jar · 5L Single-Use' },
+            { label: 'Capacity', value: '6,000 LPH — ~2,000 jars/day maximum' },
+            { label: 'Break-even', value: '~220–240 jars/day at launch pricing' },
+            { label: 'Month 1 Target', value: '500 jars/day, T1 wholesale only' },
+            { label: 'Founders', value: 'Samuel Ghedamu (CEO) · Amanuel Asmerom Yonas (COO)' },
+            { label: 'Launch Date', value: 'May 3, 2026 — commercial operations' },
+          ].map((item) => (
+            <div key={item.label} style={{ ...cardStyle, padding: '20px 24px' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>
+                {item.label}
+              </p>
+              <p style={{ fontSize: 13, color: '#334155', lineHeight: 1.5 }}>{item.value}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Values */}
+        <div style={{ ...cardStyle, marginBottom: 40 }}>
+          <p style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 13, color: '#0077B6', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 16 }}>
+            Core Values
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
+            {[
+              { icon: '💧', value: 'Quality First', desc: '100% UNBS compliance, zero compromise' },
+              { icon: '📊', value: 'Data-Driven', desc: 'Every decision sourced from the system' },
+              { icon: '⚡', value: 'Lean Operations', desc: 'No waste, tight feedback loops' },
+              { icon: '🤝', value: 'Community', desc: 'Affordable water for every household' },
+            ].map((v) => (
+              <div key={v.value} style={{ padding: '16px', background: '#f8fafc', borderRadius: 10 }}>
+                <div style={{ fontSize: 22, marginBottom: 8 }}>{v.icon}</div>
+                <div style={{ fontWeight: 700, fontSize: 13, color: '#334155', marginBottom: 4 }}>{v.value}</div>
+                <div style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.5 }}>{v.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ background: '#10141a', color: '#64748b', padding: '32px 48px', textAlign: 'center' }}>
+        <p style={{ fontSize: 13, marginBottom: 4 }}>Powered by Maji Safi OS · Safiflow Ventures Group Limited</p>
+        <p style={{ fontSize: 12 }}>Reg G241004-1234 · Lukuli Road, Buziga, Kampala, Uganda · sammygedamua@gmail.com</p>
       </div>
     </div>
   );
-}
-
-// Temporary local shield check icon inside component until main lucide import resolves
-function ShieldCheck({ className }: { className: string }) {
-  return <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>;
 }

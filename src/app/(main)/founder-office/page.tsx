@@ -7,6 +7,7 @@ import { useAuth } from '@/components/AuthProvider';
 export default function FounderOfficePage() {
   const { user } = useAuth();
   const [events, setEvents] = useState<any[]>([]);
+  const [deptHealth, setDeptHealth] = useState<Record<string, 'green' | 'amber' | 'red'>>({});
   const [stats, setStats] = useState({
     jarsToday: 0,
     jarsSource: '',
@@ -113,6 +114,21 @@ export default function FounderOfficePage() {
         complianceSource: 'compliance_records, buziga',
       });
       setEvents(eventData ?? []);
+
+      // Dept health: based on today's events per department
+      const todayEvents = eventData ?? [];
+      const health: Record<string, 'green' | 'amber' | 'red'> = {};
+      const slugs = ['founder-office','production','quality','inventory','dispatch','marketing','finance','compliance','technology'];
+      for (const slug of slugs) {
+        const deptEvents = todayEvents.filter((e: any) => e.department === slug || e.department_slug === slug);
+        const hasCritical = deptEvents.some((e: any) => e.severity === 'critical');
+        const hasWarning = deptEvents.some((e: any) => e.severity === 'warning');
+        health[slug] = hasCritical ? 'red' : hasWarning ? 'amber' : 'green';
+      }
+      if (invAlerts > 0) health['inventory'] = invAlerts > 2 ? 'red' : 'amber';
+      if (compIssues > 0) health['compliance'] = compIssues > 3 ? 'red' : 'amber';
+      if (passRate < 100 && (qcData?.length ?? 0) > 0) health['quality'] = passRate === 0 ? 'red' : 'amber';
+      setDeptHealth(health);
     } catch (err) {
       console.error('Founder dashboard error:', err);
     } finally {
@@ -313,6 +329,44 @@ export default function FounderOfficePage() {
             <p className="mt-4 text-[10px] font-label text-outline/40">{kpi.source}</p>
           </div>
         ))}
+      </div>
+
+      {/* Dept Health Grid */}
+      <div className="mb-8">
+        <p className="font-label text-[10px] text-outline uppercase tracking-[0.2em] mb-4">Department Health — Today</p>
+        <div className="grid grid-cols-3 md:grid-cols-5 xl:grid-cols-9 gap-2">
+          {[
+            { slug: 'founder-office', label: 'Founder' },
+            { slug: 'production', label: 'Production' },
+            { slug: 'quality', label: 'Quality' },
+            { slug: 'inventory', label: 'Inventory' },
+            { slug: 'dispatch', label: 'Dispatch' },
+            { slug: 'marketing', label: 'Marketing' },
+            { slug: 'finance', label: 'Finance' },
+            { slug: 'compliance', label: 'Compliance' },
+            { slug: 'technology', label: 'Technology' },
+          ].map((dept) => {
+            const h = deptHealth[dept.slug] ?? 'green';
+            return (
+              <a
+                key={dept.slug}
+                href={`/${dept.slug}`}
+                className={`flex flex-col items-center gap-2 p-3 border transition-colors hover:brightness-110 ${
+                  h === 'red'
+                    ? 'bg-tertiary-container/10 border-tertiary/30'
+                    : h === 'amber'
+                    ? 'bg-primary-container/10 border-primary/30'
+                    : 'bg-secondary-container/10 border-secondary/20'
+                }`}
+              >
+                <div className={`w-2.5 h-2.5 rounded-full ${h === 'red' ? 'bg-tertiary' : h === 'amber' ? 'bg-primary animate-pulse' : 'bg-secondary'}`} />
+                <span className={`text-[9px] font-label uppercase tracking-widest text-center ${h === 'red' ? 'text-tertiary' : h === 'amber' ? 'text-primary' : 'text-secondary/70'}`}>
+                  {dept.label}
+                </span>
+              </a>
+            );
+          })}
+        </div>
       </div>
 
       {/* Bottom row: Production vs Target + Signal Summary + Live Events */}

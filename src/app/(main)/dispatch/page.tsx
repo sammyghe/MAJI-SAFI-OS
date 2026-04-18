@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
+import DeptTeamPanel from '@/components/DeptTeamPanel';
 
 // T1 wholesale pricing per CLAUDE.md section 11
 const T1_PRICES: Record<string, number> = {
@@ -241,9 +242,17 @@ export default function DispatchPage() {
             <span className="text-[10px] tracking-widest uppercase font-label">Commercial Ledger</span>
             <span className="w-8 h-[1px] bg-outline-variant/30" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold font-headline tracking-tighter text-on-surface">
-            Dispatch – Sales &amp; Cash
-          </h1>
+          <div className="flex items-center gap-4 flex-wrap">
+            <h1 className="text-4xl md:text-5xl font-extrabold font-headline tracking-tighter text-on-surface">
+              Dispatch – Sales &amp; Cash
+            </h1>
+            <a
+              href="/dispatch/crm"
+              className="text-[10px] font-label font-bold uppercase tracking-widest px-4 py-2 bg-primary-container/20 border border-primary/30 text-primary hover:bg-primary-container/40 transition-colors"
+            >
+              Distributor CRM →
+            </a>
+          </div>
         </div>
         <div className="bg-surface-container-low p-6 border-l-4 border-primary-container min-w-[260px]">
           <p className="text-xs text-outline font-label mb-1">Total Cash Today</p>
@@ -550,6 +559,7 @@ export default function DispatchPage() {
           </div>
         </div>
       )}
+      <DeptTeamPanel departmentSlug="dispatch" />
     </div>
   );
 }

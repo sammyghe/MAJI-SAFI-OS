@@ -3,11 +3,27 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
+import { showToast } from '@/components/ToastContainer';
+
+// T1 wholesale pricing per CLAUDE.md section 11
+const T1_PRICES: Record<string, number> = {
+  '20L Refill':       3000,
+  '20L Single-Use':   7500,
+  '20L Reusable Jar': 15000,
+  '5L Single-Use':    2800,
+};
+
+const PRODUCT_TYPES = Object.keys(T1_PRICES);
 
 export default function DispatchPage() {
   const { user } = useAuth();
   const [sales, setSales] = useState<any[]>([]);
-  const [formData, setFormData] = useState({ distributor: '', jars: '', amount_ugx: '' });
+  const [formData, setFormData] = useState({
+    distributor: '',
+    product_type: '20L Refill',
+    jars: '',
+    amount_ugx: '',
+  });
   const [cashState, setCashState] = useState({
     systemTotal: 0,
     countedAmount: '0',
@@ -18,8 +34,9 @@ export default function DispatchPage() {
   const [error, setError] = useState('');
   const [showEOD, setShowEOD] = useState(false);
   const [editSale, setEditSale] = useState<any | null>(null);
-  const [editForm, setEditForm] = useState({ distributor: '', jars_sold: '', amount_ugx: '' });
+  const [editForm, setEditForm] = useState({ distributor: '', product_type: '20L Refill', jars_sold: '', amount_ugx: '' });
   const [editSaving, setEditSaving] = useState(false);
+  const [stockWarning, setStockWarning] = useState('');
 
   useEffect(() => { loadSales(); }, []);
 
@@ -41,21 +58,106 @@ export default function DispatchPage() {
     }
   };
 
+  // Auto-compute amount when jars or product_type changes
+  const handleJarsOrTypeChange = (jars: string, productType: string) => {
+    const jarNum = parseInt(jars);
+    if (jarNum > 0 && T1_PRICES[productType]) {
+      setFormData((prev) => ({
+        ...prev,
+        jars,
+        product_type: productType,
+        amount_ugx: (jarNum * T1_PRICES[productType]).toString(),
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, jars, product_type: productType }));
+    }
+  };
+
   const handleAddSale = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setStockWarning('');
     setLoading(true);
     try {
       if (!formData.distributor || !formData.jars || !formData.amount_ugx) throw new Error('All fields required');
+      const jarsSold = parseInt(formData.jars);
+
+      // Check available stock before sale
+      const { data: invRow } = await supabase
+        .from('inventory_items')
+        .select('id, quantity, reorder_threshold, unit')
+        .eq('location_id', 'buziga')
+        .eq('item_name', formData.product_type)
+        .maybeSingle();
+
+      let stockShortfall = false;
+      if (invRow && (invRow.quantity ?? 0) < jarsSold) {
+        stockShortfall = true;
+        setStockWarning(
+          `⚠ Stock warning: only ${invRow.quantity} ${invRow.unit} available, selling ${jarsSold}. Sale logged but discrepancy flagged.`
+        );
+      }
+
+      // Insert sale (DATA — append-only per taxonomy)
       const { error: insertError } = await supabase.from('sales_ledger').insert([{
         distributor: formData.distributor,
-        jars_sold: parseInt(formData.jars),
+        jars_sold: jarsSold,
         amount_ugx: parseInt(formData.amount_ugx),
+        product_type: formData.product_type,
         location_id: 'buziga',
         logged_by: user?.name ?? 'Unknown',
       }]);
       if (insertError) throw insertError;
-      setFormData({ distributor: '', jars: '', amount_ugx: '' });
+
+      // Decrement inventory
+      if (invRow) {
+        const newQty = Math.max(0, (invRow.quantity ?? 0) - jarsSold);
+        await supabase
+          .from('inventory_items')
+          .update({ quantity: newQty, last_updated: new Date().toISOString() })
+          .eq('id', invRow.id);
+
+        // Fire reorder event if stock drops to or below threshold
+        if (newQty <= invRow.reorder_threshold) {
+          await supabase.from('events').insert([{
+            location_id: 'buziga',
+            event_type: 'reorder_required',
+            department: 'inventory',
+            severity: 'warning',
+            payload: {
+              items: [{ id: invRow.id, name: formData.product_type, quantity: newQty, threshold: invRow.reorder_threshold, unit: invRow.unit }],
+              count: 1,
+              triggered_by: 'dispatch',
+            },
+          }]);
+        }
+
+        // Fire discrepancy event if stock was insufficient
+        if (stockShortfall) {
+          await supabase.from('events').insert([{
+            location_id: 'buziga',
+            event_type: 'stock_discrepancy',
+            department: 'dispatch',
+            severity: 'warning',
+            payload: {
+              product_type: formData.product_type,
+              sold: jarsSold,
+              available: invRow.quantity,
+              shortfall: jarsSold - (invRow.quantity ?? 0),
+              logged_by: user?.name ?? 'Unknown',
+            },
+          }]);
+        }
+      }
+
+      showToast({
+        type: stockShortfall ? 'info' : 'success',
+        message: stockShortfall
+          ? `Sale logged with stock shortfall. Discrepancy event fired.`
+          : `Sale logged — ${jarsSold} × ${formData.product_type} @ ${parseInt(formData.amount_ugx).toLocaleString()} UGX.`,
+      });
+
+      setFormData({ distributor: '', product_type: '20L Refill', jars: '', amount_ugx: '' });
       await loadSales();
     } catch (err: any) {
       setError(err.message ?? 'Error logging sale');
@@ -66,7 +168,12 @@ export default function DispatchPage() {
 
   const openEdit = (sale: any) => {
     setEditSale(sale);
-    setEditForm({ distributor: sale.distributor, jars_sold: sale.jars_sold?.toString() ?? '', amount_ugx: sale.amount_ugx?.toString() ?? '' });
+    setEditForm({
+      distributor: sale.distributor,
+      product_type: sale.product_type ?? '20L Refill',
+      jars_sold: sale.jars_sold?.toString() ?? '',
+      amount_ugx: sale.amount_ugx?.toString() ?? '',
+    });
   };
 
   const handleEditSave = async (e: React.FormEvent) => {
@@ -78,6 +185,7 @@ export default function DispatchPage() {
         .from('sales_ledger')
         .update({
           distributor: editForm.distributor,
+          product_type: editForm.product_type,
           jars_sold: parseInt(editForm.jars_sold),
           amount_ugx: parseInt(editForm.amount_ugx),
         })
@@ -110,7 +218,7 @@ export default function DispatchPage() {
           location_id: 'buziga',
         }]);
       }
-      alert('EOD reconciliation closed. Cash audit logged.');
+      showToast({ type: 'success', message: 'EOD reconciliation closed. Cash audit logged.' });
       setShowEOD(false);
       setCashState((prev) => ({ ...prev, countedAmount: '0', forceCloseReason: '', mismatched: false }));
     } catch {
@@ -120,6 +228,9 @@ export default function DispatchPage() {
 
   const jarsDispatched = sales.reduce((sum, s) => sum + (s.jars_sold ?? 0), 0);
   const uniqueDistributors = new Set(sales.map((s) => s.distributor)).size;
+
+  // T1 unit price for current form selection
+  const unitPrice = T1_PRICES[formData.product_type] ?? 0;
 
   return (
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
@@ -153,19 +264,11 @@ export default function DispatchPage() {
           { label: 'Jars Dispatched', value: jarsDispatched.toString(), ref: 'sales_ledger' },
           { label: 'Distributors', value: uniqueDistributors.toString(), ref: 'sales_ledger' },
           { label: 'Cash Collected', value: `${cashState.systemTotal.toLocaleString()} UGX`, ref: 'sales_ledger' },
-          {
-            label: 'Cash Mismatch',
-            value: cashState.mismatched ? 'YES' : 'NONE',
-            ref: 'finance_overrides',
-            alert: cashState.mismatched,
-          },
+          { label: 'Cash Mismatch', value: cashState.mismatched ? 'YES' : 'NONE', ref: 'finance_overrides', alert: cashState.mismatched },
         ].map((stat) => (
-          <div
-            key={stat.label}
-            className={`bg-surface-container-low ghost-border p-5 ${stat.alert ? 'border-l-2 border-tertiary-container' : ''}`}
-          >
+          <div key={stat.label} className={`bg-surface-container-low ghost-border p-5 ${(stat as any).alert ? 'border-l-2 border-tertiary-container' : ''}`}>
             <p className="text-[10px] text-outline font-label uppercase tracking-widest mb-2">{stat.label}</p>
-            <p className={`text-2xl font-body font-bold ${stat.alert ? 'text-tertiary' : 'text-on-surface'}`}>
+            <p className={`text-2xl font-body font-bold ${(stat as any).alert ? 'text-tertiary' : 'text-on-surface'}`}>
               {stat.value}
             </p>
             <p className="text-[10px] text-outline/40 font-label mt-1">[source: {stat.ref}]</p>
@@ -185,31 +288,32 @@ export default function DispatchPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-container-lowest">
-                {['Distributor', 'Jars Sold', 'Cash (UGX)', 'Time', 'Logged By', ''].map((h) => (
-                  <th key={h} className="px-6 py-4 text-[10px] font-label text-outline uppercase tracking-widest">{h}</th>
+                {['Distributor', 'Product', 'Jars Sold', 'Cash (UGX)', 'Time', 'Logged By', ''].map((h) => (
+                  <th key={h} className="px-5 py-4 text-[10px] font-label text-outline uppercase tracking-widest">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/10">
               {sales.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-outline/50 font-label text-sm">
+                  <td colSpan={7} className="px-6 py-8 text-center text-outline/50 font-label text-sm">
                     No sales logged yet today
                   </td>
                 </tr>
               ) : sales.map((s) => (
                 <tr key={s.id} className="hover:bg-surface-container-high/50 transition-colors cursor-pointer" onClick={() => openEdit(s)}>
-                  <td className="px-6 py-5 text-sm font-medium">{s.distributor}</td>
-                  <td className="px-6 py-5 text-sm font-body">{s.jars_sold}</td>
-                  <td className="px-6 py-5 text-right font-body font-semibold text-secondary">
+                  <td className="px-5 py-4 text-sm font-medium">{s.distributor}</td>
+                  <td className="px-5 py-4 text-xs font-label text-on-surface-variant">{s.product_type ?? '—'}</td>
+                  <td className="px-5 py-4 text-sm font-body">{s.jars_sold}</td>
+                  <td className="px-5 py-4 text-right font-body font-semibold text-secondary">
                     {s.amount_ugx?.toLocaleString()}
                     <span className="text-[10px] text-outline/40 font-label ml-1">[Ref: {s.id?.slice(0, 6)}]</span>
                   </td>
-                  <td className="px-6 py-5 text-sm font-body text-outline/70">
+                  <td className="px-5 py-4 text-sm font-body text-outline/70">
                     {new Date(s.created_at).toLocaleTimeString()}
                   </td>
-                  <td className="px-6 py-5 text-sm font-label text-on-surface-variant">{s.logged_by}</td>
-                  <td className="px-6 py-5">
+                  <td className="px-5 py-4 text-sm font-label text-on-surface-variant">{s.logged_by}</td>
+                  <td className="px-5 py-4">
                     <span className="text-xs font-label text-primary">Edit</span>
                   </td>
                 </tr>
@@ -227,23 +331,36 @@ export default function DispatchPage() {
           </div>
           <h4 className="font-headline font-bold text-xl mb-6">Log Sale</h4>
           <form onSubmit={handleAddSale} className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase text-outline font-label tracking-widest">Distributor Name</label>
+              <input
+                type="text"
+                value={formData.distributor}
+                onChange={(e) => setFormData({ ...formData, distributor: e.target.value })}
+                placeholder="e.g. Buziga Distributors"
+                className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+              />
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Distributor Name</label>
-                <input
-                  type="text"
-                  value={formData.distributor}
-                  onChange={(e) => setFormData({ ...formData, distributor: e.target.value })}
-                  placeholder="e.g. Buziga Distributors"
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Product Type</label>
+                <select
+                  value={formData.product_type}
+                  onChange={(e) => handleJarsOrTypeChange(formData.jars, e.target.value)}
                   className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
-                />
+                >
+                  {PRODUCT_TYPES.map((t) => <option key={t}>{t}</option>)}
+                </select>
+                <p className="text-[10px] text-outline/50 font-label">
+                  T1 unit price: {unitPrice.toLocaleString()} UGX
+                </p>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase text-outline font-label tracking-widest">Jars Sold</label>
                 <input
                   type="number"
                   value={formData.jars}
-                  onChange={(e) => setFormData({ ...formData, jars: e.target.value })}
+                  onChange={(e) => handleJarsOrTypeChange(e.target.value, formData.product_type)}
                   placeholder="e.g., 50"
                   className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
                 />
@@ -255,10 +372,23 @@ export default function DispatchPage() {
                 type="number"
                 value={formData.amount_ugx}
                 onChange={(e) => setFormData({ ...formData, amount_ugx: e.target.value })}
-                placeholder="e.g., 150000"
+                placeholder="Auto-filled from T1 price × jars"
                 className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
               />
+              {formData.jars && formData.amount_ugx && (
+                <p className="text-[10px] text-outline/50 font-label">
+                  T1 expected: {(parseInt(formData.jars) * unitPrice).toLocaleString()} UGX
+                  {parseInt(formData.amount_ugx) !== parseInt(formData.jars) * unitPrice && (
+                    <span className="ml-1 text-primary"> (custom price entered)</span>
+                  )}
+                </p>
+              )}
             </div>
+            {stockWarning && (
+              <div className="p-3 bg-primary-container/10 border-l-2 border-primary-container">
+                <p className="text-primary text-xs font-label">{stockWarning}</p>
+              </div>
+            )}
             {error && (
               <div className="p-3 bg-tertiary-container/10 border-l-2 border-tertiary-container">
                 <p className="text-tertiary text-xs font-label">{error}</p>
@@ -317,6 +447,16 @@ export default function DispatchPage() {
                   onChange={(e) => setEditForm({ ...editForm, distributor: e.target.value })}
                   className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
                 />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Product Type</label>
+                <select
+                  value={editForm.product_type}
+                  onChange={(e) => setEditForm({ ...editForm, product_type: e.target.value })}
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                >
+                  {PRODUCT_TYPES.map((t) => <option key={t}>{t}</option>)}
+                </select>
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase text-outline font-label tracking-widest">Jars Sold</label>

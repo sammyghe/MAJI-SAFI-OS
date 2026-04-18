@@ -68,7 +68,17 @@ export default function QualityPage() {
         }]);
       if (insertError) throw insertError;
 
-      // 2 — If FAIL: halt batch + fire critical event
+      // 2 — On PASS: update batch status to 'passed'
+      if (result === 'PASS') {
+        const { error: passError } = await supabase
+          .from('production_logs')
+          .update({ status: 'passed' })
+          .eq('batch_id', testForm.batch_id.trim())
+          .eq('location_id', 'buziga');
+        if (passError) console.error('Batch status update error (batch may not exist yet):', passError);
+      }
+
+      // 3 — If FAIL: halt batch + fire critical event
       if (result === 'FAIL') {
         // Halt the batch in production_logs
         const { error: haltError } = await supabase

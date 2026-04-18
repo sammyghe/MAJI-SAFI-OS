@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
+import { showToast } from '@/components/ToastContainer';
+
+const PRODUCT_TYPES = ['20L Refill', '20L Single-Use', '20L Reusable Jar', '5L Single-Use'];
 
 export default function ProductionPage() {
   const { user } = useAuth();
@@ -42,18 +45,56 @@ export default function ProductionPage() {
     setLoading(true);
     try {
       if (!formData.jar_count) throw new Error('Jar count is required');
+      const jarCount = parseInt(formData.jar_count);
       const batchId = `BATCH-${Date.now()}`;
+
+      // 1 — Insert production log (DATA — append-only)
       const { error: insertError } = await supabase
         .from('production_logs')
         .insert([{
           batch_id: batchId,
-          jar_count: parseInt(formData.jar_count),
+          jar_count: jarCount,
           product_type: formData.product_type,
           operator_name: user?.name ?? 'Unknown',
           location_id: 'buziga',
           notes: formData.notes,
         }]);
       if (insertError) throw insertError;
+
+      // 2 — Fire batch_created event → Founder Office realtime picks this up
+      await supabase.from('events').insert([{
+        location_id: 'buziga',
+        event_type: 'batch_created',
+        department: 'production',
+        batch_id: batchId,
+        severity: 'warning',
+        payload: {
+          product_type: formData.product_type,
+          jar_count: jarCount,
+          operator: user?.name ?? 'Unknown',
+        },
+      }]);
+
+      // 3 — Increment finished-goods inventory for this product_type
+      const { data: invRow } = await supabase
+        .from('inventory_items')
+        .select('id, quantity, reorder_threshold')
+        .eq('location_id', 'buziga')
+        .eq('item_name', formData.product_type)
+        .maybeSingle();
+
+      if (invRow) {
+        const newQty = (invRow.quantity ?? 0) + jarCount;
+        await supabase
+          .from('inventory_items')
+          .update({ quantity: newQty, last_updated: new Date().toISOString() })
+          .eq('id', invRow.id);
+      }
+
+      showToast({
+        type: 'success',
+        message: `Batch ${batchId} logged — ${jarCount} × ${formData.product_type}. Inventory updated.`,
+      });
       setFormData({ jar_count: '', product_type: '20L Refill', notes: '' });
       await loadBatches();
     } catch (err: any) {
@@ -92,6 +133,7 @@ export default function ProductionPage() {
   };
 
   const jarsToday = batches.reduce((sum, b) => sum + (b.jar_count ?? 0), 0);
+  const haltedCount = batches.filter((b) => b.status === 'halted').length;
 
   return (
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
@@ -101,9 +143,7 @@ export default function ProductionPage() {
           <h2 className="font-headline text-4xl font-extrabold tracking-tight mb-2">
             Operations – Production &amp; Quality
           </h2>
-          <p className="text-slate-400 font-label text-sm">
-            Plant Authority Ledger // Location: Buziga
-          </p>
+          <p className="text-slate-400 font-label text-sm">Plant Authority Ledger // Location: Buziga</p>
         </div>
         <button
           onClick={() => (document.getElementById('log-batch-form') as HTMLElement)?.scrollIntoView({ behavior: 'smooth' })}
@@ -114,7 +154,22 @@ export default function ProductionPage() {
         </button>
       </div>
 
-      {/* Metric Bento Grid */}
+      {/* Halted alert */}
+      {haltedCount > 0 && (
+        <div className="mb-8 p-4 bg-tertiary-container/10 border-l-2 border-tertiary-container flex items-start gap-3">
+          <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">warning</span>
+          <div>
+            <p className="text-tertiary font-body text-[10px] font-bold uppercase tracking-widest">
+              {haltedCount} Batch{haltedCount > 1 ? 'es' : ''} Halted — QC Failure
+            </p>
+            <p className="text-sm font-label text-on-surface-variant mt-1">
+              Halted batches cannot be dispatched. QC must sign off before resuming.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         {[
           {
@@ -126,20 +181,20 @@ export default function ProductionPage() {
             icon: 'water_full',
           },
           {
-            label: 'Machine Uptime',
-            value: '98',
-            suffix: '%',
-            color: 'text-secondary',
-            ref: 'OEE-DASH-V3',
-            icon: 'settings',
-          },
-          {
             label: 'Batches Logged',
             value: batches.length.toString(),
             suffix: '',
             color: 'text-on-primary-container',
             ref: 'production_logs, buziga',
             icon: 'inventory_2',
+          },
+          {
+            label: 'Halted Batches',
+            value: haltedCount.toString(),
+            suffix: '',
+            color: haltedCount > 0 ? 'text-tertiary' : 'text-secondary',
+            ref: 'production_logs, buziga',
+            icon: 'block',
           },
         ].map((m) => (
           <div key={m.label} className="bg-surface-container-low ghost-border p-8 relative overflow-hidden">
@@ -154,6 +209,21 @@ export default function ProductionPage() {
             <p className="mt-4 font-label text-xs text-outline/50">[source: {m.ref}]</p>
           </div>
         ))}
+      </div>
+
+      {/* Production progress bar */}
+      <div className="mb-12 bg-surface-container-low ghost-border p-6">
+        <div className="flex justify-between text-[10px] font-label text-outline mb-2">
+          <span>Daily progress vs 500-jar target</span>
+          <span>{jarsToday} / 500</span>
+        </div>
+        <div className="w-full bg-surface-container-highest h-2 overflow-hidden">
+          <div
+            className={`h-full transition-all ${jarsToday >= 500 ? 'bg-secondary' : 'bg-primary'}`}
+            style={{ width: `${Math.min((jarsToday / 500) * 100, 100)}%` }}
+          />
+        </div>
+        <p className="text-[10px] font-label text-outline/40 mt-2">[source: production_logs, buziga]</p>
       </div>
 
       {/* Batch Ledger Table */}
@@ -179,35 +249,51 @@ export default function ProductionPage() {
                       No batches logged yet today
                     </td>
                   </tr>
-                ) : batches.map((b) => (
-                  <tr key={b.id} className="border-b border-[#262a31]/10 hover:bg-[#262a31]/20 transition-colors cursor-pointer" onClick={() => openEdit(b)}>
-                    <td className="px-6 py-4 text-sm font-semibold">
-                      {b.batch_id}
-                      <span className="ml-2 text-[10px] font-label text-outline/50">[Ref: {b.id?.slice(0,6)}]</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-on-surface-variant font-label">{b.product_type}</td>
-                    <td className="px-6 py-4 text-sm">{b.jar_count}</td>
-                    <td className="px-6 py-4 text-sm text-on-surface-variant font-label">{b.operator_name}</td>
-                    <td className="px-6 py-4">
-                      {b.status === 'halted' ? (
-                        <span className="bg-tertiary-container text-on-tertiary-container text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
-                          HALTED
-                        </span>
-                      ) : b.status === 'dispatched' ? (
-                        <span className="bg-primary-container text-on-primary-container text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
-                          DISPATCHED
-                        </span>
-                      ) : (
-                        <span className="bg-secondary-container text-secondary text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
-                          ACTIVE
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-xs font-label text-primary">Edit</span>
-                    </td>
-                  </tr>
-                ))}
+                ) : batches.map((b) => {
+                  const isHalted = b.status === 'halted';
+                  const isPassed = b.status === 'passed';
+                  return (
+                    <tr
+                      key={b.id}
+                      className={`border-b border-[#262a31]/10 transition-colors cursor-pointer ${
+                        isHalted
+                          ? 'bg-tertiary-container/10 border-l-2 border-tertiary-container hover:bg-tertiary-container/20'
+                          : 'hover:bg-[#262a31]/20'
+                      }`}
+                      onClick={() => openEdit(b)}
+                    >
+                      <td className="px-6 py-4 text-sm font-semibold">
+                        {b.batch_id}
+                        <span className="ml-2 text-[10px] font-label text-outline/50">[Ref: {b.id?.slice(0, 6)}]</span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-on-surface-variant font-label">{b.product_type}</td>
+                      <td className="px-6 py-4 text-sm">{b.jar_count}</td>
+                      <td className="px-6 py-4 text-sm text-on-surface-variant font-label">{b.operator_name}</td>
+                      <td className="px-6 py-4">
+                        {isHalted ? (
+                          <span className="bg-tertiary-container text-on-tertiary-container text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
+                            HALTED
+                          </span>
+                        ) : isPassed ? (
+                          <span className="bg-secondary-container text-secondary text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
+                            QC PASSED
+                          </span>
+                        ) : b.status === 'dispatched' ? (
+                          <span className="bg-primary-container text-on-primary-container text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
+                            DISPATCHED
+                          </span>
+                        ) : (
+                          <span className="bg-surface-container text-on-surface-variant text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
+                            ACTIVE
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-label text-primary">Edit</span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -223,6 +309,16 @@ export default function ProductionPage() {
           </div>
           <form onSubmit={handleSubmit} className="bg-surface-container-low ghost-border p-6 space-y-5">
             <div className="space-y-1">
+              <label className="text-[10px] uppercase text-outline font-label tracking-widest">Product Type</label>
+              <select
+                value={formData.product_type}
+                onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
+                className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+              >
+                {PRODUCT_TYPES.map((t) => <option key={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1">
               <label className="text-[10px] uppercase text-outline font-label tracking-widest">Jar Count</label>
               <input
                 type="number"
@@ -231,19 +327,6 @@ export default function ProductionPage() {
                 placeholder="e.g., 60"
                 className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
               />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase text-outline font-label tracking-widest">Product Type</label>
-              <select
-                value={formData.product_type}
-                onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
-                className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
-              >
-                <option>20L Refill</option>
-                <option>20L Single-Use</option>
-                <option>20L Reusable Jar</option>
-                <option>5L Single-Use</option>
-              </select>
             </div>
             <div className="space-y-1">
               <label className="text-[10px] uppercase text-outline font-label tracking-widest">Notes</label>
@@ -269,16 +352,25 @@ export default function ProductionPage() {
           </form>
         </div>
 
-        <div className="bg-surface-container-low ghost-border p-6 flex flex-col justify-end relative overflow-hidden">
-          <div className="absolute inset-0 z-0 opacity-10 grayscale brightness-50 bg-gradient-to-br from-primary-container/20 to-surface-container-lowest" />
-          <div className="relative z-10">
-            <p className="font-label text-[10px] text-slate-400 uppercase tracking-widest mb-1">Facility Authority</p>
-            <p className="font-headline text-xl font-bold mb-3">Production Command Centre</p>
-            <p className="text-xs text-slate-300 leading-relaxed font-label">
-              All batches require QC sign-off before dispatch. A batch cannot be marked dispatched until
-              a corresponding water_tests row exists with result = PASS.
-            </p>
+        <div className="bg-surface-container-low ghost-border p-6 flex flex-col justify-between">
+          <div>
+            <p className="font-label text-[10px] text-slate-400 uppercase tracking-widest mb-1">Automation</p>
+            <p className="font-headline text-xl font-bold mb-3">What happens on submit</p>
+            <div className="space-y-3 text-xs text-slate-300 font-label">
+              {[
+                'production_logs row written (append-only)',
+                'batch_created event → Founder Office feed',
+                'inventory_items quantity incremented for product type',
+                'QC test required before dispatch (Supabase constraint)',
+              ].map((step, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="text-primary font-bold mt-0.5">{i + 1}.</span>
+                  <span>{step}</span>
+                </div>
+              ))}
+            </div>
           </div>
+          <p className="mt-6 text-[10px] text-outline/40 font-label">[source: production_logs, events, inventory_items — buziga]</p>
         </div>
       </div>
 
@@ -287,7 +379,9 @@ export default function ProductionPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-low border border-outline-variant/20 p-8 max-w-sm w-full">
             <h2 className="text-xl font-bold font-headline mb-1">Edit Batch</h2>
-            <p className="text-[10px] text-outline/50 font-label mb-6">[source: production_logs row {editBatch.id?.slice(0, 8)}] · {editBatch.batch_id}</p>
+            <p className="text-[10px] text-outline/50 font-label mb-6">
+              [source: production_logs row {editBatch.id?.slice(0, 8)}] · {editBatch.batch_id}
+            </p>
             <form onSubmit={handleEditSave} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-[10px] uppercase text-outline font-label tracking-widest">Jar Count</label>
@@ -306,6 +400,7 @@ export default function ProductionPage() {
                   className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
                 >
                   <option value="created">Created</option>
+                  <option value="passed">QC Passed</option>
                   <option value="halted">Halted</option>
                   <option value="dispatched">Dispatched</option>
                 </select>

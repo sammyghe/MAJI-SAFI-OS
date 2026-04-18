@@ -12,15 +12,46 @@ interface StockItem {
   unit: string;
   reorder_threshold: number;
   location_id: string;
+  last_updated?: string;
+}
+
+async function fireReorderEventIfNeeded(item: StockItem, newQty: number) {
+  if (newQty <= item.reorder_threshold) {
+    await supabase.from('events').insert([{
+      location_id: 'buziga',
+      event_type: 'reorder_required',
+      department: 'inventory',
+      severity: 'warning',
+      payload: {
+        items: [{
+          id: item.id,
+          name: item.item_name,
+          quantity: newQty,
+          threshold: item.reorder_threshold,
+          unit: item.unit,
+        }],
+        count: 1,
+      },
+    }]);
+  }
 }
 
 export default function InventoryPage() {
   const [stock, setStock] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastSync, setLastSync] = useState<string>('');
+
+  // Edit modal
   const [editItem, setEditItem] = useState<StockItem | null>(null);
   const [editForm, setEditForm] = useState({ quantity: '', reorder_threshold: '' });
   const [editSaving, setEditSaving] = useState(false);
+
+  // Stock forms tab: 'receive' | 'count'
+  const [stockTab, setStockTab] = useState<'receive' | 'count'>('receive');
+  const [selectedItemId, setSelectedItemId] = useState('');
+  const [stockQty, setStockQty] = useState('');
+  const [stockNotes, setStockNotes] = useState('');
+  const [stockSaving, setStockSaving] = useState(false);
 
   useEffect(() => { loadStock(); }, []);
 
@@ -43,10 +74,86 @@ export default function InventoryPage() {
     }
   };
 
-  // Explicit reorder check — fires events for items below threshold
+  // Receive Stock — adds to existing quantity
+  const handleReceiveStock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedItemId || !stockQty) {
+      showToast({ type: 'error', message: 'Select an item and enter quantity received' });
+      return;
+    }
+    setStockSaving(true);
+    try {
+      const item = stock.find((s) => s.id === selectedItemId);
+      if (!item) throw new Error('Item not found');
+      const received = parseInt(stockQty);
+      if (isNaN(received) || received <= 0) throw new Error('Quantity must be a positive number');
+      const newQty = (item.quantity ?? 0) + received;
+
+      const { error } = await supabase
+        .from('inventory_items')
+        .update({ quantity: newQty, last_updated: new Date().toISOString() })
+        .eq('id', item.id);
+      if (error) throw error;
+
+      await fireReorderEventIfNeeded(item, newQty);
+
+      showToast({
+        type: 'success',
+        message: `Received ${received} ${item.unit} of ${item.item_name}. New stock: ${newQty} ${item.unit}.`,
+      });
+      setStockQty('');
+      setStockNotes('');
+      await loadStock();
+    } catch (err: any) {
+      showToast({ type: 'error', message: err.message ?? 'Error updating stock' });
+    } finally {
+      setStockSaving(false);
+    }
+  };
+
+  // Stock Count — overwrites quantity (physical reconciliation)
+  const handleStockCount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedItemId || stockQty === '') {
+      showToast({ type: 'error', message: 'Select an item and enter the actual count' });
+      return;
+    }
+    setStockSaving(true);
+    try {
+      const item = stock.find((s) => s.id === selectedItemId);
+      if (!item) throw new Error('Item not found');
+      const actualCount = parseInt(stockQty);
+      if (isNaN(actualCount) || actualCount < 0) throw new Error('Count must be zero or a positive number');
+      const prev = item.quantity ?? 0;
+      const diff = actualCount - prev;
+
+      const { error } = await supabase
+        .from('inventory_items')
+        .update({ quantity: actualCount, last_updated: new Date().toISOString() })
+        .eq('id', item.id);
+      if (error) throw error;
+
+      await fireReorderEventIfNeeded(item, actualCount);
+
+      showToast({
+        type: diff >= 0 ? 'success' : 'info',
+        message: `Stock count recorded: ${actualCount} ${item.unit} of ${item.item_name}. ${
+          diff !== 0 ? `Variance: ${diff > 0 ? '+' : ''}${diff} ${item.unit}.` : 'No variance.'
+        }`,
+      });
+      setStockQty('');
+      setStockNotes('');
+      await loadStock();
+    } catch (err: any) {
+      showToast({ type: 'error', message: err.message ?? 'Error recording count' });
+    } finally {
+      setStockSaving(false);
+    }
+  };
+
+  // Reorder check (explicit, fires consolidated event for all low items)
   const runReorderCheck = async () => {
     await loadStock();
-    // Re-fetch directly so we have latest data synchronously
     const { data } = await supabase
       .from('inventory_items')
       .select('*')
@@ -59,7 +166,6 @@ export default function InventoryPage() {
       return;
     }
 
-    // Write one event per low item (or one consolidated event)
     const { error: eventError } = await supabase.from('events').insert([{
       location_id: 'buziga',
       event_type: 'reorder_required',
@@ -97,15 +203,17 @@ export default function InventoryPage() {
     if (!editItem) return;
     setEditSaving(true);
     try {
+      const newQty = parseInt(editForm.quantity);
       const { error } = await supabase
         .from('inventory_items')
         .update({
-          quantity: parseInt(editForm.quantity),
+          quantity: newQty,
           reorder_threshold: parseInt(editForm.reorder_threshold),
           last_updated: new Date().toISOString(),
         })
         .eq('id', editItem.id);
       if (error) throw error;
+      await fireReorderEventIfNeeded(editItem, newQty);
       setEditItem(null);
       await loadStock();
     } catch (err) {
@@ -125,6 +233,8 @@ export default function InventoryPage() {
     if (item.quantity <= item.reorder_threshold * 1.2) return 'NEAR LIMIT';
     return 'OK';
   };
+
+  const selectedItem = stock.find((s) => s.id === selectedItemId);
 
   return (
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
@@ -183,16 +293,14 @@ export default function InventoryPage() {
       {/* Material Ledger Table */}
       <section className="mb-8 bg-surface border border-outline-variant/15 overflow-hidden">
         <div className="px-6 py-4 bg-surface-container-high border-b border-outline-variant/10 flex justify-between items-center">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-outline font-label">
-            Material Ledger
-          </h3>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-outline font-label">Material Ledger</h3>
           <span className="text-[10px] font-body text-outline/50">[source: inventory_items, buziga]</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-container-low border-b border-outline-variant/5">
-                {['Item Name', 'Category', 'Current Qty', 'Reorder Threshold', 'Status', ''].map((h) => (
+                {['Item Name', 'Category', 'Current Qty', 'Reorder Threshold', 'Last Updated', 'Status', ''].map((h) => (
                   <th key={h} className="px-6 py-4 text-[10px] font-bold text-outline uppercase tracking-wider font-label">{h}</th>
                 ))}
               </tr>
@@ -200,13 +308,11 @@ export default function InventoryPage() {
             <tbody className="divide-y divide-outline-variant/5 font-body">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-outline/50 font-label text-sm">
-                    Loading inventory...
-                  </td>
+                  <td colSpan={7} className="px-6 py-8 text-center text-outline/50 font-label text-sm">Loading inventory...</td>
                 </tr>
               ) : stock.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center font-label text-sm">
+                  <td colSpan={7} className="px-6 py-8 text-center font-label text-sm">
                     <p className="text-outline/50">No data — enter it.</p>
                     <p className="text-[10px] text-outline/30 mt-1 font-body">[source: inventory_items — no rows found for buziga]</p>
                   </td>
@@ -240,6 +346,11 @@ export default function InventoryPage() {
                     <td className="px-6 py-5 text-outline text-sm">
                       {item.reorder_threshold.toLocaleString()} {item.unit}
                     </td>
+                    <td className="px-6 py-5 text-[10px] font-label text-outline/50">
+                      {item.last_updated
+                        ? new Date(item.last_updated).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : '—'}
+                    </td>
                     <td className="px-6 py-5">
                       {isLow ? (
                         <span className="bg-tertiary-container text-on-tertiary-container px-3 py-1 text-[10px] font-bold uppercase rounded-none tracking-tighter flex items-center gap-1 w-fit font-label">
@@ -266,31 +377,125 @@ export default function InventoryPage() {
         </div>
       </section>
 
-      {/* Stats row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-surface-container-high p-8 ghost-border relative overflow-hidden">
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-3xl" />
-          <p className="text-[10px] font-label text-outline uppercase tracking-widest mb-4">Total Items</p>
-          <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-body font-bold text-on-surface">{stock.length}</span>
+      {/* Stock Write Forms */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="bg-surface-container-low ghost-border overflow-hidden">
+          {/* Tab switcher */}
+          <div className="flex border-b border-outline-variant/10">
+            {(['receive', 'count'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => { setStockTab(tab); setStockQty(''); setStockNotes(''); }}
+                className={`flex-1 py-3 text-[10px] font-bold uppercase tracking-widest font-label transition-colors ${
+                  stockTab === tab
+                    ? 'bg-primary-container/20 text-primary border-b-2 border-primary'
+                    : 'text-outline hover:text-on-surface'
+                }`}
+              >
+                {tab === 'receive' ? 'Receive Stock' : 'Stock Count'}
+              </button>
+            ))}
           </div>
-          <p className="text-[10px] font-label text-outline/50 mt-2">[source: inventory_items, buziga]</p>
-        </div>
-        <div className="bg-surface-container-high p-8 ghost-border relative overflow-hidden">
-          <p className="text-[10px] font-label text-outline uppercase tracking-widest mb-4">Below Threshold</p>
-          <div className="flex items-baseline gap-2">
-            <span className={`text-4xl font-body font-bold ${belowThreshold.length > 0 ? 'text-tertiary' : 'text-secondary'}`}>
-              {belowThreshold.length}
-            </span>
-          </div>
-          <p className="text-[10px] font-label text-outline/50 mt-2">[source: inventory_items, buziga]</p>
-        </div>
-        <div className="bg-surface-container border border-primary-container/20 p-8 flex flex-col justify-between">
-          <div>
-            <h4 className="text-sm font-bold text-primary mb-2 font-label">Automated Procurement</h4>
-            <p className="text-xs text-on-surface-variant font-label leading-relaxed">
-              System triggers reorder alerts when any item drops below its threshold. Founders receive a critical event notification.
+          <div className="p-6">
+            <p className="text-[10px] text-outline/60 font-label mb-4">
+              {stockTab === 'receive'
+                ? 'Add incoming stock to existing quantity (delivery, purchase)'
+                : 'Physical count — overwrites quantity in system (reconciliation)'}
             </p>
+            <form onSubmit={stockTab === 'receive' ? handleReceiveStock : handleStockCount} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Item</label>
+                <select
+                  value={selectedItemId}
+                  onChange={(e) => setSelectedItemId(e.target.value)}
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                >
+                  <option value="">Select item...</option>
+                  {stock.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.item_name} — current: {s.quantity} {s.unit}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">
+                  {stockTab === 'receive' ? 'Quantity Received' : 'Actual Count'}
+                  {selectedItem ? ` (${selectedItem.unit})` : ''}
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={stockQty}
+                  onChange={(e) => setStockQty(e.target.value)}
+                  placeholder={stockTab === 'receive' ? 'e.g., 200' : 'e.g., 150'}
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                />
+              </div>
+              {/* Preview */}
+              {selectedItem && stockQty !== '' && !isNaN(parseInt(stockQty)) && (
+                <div className="px-3 py-2 bg-surface-container text-[10px] font-label text-outline/70">
+                  {stockTab === 'receive'
+                    ? `New total: ${(selectedItem.quantity ?? 0) + parseInt(stockQty)} ${selectedItem.unit}`
+                    : `Variance: ${parseInt(stockQty) - (selectedItem.quantity ?? 0) >= 0 ? '+' : ''}${parseInt(stockQty) - (selectedItem.quantity ?? 0)} ${selectedItem.unit}`}
+                  {parseInt(stockQty) <= selectedItem.reorder_threshold && (
+                    <span className="ml-2 text-tertiary font-bold">⚠ Below reorder threshold — event will fire</span>
+                  )}
+                </div>
+              )}
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Notes (optional)</label>
+                <input
+                  type="text"
+                  value={stockNotes}
+                  onChange={(e) => setStockNotes(e.target.value)}
+                  placeholder="e.g., Delivery from supplier"
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={stockSaving || !selectedItemId || stockQty === ''}
+                className="w-full py-2.5 bg-primary-container text-on-primary-container font-label text-xs font-bold uppercase tracking-widest hover:brightness-110 disabled:opacity-50 transition-all"
+              >
+                {stockSaving
+                  ? 'Saving...'
+                  : stockTab === 'receive'
+                  ? 'Record Delivery'
+                  : 'Record Physical Count'}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Stats column */}
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              { label: 'Total Items', value: stock.length, color: 'text-on-surface' },
+              { label: 'Below Threshold', value: belowThreshold.length, color: belowThreshold.length > 0 ? 'text-tertiary' : 'text-secondary' },
+              { label: 'Near Limit', value: nearThreshold.length, color: nearThreshold.length > 0 ? 'text-primary' : 'text-outline' },
+            ].map((s) => (
+              <div key={s.label} className="bg-surface-container-high p-6 ghost-border">
+                <p className="text-[10px] font-label text-outline uppercase tracking-widest mb-3">{s.label}</p>
+                <p className={`text-3xl font-body font-bold ${s.color}`}>{s.value}</p>
+                <p className="text-[10px] font-label text-outline/50 mt-2">[source: inventory_items, buziga]</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-surface-container border border-primary-container/20 p-6 flex flex-col justify-between">
+            <div>
+              <h4 className="text-sm font-bold text-primary mb-2 font-label">Automated Procurement Loop</h4>
+              <div className="space-y-2 text-xs text-on-surface-variant font-label">
+                <p>• Receive Stock: adds to existing quantity (inbound delivery)</p>
+                <p>• Stock Count: overwrites with physical count (reconciliation)</p>
+                <p>• Both: auto-fire reorder_required event if qty ≤ threshold</p>
+                <p>• Production fills: increment on batch log</p>
+                <p>• Dispatch sales: decrement on sale record</p>
+              </div>
+            </div>
+            <p className="mt-4 text-[10px] font-label text-outline/40">[source: inventory_items, events — buziga]</p>
           </div>
         </div>
       </div>
@@ -321,18 +526,12 @@ export default function InventoryPage() {
                 />
               </div>
               <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setEditItem(null)}
-                  className="flex-1 py-2 bg-surface-container-high text-on-surface text-xs font-bold font-label hover:bg-surface-container-highest"
-                >
+                <button type="button" onClick={() => setEditItem(null)}
+                  className="flex-1 py-2 bg-surface-container-high text-on-surface text-xs font-bold font-label hover:bg-surface-container-highest">
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  disabled={editSaving}
-                  className="flex-1 py-2 bg-primary-container text-on-primary-container text-xs font-bold font-label hover:brightness-110 disabled:opacity-50"
-                >
+                <button type="submit" disabled={editSaving}
+                  className="flex-1 py-2 bg-primary-container text-on-primary-container text-xs font-bold font-label hover:brightness-110 disabled:opacity-50">
                   {editSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>

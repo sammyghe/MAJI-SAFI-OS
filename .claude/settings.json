@@ -6,7 +6,9 @@
       "Bash(rm -f \"stitch export/stitch_maji_safi_os/commercial_workspace/screen.png\")",
       "Bash(rm -f \"stitch export/stitch_maji_safi_os/executive_workspace/screen.png\")",
       "Bash(rm -f \"stitch export/stitch_maji_safi_os/finance_workspace/screen.png\")",
-      "Bash(rm -f \"stitch export/stitch_maji_safi_os/hr_workspace/screen.png\")"
+      "Bash(rm -f \"stitch export/stitch_maji_safi_os/hr_workspace/screen.png\")",
+      "Bash(grep -rA 25 \"CREATE TABLE.*production_logs\" \"c:/Users/user/Desktop/Mjai safi OS/scripts/\")",
+      "Bash(grep -rA 25 \"production_logs\" \"c:/Users/user/Desktop/Mjai safi OS/scripts/create_all_missing_tables.sql\")"
     ]
   }
 }

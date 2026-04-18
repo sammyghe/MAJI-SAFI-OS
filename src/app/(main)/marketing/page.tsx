@@ -14,12 +14,17 @@ interface Prospect {
   created_at: string;
 }
 
+const STATUS_OPTIONS = ['new', 'contacted', 'qualified', 'converted', 'dead'];
+
 export default function MarketingPage() {
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [leadForm, setLeadForm] = useState({ name: '', phone: '', product_interest: '20L Refill (Bulk)' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [editProspect, setEditProspect] = useState<Prospect | null>(null);
+  const [editForm, setEditForm] = useState({ status: 'new', phone: '', notes: '' });
+  const [editSaving, setEditSaving] = useState(false);
 
   useEffect(() => { loadProspects(); }, []);
 
@@ -65,6 +70,34 @@ export default function MarketingPage() {
     }
   };
 
+  const openEdit = (p: Prospect) => {
+    setEditProspect(p);
+    setEditForm({ status: p.status, phone: p.phone ?? '', notes: '' });
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editProspect) return;
+    setEditSaving(true);
+    try {
+      const { error } = await supabase
+        .from('prospects')
+        .update({
+          status: editForm.status,
+          phone: editForm.phone,
+          last_contact: new Date().toISOString().split('T')[0],
+        })
+        .eq('id', editProspect.id);
+      if (error) throw error;
+      setEditProspect(null);
+      await loadProspects();
+    } catch (err) {
+      console.error('Error updating prospect:', err);
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const newCount = prospects.filter((p) => p.status === 'new').length;
   const qualifiedCount = prospects.filter((p) => p.status === 'qualified').length;
   const convertedCount = prospects.filter((p) => p.status === 'converted').length;
@@ -78,13 +111,14 @@ export default function MarketingPage() {
     switch (status) {
       case 'converted': return 'bg-secondary-container text-secondary';
       case 'qualified': return 'bg-primary-container text-on-primary-container';
-      case 'sleeping': return 'bg-tertiary-container text-on-tertiary-container';
+      case 'contacted': return 'bg-surface-container-highest text-primary';
+      case 'dead': return 'bg-tertiary-container/30 text-outline';
       default: return 'bg-surface-container-highest text-on-surface-variant';
     }
   };
 
   return (
-    <div className="px-8 py-10 max-w-7xl mx-auto">
+    <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12">
         <div>
@@ -121,55 +155,54 @@ export default function MarketingPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
-        {/* Prospect Table */}
-        <div className="col-span-12">
-          <div className="bg-surface-container-low border border-outline-variant/10 overflow-hidden mb-8">
-            <div className="p-6 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container">
-              <h3 className="font-headline font-bold text-lg">Active Distribution Pipeline</h3>
-              <span className="text-[10px] font-body text-outline/50 uppercase tracking-widest">
-                [source: prospects, buziga]
-              </span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-surface-container-lowest">
-                    {['Name', 'Phone', 'Product Interest', 'Status', 'Added'].map((h) => (
-                      <th key={h} className="px-6 py-4 text-[10px] font-label text-outline uppercase tracking-widest">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/10">
-                  {loading ? (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-outline/50 font-label text-sm">Loading...</td>
-                    </tr>
-                  ) : prospects.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-outline/50 font-label text-sm">No prospects yet — add the first lead below</td>
-                    </tr>
-                  ) : prospects.map((p) => (
-                    <tr key={p.id} className="hover:bg-surface-container-high/50 transition-colors">
-                      <td className="px-6 py-5 text-sm font-medium">{p.name}</td>
-                      <td className="px-6 py-5 text-sm text-outline font-label">{p.phone ?? '—'}</td>
-                      <td className="px-6 py-5 text-sm font-body">{p.product_interest ?? '—'}</td>
-                      <td className="px-6 py-5">
-                        <span className={`${statusColor(p.status)} text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter uppercase`}>
-                          {p.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5 text-sm font-body text-outline/70">
-                        {new Date(p.created_at).toLocaleDateString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+      {/* Prospect Table */}
+      <div className="bg-surface-container-low border border-outline-variant/10 overflow-hidden mb-8">
+        <div className="p-6 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container">
+          <h3 className="font-headline font-bold text-lg">Active Distribution Pipeline</h3>
+          <span className="text-[10px] font-body text-outline/50 uppercase tracking-widest">[source: prospects, buziga]</span>
         </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-surface-container-lowest">
+                {['Name', 'Phone', 'Product Interest', 'Status', 'Added', ''].map((h) => (
+                  <th key={h} className="px-6 py-4 text-[10px] font-label text-outline uppercase tracking-widest">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant/10">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-outline/50 font-label text-sm">Loading...</td>
+                </tr>
+              ) : prospects.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-outline/50 font-label text-sm">No prospects yet — add the first lead below</td>
+                </tr>
+              ) : prospects.map((p) => (
+                <tr key={p.id} className="hover:bg-surface-container-high/50 transition-colors cursor-pointer" onClick={() => openEdit(p)}>
+                  <td className="px-6 py-5 text-sm font-medium">{p.name}</td>
+                  <td className="px-6 py-5 text-sm text-outline font-label">{p.phone ?? '—'}</td>
+                  <td className="px-6 py-5 text-sm font-body">{p.product_interest ?? '—'}</td>
+                  <td className="px-6 py-5">
+                    <span className={`${statusColor(p.status)} text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter uppercase`}>
+                      {p.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-5 text-sm font-body text-outline/70">
+                    {new Date(p.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-5">
+                    <span className="text-xs font-label text-primary">Edit</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
+      <div className="grid grid-cols-12 gap-6">
         {/* Lead Intake Form */}
         <div className="col-span-12 lg:col-span-7 bg-surface-container ghost-border p-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
@@ -177,7 +210,7 @@ export default function MarketingPage() {
           </div>
           <h4 className="font-headline font-bold text-xl mb-6">Record New Lead</h4>
           <form onSubmit={handleAddLead} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-[10px] uppercase text-outline font-label tracking-widest">Lead Name</label>
                 <input
@@ -245,11 +278,53 @@ export default function MarketingPage() {
             <p className="text-xs text-outline font-label uppercase tracking-widest mb-2">Target</p>
             <p className="text-xl font-headline font-bold">3 T1 prospects / week</p>
             <p className="text-xs text-on-surface-variant font-label leading-relaxed mt-2">
-              Sleeping distributors (no order in 7+ days) trigger automatic alerts to founders.
+              Click any row to update status, phone, or contact date.
             </p>
           </div>
         </div>
       </div>
+
+      {/* Edit Prospect Modal */}
+      {editProspect && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-container-low border border-outline-variant/20 p-8 max-w-sm w-full">
+            <h2 className="text-xl font-bold font-headline mb-1">{editProspect.name}</h2>
+            <p className="text-[10px] text-outline/50 font-label mb-6">[source: prospects row {editProspect.id?.slice(0, 8)}]</p>
+            <form onSubmit={handleEditSave} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Status</label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                >
+                  {STATUS_OPTIONS.map((s) => <option key={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Phone</label>
+                <input
+                  type="text"
+                  value={editForm.phone}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                />
+              </div>
+              <p className="text-[10px] text-outline/50 font-label">Saving will also update last_contact to today.</p>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setEditProspect(null)}
+                  className="flex-1 py-2 bg-surface-container-high text-on-surface text-xs font-bold font-label hover:bg-surface-container-highest">
+                  Cancel
+                </button>
+                <button type="submit" disabled={editSaving}
+                  className="flex-1 py-2 bg-primary-container text-on-primary-container text-xs font-bold font-label hover:brightness-110 disabled:opacity-50">
+                  {editSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

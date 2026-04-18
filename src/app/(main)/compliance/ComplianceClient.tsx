@@ -8,6 +8,9 @@ export default function ComplianceClient({ initialRecords }: { initialRecords: a
   const [records, setRecords] = useState<any[]>(initialRecords);
   const [uploading, setUploading] = useState<string | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const [editRecord, setEditRecord] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ status: 'missing', expiry_date: '' });
+  const [editSaving, setEditSaving] = useState(false);
 
   const [tasks, setTasks] = useState([
     { id: 1, text: 'Validate daily operational logs', checked: true },
@@ -50,13 +53,42 @@ export default function ComplianceClient({ initialRecords }: { initialRecords: a
       const { error: uploadError } = await supabase.storage.from('maji_documents').upload(fileName, file);
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from('maji_documents').getPublicUrl(fileName);
-      await supabase.from('compliance_records').update({ file_url: data.publicUrl, status: 'active' }).eq('id', recordId);
+      await supabase.from('compliance_records').update({ file_url: data.publicUrl, status: 'active', updated_at: new Date().toISOString() }).eq('id', recordId);
       setRecords(records.map((r) => r.id === recordId ? { ...r, file_url: data.publicUrl, status: 'active' } : r));
       showToast({ type: 'success', message: 'Compliance document uploaded.' });
     } catch (err: any) {
       showToast({ type: 'error', message: 'Upload failed: ' + err.message });
     }
     setUploading(null);
+  };
+
+  const openEdit = (record: any) => {
+    setEditRecord(record);
+    setEditForm({ status: record.status, expiry_date: record.expiry_date ?? '' });
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editRecord) return;
+    setEditSaving(true);
+    try {
+      const { error } = await supabase
+        .from('compliance_records')
+        .update({
+          status: editForm.status,
+          expiry_date: editForm.expiry_date || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editRecord.id);
+      if (error) throw error;
+      setRecords(records.map((r) => r.id === editRecord.id ? { ...r, status: editForm.status, expiry_date: editForm.expiry_date } : r));
+      showToast({ type: 'success', message: 'Record updated.' });
+      setEditRecord(null);
+    } catch (err: any) {
+      showToast({ type: 'error', message: err.message ?? 'Error saving' });
+    } finally {
+      setEditSaving(false);
+    }
   };
 
   const expiringSoon = records.filter((r) => {
@@ -105,13 +137,14 @@ export default function ComplianceClient({ initialRecords }: { initialRecords: a
               return (
                 <div
                   key={record.id}
-                  className={`px-6 py-5 flex items-center justify-between transition-colors hover:bg-surface-container-high/30 ${isExpiring ? 'border-l-2 border-tertiary-container' : ''}`}
+                  className={`px-6 py-5 flex items-center justify-between transition-colors hover:bg-surface-container-high/30 cursor-pointer ${isExpiring ? 'border-l-2 border-tertiary-container' : ''}`}
+                  onClick={() => openEdit(record)}
                 >
-                  <div>
+                  <div className="flex-1 min-w-0 mr-4">
                     <p className="font-bold text-on-surface text-sm font-label">{record.document_name}</p>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className={`text-[10px] font-bold uppercase font-label ${record.status === 'active' ? 'text-secondary' : 'text-outline/50'}`}>
-                        {record.status === 'active' ? '● Active' : '○ Missing'}
+                      <span className={`text-[10px] font-bold uppercase font-label ${record.status === 'active' ? 'text-secondary' : record.status === 'expired' ? 'text-tertiary' : 'text-outline/50'}`}>
+                        {record.status === 'active' ? '● Active' : record.status === 'expired' ? '● Expired' : '○ Missing'}
                       </span>
                       <span className={`text-[10px] font-label ${isExpired ? 'text-tertiary' : isExpiring ? 'text-tertiary-container' : 'text-outline/50'}`}>
                         {isExpired ? `Expired ${record.expiry_date}` : `Exp: ${record.expiry_date}`}
@@ -126,11 +159,15 @@ export default function ComplianceClient({ initialRecords }: { initialRecords: a
                         target="_blank"
                         rel="noreferrer"
                         className="text-xs font-bold text-primary font-label hover:text-primary/70"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         VIEW
                       </a>
                     )}
-                    <label className="text-xs cursor-pointer text-outline hover:text-on-surface flex items-center gap-1 font-label border border-outline-variant/30 px-3 py-1 transition-colors hover:bg-surface-container-high">
+                    <label
+                      className="text-xs cursor-pointer text-outline hover:text-on-surface flex items-center gap-1 font-label border border-outline-variant/30 px-3 py-1 transition-colors hover:bg-surface-container-high"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       {uploading === record.id ? (
                         <span className="animate-pulse">...</span>
                       ) : (
@@ -202,6 +239,50 @@ export default function ComplianceClient({ initialRecords }: { initialRecords: a
           </div>
         </div>
       </div>
+
+      {/* Edit Record Modal */}
+      {editRecord && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-container-low border border-outline-variant/20 p-8 max-w-sm w-full">
+            <h2 className="text-xl font-bold font-headline mb-1">Edit Document</h2>
+            <p className="text-sm text-on-surface-variant font-label mb-1">{editRecord.document_name}</p>
+            <p className="text-[10px] text-outline/50 font-label mb-6">[source: compliance_records row {editRecord.id?.slice(0, 8)}]</p>
+            <form onSubmit={handleEditSave} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Status</label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                >
+                  <option value="missing">Missing</option>
+                  <option value="active">Active</option>
+                  <option value="expired">Expired</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Expiry Date</label>
+                <input
+                  type="date"
+                  value={editForm.expiry_date}
+                  onChange={(e) => setEditForm({ ...editForm, expiry_date: e.target.value })}
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setEditRecord(null)}
+                  className="flex-1 py-2 bg-surface-container-high text-on-surface text-xs font-bold font-label hover:bg-surface-container-highest">
+                  Cancel
+                </button>
+                <button type="submit" disabled={editSaving}
+                  className="flex-1 py-2 bg-primary-container text-on-primary-container text-xs font-bold font-label hover:brightness-110 disabled:opacity-50">
+                  {editSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

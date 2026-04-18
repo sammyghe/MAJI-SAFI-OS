@@ -5,18 +5,19 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
 
+// Ledger row computed from transactions table
 interface LedgerRow {
-  id: string;
+  budgetId: string;   // id of the budget entry row
   category: string;
-  budgeted: number;
-  spent: number;
+  budgeted: number;   // amount_ugx where description='__budget__' and transaction_type IS NULL
+  spent: number;      // SUM(amount_ugx) where transaction_type='expense'
   period: string;
 }
 
 interface CashRow {
   id: string;
-  amount: number;
-  recorded_at: string;
+  physical_cash_count_ugx: number;
+  created_at: string;
 }
 
 const CATEGORIES = ['Chemicals', 'Caps', 'Labels', 'Salaries', 'Transport', 'UNBS Fees', 'Utilities', 'Misc'];
@@ -41,16 +42,31 @@ function PctBar({ pct }: { pct: number }) {
   );
 }
 
+// Compute period start/end from YYYY-MM string
+function periodRange(period: string) {
+  const [year, month] = period.split('-');
+  const y = parseInt(year);
+  const m = parseInt(month);
+  const nextM = m === 12 ? 1 : m + 1;
+  const nextY = m === 12 ? y + 1 : y;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return {
+    start: `${year}-${month}-01`,
+    end: `${nextY}-${pad(nextM)}-01`,
+  };
+}
+
 export default function FinancePage() {
   const { user } = useAuth();
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
+  const [allTxns, setAllTxns] = useState<any[]>([]);
   const [cash, setCash] = useState<CashRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeForm, setActiveForm] = useState<'budget' | 'expense' | 'cash'>('budget');
   const [formSaving, setFormSaving] = useState(false);
   const [formError, setFormError] = useState('');
   const [budgetForm, setBudgetForm] = useState({ category: CATEGORIES[0], amount: '' });
-  const [expenseForm, setExpenseForm] = useState({ category: CATEGORIES[0], amount: '' });
+  const [expenseForm, setExpenseForm] = useState({ category: CATEGORIES[0], amount: '', description: '' });
   const [cashForm, setCashForm] = useState({ amount: '' });
 
   // EOD state
@@ -60,26 +76,56 @@ export default function FinancePage() {
   const [eodSaving, setEodSaving] = useState(false);
 
   const period = new Date().toISOString().slice(0, 7); // YYYY-MM
+  const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     try {
-      const [{ data: ledgerData }, { data: cashData }] = await Promise.all([
+      const { start, end } = periodRange(period);
+
+      const [{ data: txnData }, { data: cashData }] = await Promise.all([
         supabase
           .from('transactions')
-          .select('id, category, budgeted, spent, period')
+          .select('*')
           .eq('location_id', 'buziga')
-          .eq('period', period),
+          .gte('transaction_date', start)
+          .lt('transaction_date', end),
         supabase
           .from('daily_cash')
-          .select('id, amount, recorded_at')
+          .select('id, physical_cash_count_ugx, created_at')
           .eq('location_id', 'buziga')
-          .order('recorded_at', { ascending: false })
+          .eq('date', today)
+          .order('created_at', { ascending: false })
           .limit(1)
-          .single(),
+          .maybeSingle(),
       ]);
-      setLedger(ledgerData ?? []);
+
+      const txns = txnData ?? [];
+      setAllTxns(txns);
+
+      // Compute envelope ledger from transactions
+      const rows: LedgerRow[] = CATEGORIES.map((cat) => {
+        // Budget entry: transaction_type IS NULL + description='__budget__'
+        const budgetEntry = txns
+          .filter((t) => t.category === cat && t.description === '__budget__' && !t.transaction_type)
+          .sort((a: any, b: any) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime())[0];
+
+        // Expenses: transaction_type='expense'
+        const spent = txns
+          .filter((t) => t.category === cat && t.transaction_type === 'expense')
+          .reduce((sum: number, t: any) => sum + (t.amount_ugx ?? 0), 0);
+
+        return {
+          budgetId: budgetEntry?.id ?? '',
+          category: cat,
+          budgeted: budgetEntry?.amount_ugx ?? 0,
+          spent,
+          period,
+        };
+      });
+
+      setLedger(rows);
       setCash(cashData ?? null);
     } catch (err) {
       console.error('Finance load error:', err);
@@ -89,7 +135,6 @@ export default function FinancePage() {
   };
 
   const loadSalesTotal = async () => {
-    const today = new Date().toISOString().split('T')[0];
     const { data } = await supabase
       .from('sales_ledger')
       .select('amount_ugx')
@@ -104,7 +149,7 @@ export default function FinancePage() {
   const totalSpent = ledger.reduce((s, r) => s + (r.spent ?? 0), 0);
   const totalRemaining = totalBudgeted - totalSpent;
   const totalPct = totalBudgeted > 0 ? (totalSpent / totalBudgeted) * 100 : 0;
-  const overBudget = ledger.filter((r) => r.spent > r.budgeted);
+  const overBudget = ledger.filter((r) => r.budgeted > 0 && r.spent > r.budgeted);
 
   // ── Set Monthly Budget ──────────────────────────────────────────────────────
   const handleSetBudget = async (e: React.FormEvent) => {
@@ -116,11 +161,13 @@ export default function FinancePage() {
     }
     setFormSaving(true);
     try {
-      const existing = getRow(budgetForm.category);
+      const existing = allTxns.find(
+        (t) => t.category === budgetForm.category && t.description === '__budget__' && !t.transaction_type
+      );
       if (existing) {
         const { error } = await supabase
           .from('transactions')
-          .update({ budgeted: parseInt(budgetForm.amount) })
+          .update({ amount_ugx: parseInt(budgetForm.amount) })
           .eq('id', existing.id);
         if (error) throw error;
       } else {
@@ -129,9 +176,10 @@ export default function FinancePage() {
           .insert([{
             location_id: 'buziga',
             category: budgetForm.category,
-            period,
-            budgeted: parseInt(budgetForm.amount),
-            spent: 0,
+            description: '__budget__',
+            amount_ugx: parseInt(budgetForm.amount),
+            // transaction_type omitted → NULL (budget allocation marker)
+            recorded_by: user?.name ?? 'System',
           }]);
         if (error) throw error;
       }
@@ -155,29 +203,20 @@ export default function FinancePage() {
     }
     setFormSaving(true);
     try {
-      const amount = parseInt(expenseForm.amount);
-      const existing = getRow(expenseForm.category);
-      if (existing) {
-        const { error } = await supabase
-          .from('transactions')
-          .update({ spent: existing.spent + amount })
-          .eq('id', existing.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('transactions')
-          .insert([{
-            location_id: 'buziga',
-            category: expenseForm.category,
-            period,
-            budgeted: 0,
-            spent: amount,
-          }]);
-        if (error) throw error;
-      }
+      const { error } = await supabase
+        .from('transactions')
+        .insert([{
+          location_id: 'buziga',
+          category: expenseForm.category,
+          description: expenseForm.description || expenseForm.category,
+          amount_ugx: parseInt(expenseForm.amount),
+          transaction_type: 'expense',
+          recorded_by: user?.name ?? 'System',
+        }]);
+      if (error) throw error;
       await loadData();
-      setExpenseForm({ category: CATEGORIES[0], amount: '' });
-      showToast({ type: 'success', message: `Expense logged: ${expenseForm.category} — UGX ${amount.toLocaleString()}` });
+      setExpenseForm({ category: CATEGORIES[0], amount: '', description: '' });
+      showToast({ type: 'success', message: `Expense logged: ${expenseForm.category} — UGX ${parseInt(expenseForm.amount).toLocaleString()}` });
     } catch (err: any) {
       setFormError(err.message ?? 'Error logging expense');
     } finally {
@@ -197,7 +236,11 @@ export default function FinancePage() {
     try {
       const { error } = await supabase
         .from('daily_cash')
-        .insert([{ amount: parseInt(cashForm.amount), location_id: 'buziga' }]);
+        .insert([{
+          physical_cash_count_ugx: parseInt(cashForm.amount),
+          location_id: 'buziga',
+          date: today,
+        }]);
       if (error) throw error;
       await loadData();
       setCashForm({ amount: '' });
@@ -216,7 +259,7 @@ export default function FinancePage() {
     setShowEOD(true);
   };
 
-  const cashCounted = cash?.amount ?? 0;
+  const cashCounted = cash?.physical_cash_count_ugx ?? 0;
   const isMismatch = showEOD && Math.abs(cashCounted - salesTotal) > 0;
 
   const handleEODClose = async () => {
@@ -245,7 +288,7 @@ export default function FinancePage() {
   const canOpenEOD = cash !== null;
 
   return (
-    <div className="px-8 py-10 max-w-7xl mx-auto">
+    <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
       {/* Header */}
       <header className="mb-12">
         <div className="flex justify-between items-end flex-wrap gap-4">
@@ -299,20 +342,22 @@ export default function FinancePage() {
         <div className="col-span-12 lg:col-span-8 bg-surface-container-low ghost-border p-8 relative overflow-hidden">
           <div className="flex justify-between items-start mb-8 flex-wrap gap-4">
             <div>
-              <h3 className="text-sm font-bold text-on-surface-variant font-headline">Cash Position</h3>
+              <h3 className="text-sm font-bold text-on-surface-variant font-headline">Cash Position (Today)</h3>
               <p className="text-xs text-outline/70 font-label">
-                {cash ? `Recorded ${new Date(cash.recorded_at).toLocaleDateString()}` : 'No data recorded today'}
+                {cash
+                  ? `Recorded ${new Date(cash.created_at).toLocaleDateString()}`
+                  : 'No cash recorded today — use Record Daily Cash tab below'}
               </p>
             </div>
             <div className="text-right">
               {cash ? (
                 <>
                   <span className="text-2xl font-body font-bold text-primary">
-                    {fmtUGX(cash.amount)}
+                    {fmtUGX(cash.physical_cash_count_ugx)}
                     <span className="text-xs font-label font-normal opacity-50 ml-1">UGX</span>
                   </span>
                   <p className="text-[10px] text-outline/50 uppercase font-label tracking-widest mt-1">
-                    [source: daily_cash row {cash.id?.slice(0, 8)}, {cash.recorded_at.slice(0, 10)}]
+                    [source: daily_cash row {cash.id?.slice(0, 8)}, {today}]
                   </p>
                 </>
               ) : (
@@ -351,14 +396,14 @@ export default function FinancePage() {
                   <span className="text-sm text-on-surface-variant font-label">Budgeted</span>
                   <span className="font-body text-lg">
                     {fmtUGX(totalBudgeted)}
-                    <span className="text-[10px] text-outline/50 ml-1">[Ref-B1]</span>
+                    <span className="text-[10px] text-outline/50 ml-1">[source: transactions]</span>
                   </span>
                 </div>
                 <div className="flex justify-between items-baseline">
                   <span className="text-sm text-on-surface-variant font-label">Spent</span>
                   <span className="font-body text-lg">
                     {fmtUGX(totalSpent)}
-                    <span className="text-[10px] text-outline/50 ml-1">[Ref-B2]</span>
+                    <span className="text-[10px] text-outline/50 ml-1">[source: transactions]</span>
                   </span>
                 </div>
                 <div className="flex justify-between items-baseline border-t border-outline-variant pt-4 mt-4">
@@ -383,7 +428,7 @@ export default function FinancePage() {
       {/* ── Data Entry Row ──────────────────────────────────────────────────── */}
       <div className="mb-8 bg-surface-container-low ghost-border overflow-hidden">
         {/* Tab bar */}
-        <div className="flex border-b border-outline-variant/10">
+        <div className="flex flex-wrap border-b border-outline-variant/10">
           {[
             { key: 'budget', label: 'Set Monthly Budget', icon: 'account_balance' },
             { key: 'expense', label: 'Log Expense', icon: 'receipt_long' },
@@ -392,14 +437,14 @@ export default function FinancePage() {
             <button
               key={tab.key}
               onClick={() => { setActiveForm(tab.key as any); setFormError(''); }}
-              className={`flex items-center gap-2 px-6 py-4 text-xs font-bold font-label uppercase tracking-widest transition-colors ${
+              className={`flex items-center gap-2 px-4 md:px-6 py-4 text-xs font-bold font-label uppercase tracking-widest transition-colors ${
                 activeForm === tab.key
                   ? 'border-b-2 border-primary text-primary bg-surface-container'
                   : 'text-outline hover:text-on-surface hover:bg-surface-container-high/20'
               }`}
             >
               <span className="material-symbols-outlined text-sm">{tab.icon}</span>
-              {tab.label}
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>
@@ -411,7 +456,7 @@ export default function FinancePage() {
               <p className="text-xs text-on-surface-variant font-label mb-6 leading-relaxed">
                 Set or update the monthly budget for an envelope. If a row exists for this period it will be updated; otherwise a new row is created.
               </p>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase text-outline font-label tracking-widest">Category</label>
                   <select
@@ -448,9 +493,9 @@ export default function FinancePage() {
           {activeForm === 'expense' && (
             <form onSubmit={handleLogExpense} className="max-w-lg">
               <p className="text-xs text-on-surface-variant font-label mb-6 leading-relaxed">
-                Log a spend against an envelope. The amount is added to the current "spent" total for this category and period.
+                Log a spend against an envelope. Each expense is recorded as an individual transaction and added to the category total.
               </p>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase text-outline font-label tracking-widest">Category</label>
                   <select
@@ -472,11 +517,21 @@ export default function FinancePage() {
                   />
                 </div>
               </div>
-              {/* Show current row balance if exists */}
-              {getRow(expenseForm.category) && (
+              <div className="space-y-1 mb-4">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Description (optional)</label>
+                <input
+                  type="text"
+                  value={expenseForm.description}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
+                  placeholder="e.g. Chlorine restock"
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 text-sm font-label py-2 text-on-surface"
+                />
+              </div>
+              {/* Show current balance if exists */}
+              {getRow(expenseForm.category) && (getRow(expenseForm.category)!.budgeted > 0 || getRow(expenseForm.category)!.spent > 0) && (
                 <div className="mb-4 px-4 py-3 bg-surface-container-highest text-[10px] font-label text-outline/70">
                   Current: Spent {fmtUGX(getRow(expenseForm.category)!.spent)} / Budgeted {fmtUGX(getRow(expenseForm.category)!.budgeted)} UGX
-                  <span className="ml-2 text-outline/40">[source: transactions row {getRow(expenseForm.category)!.id?.slice(0, 8)}, {period}]</span>
+                  <span className="ml-2 text-outline/40">[source: transactions, {period}]</span>
                 </div>
               )}
               {formError && <p className="text-tertiary text-xs font-label mb-3">{formError}</p>}
@@ -494,12 +549,12 @@ export default function FinancePage() {
           {activeForm === 'cash' && (
             <form onSubmit={handleLogCash} className="max-w-lg">
               <p className="text-xs text-on-surface-variant font-label mb-6 leading-relaxed">
-                Record the physical cash count at end of day. Each entry is timestamped. The latest entry is used for EOD reconciliation.
+                Record the physical cash count for today. The latest entry for the current date is used for EOD reconciliation.
               </p>
               {cash && (
                 <div className="mb-4 px-4 py-3 bg-surface-container-highest text-[10px] font-label text-outline/70">
-                  Last recorded: UGX {fmtUGX(cash.amount)} on {new Date(cash.recorded_at).toLocaleString()}
-                  <span className="ml-2 text-outline/40">[source: daily_cash row {cash.id?.slice(0, 8)}, {cash.recorded_at.slice(0, 10)}]</span>
+                  Last recorded today: UGX {fmtUGX(cash.physical_cash_count_ugx)} at {new Date(cash.created_at).toLocaleTimeString()}
+                  <span className="ml-2 text-outline/40">[source: daily_cash row {cash.id?.slice(0, 8)}, {today}]</span>
                 </div>
               )}
               <div className="space-y-1 mb-4">
@@ -526,7 +581,7 @@ export default function FinancePage() {
       </div>
 
       {/* Envelope Ledger Table */}
-      <div className="col-span-12 bg-surface-container-lowest ghost-border overflow-hidden mb-6">
+      <div className="bg-surface-container-lowest ghost-border overflow-hidden mb-6">
         <div className="p-6 border-b border-outline-variant/10 flex justify-between items-center">
           <h3 className="text-sm font-bold font-headline uppercase tracking-widest">Envelope Ledger Detail</h3>
           <span className="px-2 py-1 bg-surface-container-high text-[10px] font-body text-outline">
@@ -537,10 +592,10 @@ export default function FinancePage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-container-low/50">
-                {['Envelope Name', 'Budgeted (UGX)', 'Spent (UGX)', 'Remaining (UGX)', '% Used'].map((h) => (
+                {['Envelope', 'Budgeted (UGX)', 'Spent (UGX)', 'Remaining (UGX)', '% Used'].map((h) => (
                   <th
                     key={h}
-                    className={`px-6 py-4 text-[10px] font-bold text-outline uppercase tracking-wider font-label ${h !== 'Envelope Name' ? 'text-right' : ''}`}
+                    className={`px-6 py-4 text-[10px] font-bold text-outline uppercase tracking-wider font-label ${h !== 'Envelope' ? 'text-right' : ''}`}
                   >
                     {h}
                   </th>
@@ -550,13 +605,13 @@ export default function FinancePage() {
             <tbody className="divide-y divide-outline-variant/10">
               {CATEGORIES.map((cat) => {
                 const row = getRow(cat);
-                if (!row) {
+                if (!row || (row.budgeted === 0 && row.spent === 0)) {
                   return (
                     <tr key={cat} className="hover:bg-surface-container-high/30 transition-colors">
                       <td className="px-6 py-4 font-label text-sm">{cat}</td>
                       <td className="px-6 py-4 text-right font-label text-xs text-outline/40 italic" colSpan={4}>
                         No data — enter it.
-                        <span className="ml-1 text-[10px]">[source: transactions — no {cat} row for {period}]</span>
+                        <span className="ml-1 text-[10px]">[source: transactions — no {cat} entry for {period}]</span>
                       </td>
                     </tr>
                   );
@@ -564,22 +619,21 @@ export default function FinancePage() {
                 const remaining = row.budgeted - row.spent;
                 const pct = row.budgeted > 0 ? (row.spent / row.budgeted) * 100 : 0;
                 return (
-                  <tr key={cat} className={`hover:bg-surface-container-high/30 transition-colors ${row.spent > row.budgeted ? 'border-l-2 border-tertiary-container' : ''}`}>
+                  <tr key={cat} className={`hover:bg-surface-container-high/30 transition-colors ${row.spent > row.budgeted && row.budgeted > 0 ? 'border-l-2 border-tertiary-container' : ''}`}>
                     <td className="px-6 py-4 font-label text-sm">{cat}</td>
                     <td className="px-6 py-4 text-right font-body text-sm font-semibold">
-                      {fmtUGX(row.budgeted)}
-                      <span className="text-[10px] text-outline/40 ml-1">[source: transactions row {row.id?.slice(0, 8)}, {period}]</span>
+                      {row.budgeted > 0 ? fmtUGX(row.budgeted) : '—'}
+                      {row.budgetId && <span className="text-[10px] text-outline/40 ml-1">[source: transactions row {row.budgetId?.slice(0, 8)}, {period}]</span>}
                     </td>
                     <td className="px-6 py-4 text-right font-body text-sm">
                       {fmtUGX(row.spent)}
-                      <span className="text-[10px] text-outline/40 ml-1">[source: transactions row {row.id?.slice(0, 8)}, {period}]</span>
+                      <span className="text-[10px] text-outline/40 ml-1">[source: transactions, {period}]</span>
                     </td>
                     <td className={`px-6 py-4 text-right font-body text-sm ${remaining < 0 ? 'text-tertiary font-bold' : ''}`}>
-                      {fmtUGX(remaining)}
-                      <span className="text-[10px] text-outline/40 ml-1">[source: transactions row {row.id?.slice(0, 8)}, {period}]</span>
+                      {row.budgeted > 0 ? fmtUGX(remaining) : '—'}
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <PctBar pct={pct} />
+                      {row.budgeted > 0 ? <PctBar pct={pct} /> : <span className="text-[10px] text-outline/40">—</span>}
                     </td>
                   </tr>
                 );
@@ -604,7 +658,7 @@ export default function FinancePage() {
       </div>
 
       <p className="text-[10px] text-outline/40 font-label">
-        Anti-hallucination policy: every number above has a source tag. If a source tag reads &quot;no row found&quot;, the data has not been entered yet.
+        Anti-hallucination policy: every number above has a source tag. If a source tag reads &quot;no entry found&quot;, the data has not been entered yet.
       </p>
 
       {/* ── EOD Modal ─────────────────────────────────────────────────────────── */}
@@ -621,7 +675,7 @@ export default function FinancePage() {
                 <div>
                   <p className="text-[10px] text-outline font-label uppercase tracking-widest">Daily Cash (physical count)</p>
                   <p className="text-[10px] text-outline/50 font-label mt-0.5">
-                    [source: daily_cash row {cash?.id?.slice(0, 8)}, {cash?.recorded_at?.slice(0, 10)}]
+                    [source: daily_cash row {cash?.id?.slice(0, 8)}, {today}]
                   </p>
                 </div>
                 <p className="text-xl font-bold text-primary-container font-body">
@@ -638,7 +692,6 @@ export default function FinancePage() {
                 </p>
               </div>
 
-              {/* Diff */}
               <div className={`p-4 flex justify-between items-center ${isMismatch ? 'bg-tertiary-container/10 border-l-2 border-tertiary-container' : 'bg-secondary-container/10 border-l-2 border-secondary'}`}>
                 <p className={`text-xs font-bold font-label uppercase tracking-widest ${isMismatch ? 'text-tertiary' : 'text-secondary'}`}>
                   {isMismatch ? `Mismatch — UGX ${fmtUGX(Math.abs(cashCounted - salesTotal))}` : 'Balanced'}

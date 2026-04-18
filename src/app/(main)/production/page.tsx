@@ -14,6 +14,9 @@ export default function ProductionPage() {
   const [batches, setBatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [editBatch, setEditBatch] = useState<any | null>(null);
+  const [editForm, setEditForm] = useState({ jar_count: '', notes: '', status: 'created' });
+  const [editSaving, setEditSaving] = useState(false);
 
   useEffect(() => { loadBatches(); }, []);
 
@@ -60,11 +63,38 @@ export default function ProductionPage() {
     }
   };
 
+  const openEdit = (batch: any) => {
+    setEditBatch(batch);
+    setEditForm({ jar_count: batch.jar_count?.toString() ?? '', notes: batch.notes ?? '', status: batch.status ?? 'created' });
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editBatch) return;
+    setEditSaving(true);
+    try {
+      const { error } = await supabase
+        .from('production_logs')
+        .update({
+          jar_count: parseInt(editForm.jar_count),
+          notes: editForm.notes,
+          status: editForm.status,
+        })
+        .eq('id', editBatch.id);
+      if (error) throw error;
+      setEditBatch(null);
+      await loadBatches();
+    } catch (err) {
+      console.error('Error saving batch:', err);
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const jarsToday = batches.reduce((sum, b) => sum + (b.jar_count ?? 0), 0);
-  const uptimePct = 98; // static until machine sensor integration
 
   return (
-    <div className="px-8 py-10 max-w-7xl mx-auto">
+    <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex justify-between items-end mb-12 flex-wrap gap-4">
         <div>
@@ -97,7 +127,7 @@ export default function ProductionPage() {
           },
           {
             label: 'Machine Uptime',
-            value: uptimePct.toString(),
+            value: '98',
             suffix: '%',
             color: 'text-secondary',
             ref: 'OEE-DASH-V3',
@@ -133,45 +163,54 @@ export default function ProductionPage() {
           <h3 className="font-headline text-xl font-bold">Today&apos;s Batch Ledger</h3>
         </div>
         <div className="bg-surface-container-lowest ghost-border overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-[#262a31]/30">
-                {['Batch ID', 'Product', 'Jars', 'Operator', 'Status'].map((h) => (
-                  <th key={h} className="px-6 py-4 font-label text-[11px] uppercase tracking-widest text-slate-500">{h}</th>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-[#262a31]/30">
+                  {['Batch ID', 'Product', 'Jars', 'Operator', 'Status', ''].map((h) => (
+                    <th key={h} className="px-6 py-4 font-label text-[11px] uppercase tracking-widest text-slate-500">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="font-body">
+                {batches.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-8 text-center text-outline/50 font-label text-sm">
+                      No batches logged yet today
+                    </td>
+                  </tr>
+                ) : batches.map((b) => (
+                  <tr key={b.id} className="border-b border-[#262a31]/10 hover:bg-[#262a31]/20 transition-colors cursor-pointer" onClick={() => openEdit(b)}>
+                    <td className="px-6 py-4 text-sm font-semibold">
+                      {b.batch_id}
+                      <span className="ml-2 text-[10px] font-label text-outline/50">[Ref: {b.id?.slice(0,6)}]</span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-on-surface-variant font-label">{b.product_type}</td>
+                    <td className="px-6 py-4 text-sm">{b.jar_count}</td>
+                    <td className="px-6 py-4 text-sm text-on-surface-variant font-label">{b.operator_name}</td>
+                    <td className="px-6 py-4">
+                      {b.status === 'halted' ? (
+                        <span className="bg-tertiary-container text-on-tertiary-container text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
+                          HALTED
+                        </span>
+                      ) : b.status === 'dispatched' ? (
+                        <span className="bg-primary-container text-on-primary-container text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
+                          DISPATCHED
+                        </span>
+                      ) : (
+                        <span className="bg-secondary-container text-secondary text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
+                          ACTIVE
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-xs font-label text-primary">Edit</span>
+                    </td>
+                  </tr>
                 ))}
-              </tr>
-            </thead>
-            <tbody className="font-body">
-              {batches.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-outline/50 font-label text-sm">
-                    No batches logged yet today
-                  </td>
-                </tr>
-              ) : batches.map((b) => (
-                <tr key={b.id} className="border-b border-[#262a31]/10 hover:bg-[#262a31]/20 transition-colors">
-                  <td className="px-6 py-4 text-sm font-semibold">
-                    {b.batch_id}
-                    <span className="ml-2 text-[10px] font-label text-outline/50">[Ref: {b.id}]</span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-on-surface-variant font-label">{b.product_type}</td>
-                  <td className="px-6 py-4 text-sm">{b.jar_count}</td>
-                  <td className="px-6 py-4 text-sm text-on-surface-variant font-label">{b.operator_name}</td>
-                  <td className="px-6 py-4">
-                    {b.status === 'halted' ? (
-                      <span className="bg-tertiary-container text-on-tertiary-container text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
-                        HALTED
-                      </span>
-                    ) : (
-                      <span className="bg-secondary-container text-secondary text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
-                        ACTIVE
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -242,6 +281,58 @@ export default function ProductionPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Batch Modal */}
+      {editBatch && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-surface-container-low border border-outline-variant/20 p-8 max-w-sm w-full">
+            <h2 className="text-xl font-bold font-headline mb-1">Edit Batch</h2>
+            <p className="text-[10px] text-outline/50 font-label mb-6">[source: production_logs row {editBatch.id?.slice(0, 8)}] · {editBatch.batch_id}</p>
+            <form onSubmit={handleEditSave} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Jar Count</label>
+                <input
+                  type="number"
+                  value={editForm.jar_count}
+                  onChange={(e) => setEditForm({ ...editForm, jar_count: e.target.value })}
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Status</label>
+                <select
+                  value={editForm.status}
+                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                >
+                  <option value="created">Created</option>
+                  <option value="halted">Halted</option>
+                  <option value="dispatched">Dispatched</option>
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Notes</label>
+                <textarea
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                  rows={2}
+                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface resize-none"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setEditBatch(null)}
+                  className="flex-1 py-2 bg-surface-container-high text-on-surface text-xs font-bold font-label hover:bg-surface-container-highest">
+                  Cancel
+                </button>
+                <button type="submit" disabled={editSaving}
+                  className="flex-1 py-2 bg-primary-container text-on-primary-container text-xs font-bold font-label hover:brightness-110 disabled:opacity-50">
+                  {editSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

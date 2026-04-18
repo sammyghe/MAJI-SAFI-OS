@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { showToast } from '@/components/ToastContainer';
 
 interface StockItem {
   id: string;
@@ -39,6 +40,50 @@ export default function InventoryPage() {
       console.error('Error loading inventory:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Explicit reorder check — fires events for items below threshold
+  const runReorderCheck = async () => {
+    await loadStock();
+    // Re-fetch directly so we have latest data synchronously
+    const { data } = await supabase
+      .from('inventory_items')
+      .select('*')
+      .eq('location_id', 'buziga');
+
+    const lowItems = (data ?? []).filter((s: StockItem) => s.quantity <= s.reorder_threshold);
+
+    if (lowItems.length === 0) {
+      showToast({ type: 'success', message: 'All items above threshold — no reorder needed.' });
+      return;
+    }
+
+    // Write one event per low item (or one consolidated event)
+    const { error: eventError } = await supabase.from('events').insert([{
+      location_id: 'buziga',
+      event_type: 'reorder_required',
+      department: 'inventory',
+      severity: 'warning',
+      payload: {
+        items: lowItems.map((i: StockItem) => ({
+          id: i.id,
+          name: i.item_name,
+          quantity: i.quantity,
+          threshold: i.reorder_threshold,
+          unit: i.unit,
+        })),
+        count: lowItems.length,
+      },
+    }]);
+
+    if (eventError) {
+      showToast({ type: 'error', message: 'Reorder check failed: ' + eventError.message });
+    } else {
+      showToast({
+        type: 'info',
+        message: `Reorder alert fired for ${lowItems.length} item${lowItems.length > 1 ? 's' : ''}: ${lowItems.map((i: StockItem) => i.item_name).join(', ')}`,
+      });
     }
   };
 
@@ -102,13 +147,22 @@ export default function InventoryPage() {
             )}
           </div>
         </div>
-        <button
-          onClick={loadStock}
-          className="bg-primary text-on-primary font-label text-xs font-semibold px-6 py-3 flex items-center gap-2 hover:brightness-110 transition-all active:scale-95"
-        >
-          <span className="material-symbols-outlined text-sm">refresh</span>
-          Refresh Stock
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={loadStock}
+            className="bg-surface-container-high text-on-surface font-label text-xs font-semibold px-4 py-3 flex items-center gap-2 hover:bg-surface-container-highest transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined text-sm">refresh</span>
+            Refresh
+          </button>
+          <button
+            onClick={runReorderCheck}
+            className="bg-primary text-on-primary font-label text-xs font-semibold px-6 py-3 flex items-center gap-2 hover:brightness-110 transition-all active:scale-95"
+          >
+            <span className="material-symbols-outlined text-sm">inventory_2</span>
+            Run Reorder Check
+          </button>
+        </div>
       </header>
 
       {/* Reorder Alert Banner */}

@@ -5,11 +5,14 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
 import DeptTeamPanel from '@/components/DeptTeamPanel';
+import { useCanEdit } from '@/hooks/useCanEdit';
+import { SkeletonRows } from '@/components/SkeletonRows';
 
 const PRODUCT_TYPES = ['20L Refill', '20L Single-Use', '20L Reusable Jar', '5L Single-Use'];
 
 export default function ProductionPage() {
   const { user } = useAuth();
+  const { canEdit, isReadOnly } = useCanEdit('production');
   const [formData, setFormData] = useState({
     jar_count: '',
     product_type: '20L Refill',
@@ -36,7 +39,7 @@ export default function ProductionPage() {
       if (error) throw error;
       setBatches(data ?? []);
     } catch (err) {
-      console.error('Error loading batches:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Error loading batches:', err);
     }
   };
 
@@ -127,7 +130,7 @@ export default function ProductionPage() {
       setEditBatch(null);
       await loadBatches();
     } catch (err) {
-      console.error('Error saving batch:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Error saving batch:', err);
     } finally {
       setEditSaving(false);
     }
@@ -138,6 +141,11 @@ export default function ProductionPage() {
 
   return (
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
+      {isReadOnly && (
+        <div className="mb-6 px-4 py-2.5 bg-surface-container border-l-2 border-outline/30 flex items-center gap-2">
+          <span className="text-[10px] font-label text-outline uppercase tracking-widest">View only — you are not assigned to this department</span>
+        </div>
+      )}
       {/* Header */}
       <div className="flex justify-between items-end mb-12 flex-wrap gap-4">
         <div>
@@ -302,7 +310,7 @@ export default function ProductionPage() {
       </div>
 
       {/* Log Batch Form */}
-      <div id="log-batch-form" className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      {canEdit && <div id="log-batch-form" className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div>
           <div className="flex items-center gap-4 mb-6">
             <span className="w-12 h-[1px] bg-outline-variant" />
@@ -373,10 +381,10 @@ export default function ProductionPage() {
           </div>
           <p className="mt-6 text-[10px] text-outline/40 font-label">[source: production_logs, events, inventory_items — buziga]</p>
         </div>
-      </div>
+      </div>}
 
-      {/* Edit Batch Modal */}
-      {editBatch && (
+      {/* Edit Batch Modal — founders/assigned only */}
+      {canEdit && editBatch && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-low border border-outline-variant/20 p-8 max-w-sm w-full">
             <h2 className="text-xl font-bold font-headline mb-1">Edit Batch</h2>

@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
 import Sidebar from '@/components/Sidebar';
 import TopBar from '@/components/TopBar';
+import AddAnythingButton from '@/components/AddAnythingButton';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -25,7 +26,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <>
       <TopBar onMenuClick={() => setSidebarOpen(true)} />
 
-      {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-30 md:hidden"
@@ -35,11 +35,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <main
-        className="pt-16 bg-[#10141a] min-h-screen md:ml-[var(--sidebar-w,240px)]"
-      >
+      <main className="pt-16 bg-[#10141a] min-h-screen md:ml-[var(--sidebar-w,240px)]">
         {children}
       </main>
+
+      <AddAnythingButton />
     </>
   );
 }

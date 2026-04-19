@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
 import DeptTeamPanel from '@/components/DeptTeamPanel';
+import { useCanEdit } from '@/hooks/useCanEdit';
+import { SkeletonRows } from '@/components/SkeletonRows';
 
 const THRESHOLDS: Record<string, { min: number; max: number }> = {
   TDS:       { min: 0,   max: 150 },
@@ -16,6 +18,7 @@ const THRESHOLDS: Record<string, { min: number; max: number }> = {
 
 export default function QualityPage() {
   const { user } = useAuth();
+  const { canEdit, isReadOnly } = useCanEdit('quality');
   const [testForm, setTestForm] = useState({ batch_id: '', test_type: 'TDS', reading: '' });
   const [tests, setTests] = useState<any[]>([]);
   const [passRate, setPassRate] = useState(0);
@@ -40,7 +43,7 @@ export default function QualityPage() {
         setPassRate(Math.round((passes / data.length) * 100));
       }
     } catch (err) {
-      console.error('Error loading tests:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Error loading tests:', err);
     }
   };
 
@@ -76,7 +79,7 @@ export default function QualityPage() {
           .update({ status: 'passed' })
           .eq('batch_id', testForm.batch_id.trim())
           .eq('location_id', 'buziga');
-        if (passError) console.error('Batch status update error (batch may not exist yet):', passError);
+        if (passError && process.env.NODE_ENV === 'development') console.error('Batch status update error:', passError);
       }
 
       // 3 — If FAIL: halt batch + fire critical event
@@ -89,7 +92,7 @@ export default function QualityPage() {
           .eq('location_id', 'buziga');
 
         if (haltError) {
-          console.error('Halt error (batch may not exist yet):', haltError);
+          if (process.env.NODE_ENV === 'development') console.error('Halt error:', haltError);
         }
 
         // Fire critical event → Founder Office realtime picks this up
@@ -111,7 +114,7 @@ export default function QualityPage() {
           }]);
 
         if (eventError) {
-          console.error('Event insert error:', eventError);
+          if (process.env.NODE_ENV === 'development') console.error('Event insert error:', eventError);
         }
 
         showToast({
@@ -135,6 +138,11 @@ export default function QualityPage() {
 
   return (
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
+      {isReadOnly && (
+        <div className="mb-6 px-4 py-2.5 bg-surface-container border-l-2 border-outline/30 flex items-center gap-2">
+          <span className="text-[10px] font-label text-outline uppercase tracking-widest">View only — you are not assigned to this department</span>
+        </div>
+      )}
       {/* Header */}
       <div className="flex justify-between items-end mb-12 flex-wrap gap-4">
         <div>
@@ -270,7 +278,7 @@ export default function QualityPage() {
       </div>
 
       {/* Log Test Form */}
-      <div id="log-test-form" className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      {canEdit && <div id="log-test-form" className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div>
           <div className="flex items-center gap-4 mb-6">
             <span className="w-12 h-[1px] bg-outline-variant" />
@@ -364,7 +372,7 @@ export default function QualityPage() {
             On FAIL: batch halted in production_logs + critical event → Founder Office
           </p>
         </div>
-      </div>
+      </div>}
       <DeptTeamPanel departmentSlug="quality" />
     </div>
   );

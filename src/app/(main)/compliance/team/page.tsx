@@ -69,7 +69,7 @@ export default function TeamPage() {
       if (error) throw error;
       setMembers(data ?? []);
     } catch (err) {
-      console.error('Team load error:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Team load error:', err);
     } finally {
       setLoading(false);
     }

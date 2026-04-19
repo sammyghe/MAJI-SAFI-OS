@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useCanEdit } from '@/hooks/useCanEdit';
 
 interface SystemEvent {
   id: string;
@@ -15,6 +16,7 @@ interface SystemEvent {
 }
 
 export default function TechnologyPage() {
+  const { isReadOnly } = useCanEdit('technology');
   const [events, setEvents] = useState<SystemEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
@@ -37,7 +39,7 @@ export default function TechnologyPage() {
       }
       setConnected(true);
     } catch (err) {
-      console.error('Technology load error:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Technology load error:', err);
       setConnected(false);
     } finally {
       setLoading(false);
@@ -54,6 +56,11 @@ export default function TechnologyPage() {
 
   return (
     <div className="px-8 py-10 max-w-7xl mx-auto">
+      {isReadOnly && (
+        <div className="mb-6 px-4 py-2.5 bg-surface-container border-l-2 border-outline/30">
+          <span className="text-[10px] font-label text-outline uppercase tracking-widest">View only — you are not assigned to this department</span>
+        </div>
+      )}
       {/* Header */}
       <header className="mb-12">
         <h2 className="text-4xl font-extrabold tracking-tight font-headline mb-2">

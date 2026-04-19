@@ -121,7 +121,7 @@ export default function InvestorPage() {
 
       setLastUpdated(now.toLocaleTimeString('en-GB'));
     } catch (err) {
-      console.error('Investor KPI load error:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Investor KPI load error:', err);
     } finally {
       setLoading(false);
     }

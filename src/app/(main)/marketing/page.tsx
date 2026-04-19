@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { showToast } from '@/components/ToastContainer';
+import { useCanEdit } from '@/hooks/useCanEdit';
 
 interface Prospect {
   id: string;
@@ -17,6 +19,7 @@ interface Prospect {
 const STATUS_OPTIONS = ['new', 'contacted', 'qualified', 'converted', 'dead'];
 
 export default function MarketingPage() {
+  const { canEdit, isReadOnly } = useCanEdit('marketing');
   const [prospects, setProspects] = useState<Prospect[]>([]);
   const [leadForm, setLeadForm] = useState({ name: '', phone: '', product_interest: '20L Refill (Bulk)' });
   const [loading, setLoading] = useState(true);
@@ -39,7 +42,7 @@ export default function MarketingPage() {
       if (error) throw error;
       setProspects(data ?? []);
     } catch (err) {
-      console.error('Error loading prospects:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Error loading prospects:', err);
     } finally {
       setLoading(false);
     }
@@ -62,9 +65,11 @@ export default function MarketingPage() {
         }]);
       if (insertError) throw insertError;
       setLeadForm({ name: '', phone: '', product_interest: '20L Refill (Bulk)' });
+      showToast({ type: 'success', message: `Lead "${leadForm.name}" recorded.` });
       await loadProspects();
     } catch (err: any) {
       setError(err.message ?? 'Error saving lead');
+      showToast({ type: 'error', message: err.message ?? 'Error saving lead' });
     } finally {
       setSaving(false);
     }
@@ -90,9 +95,10 @@ export default function MarketingPage() {
         .eq('id', editProspect.id);
       if (error) throw error;
       setEditProspect(null);
+      showToast({ type: 'success', message: 'Prospect updated.' });
       await loadProspects();
-    } catch (err) {
-      console.error('Error updating prospect:', err);
+    } catch (err: any) {
+      showToast({ type: 'error', message: err?.message ?? 'Error updating prospect' });
     } finally {
       setEditSaving(false);
     }
@@ -119,6 +125,11 @@ export default function MarketingPage() {
 
   return (
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
+      {isReadOnly && (
+        <div className="mb-6 px-4 py-2.5 bg-surface-container border-l-2 border-outline/30">
+          <span className="text-[10px] font-label text-outline uppercase tracking-widest">View only — you are not assigned to this department</span>
+        </div>
+      )}
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12">
         <div>
@@ -202,7 +213,7 @@ export default function MarketingPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
+      {canEdit && <div className="grid grid-cols-12 gap-6">
         {/* Lead Intake Form */}
         <div className="col-span-12 lg:col-span-7 bg-surface-container ghost-border p-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
@@ -282,10 +293,10 @@ export default function MarketingPage() {
             </p>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Edit Prospect Modal */}
-      {editProspect && (
+      {canEdit && editProspect && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-low border border-outline-variant/20 p-8 max-w-sm w-full">
             <h2 className="text-xl font-bold font-headline mb-1">{editProspect.name}</h2>

@@ -5,6 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
 import DeptTeamPanel from '@/components/DeptTeamPanel';
+import { useCanEdit } from '@/hooks/useCanEdit';
+import { SkeletonRows } from '@/components/SkeletonRows';
 
 // T1 wholesale pricing per CLAUDE.md section 11
 const T1_PRICES: Record<string, number> = {
@@ -18,6 +20,7 @@ const PRODUCT_TYPES = Object.keys(T1_PRICES);
 
 export default function DispatchPage() {
   const { user } = useAuth();
+  const { canEdit, isReadOnly } = useCanEdit('dispatch');
   const [sales, setSales] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     distributor: '',
@@ -55,7 +58,7 @@ export default function DispatchPage() {
       const total = (data ?? []).reduce((sum, s) => sum + (s.amount_ugx ?? 0), 0);
       setCashState((prev) => ({ ...prev, systemTotal: total }));
     } catch (err) {
-      console.error('Error loading sales:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Error loading sales:', err);
     }
   };
 
@@ -195,7 +198,7 @@ export default function DispatchPage() {
       setEditSale(null);
       await loadSales();
     } catch (err) {
-      console.error('Error updating sale:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Error updating sale:', err);
     } finally {
       setEditSaving(false);
     }
@@ -235,6 +238,11 @@ export default function DispatchPage() {
 
   return (
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
+      {isReadOnly && (
+        <div className="mb-6 px-4 py-2.5 bg-surface-container border-l-2 border-outline/30">
+          <span className="text-[10px] font-label text-outline uppercase tracking-widest">View only — you are not assigned to this department</span>
+        </div>
+      )}
       {/* Header + Hero Stat */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-12">
         <div>
@@ -332,7 +340,7 @@ export default function DispatchPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-6 mb-8">
+      {canEdit && <div className="grid grid-cols-12 gap-6 mb-8">
         {/* Log Sale Form */}
         <div className="col-span-12 lg:col-span-7 bg-surface-container ghost-border p-8 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
@@ -439,10 +447,10 @@ export default function DispatchPage() {
             </button>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Edit Sale Modal */}
-      {editSale && (
+      {canEdit && editSale && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-low border border-outline-variant/20 p-8 max-w-sm w-full">
             <h2 className="text-xl font-bold font-headline mb-1">Edit Sale</h2>

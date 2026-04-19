@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
+import { useCanEdit } from '@/hooks/useCanEdit';
 
 // Ledger row computed from transactions table
 interface LedgerRow {
@@ -58,6 +59,7 @@ function periodRange(period: string) {
 
 export default function FinancePage() {
   const { user } = useAuth();
+  const { canEdit, isReadOnly } = useCanEdit('finance');
   const [ledger, setLedger] = useState<LedgerRow[]>([]);
   const [allTxns, setAllTxns] = useState<any[]>([]);
   const [cash, setCash] = useState<CashRow | null>(null);
@@ -128,7 +130,7 @@ export default function FinancePage() {
       setLedger(rows);
       setCash(cashData ?? null);
     } catch (err) {
-      console.error('Finance load error:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Finance load error:', err);
     } finally {
       setLoading(false);
     }
@@ -289,6 +291,11 @@ export default function FinancePage() {
 
   return (
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
+      {isReadOnly && (
+        <div className="mb-6 px-4 py-2.5 bg-surface-container border-l-2 border-outline/30">
+          <span className="text-[10px] font-label text-outline uppercase tracking-widest">View only — you are not assigned to this department</span>
+        </div>
+      )}
       {/* Header */}
       <header className="mb-12">
         <div className="flex justify-between items-end flex-wrap gap-4">
@@ -426,7 +433,7 @@ export default function FinancePage() {
       </div>
 
       {/* ── Data Entry Row ──────────────────────────────────────────────────── */}
-      <div className="mb-8 bg-surface-container-low ghost-border overflow-hidden">
+      {canEdit && <div className="mb-8 bg-surface-container-low ghost-border overflow-hidden">
         {/* Tab bar */}
         <div className="flex flex-wrap border-b border-outline-variant/10">
           {[
@@ -578,7 +585,7 @@ export default function FinancePage() {
             </form>
           )}
         </div>
-      </div>
+      </div>}
 
       {/* Envelope Ledger Table */}
       <div className="bg-surface-container-lowest ghost-border overflow-hidden mb-6">

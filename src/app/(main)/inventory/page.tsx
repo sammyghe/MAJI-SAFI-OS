@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/components/ToastContainer';
 import DeptTeamPanel from '@/components/DeptTeamPanel';
+import { useCanEdit } from '@/hooks/useCanEdit';
+import { SkeletonRows } from '@/components/SkeletonRows';
 
 interface StockItem {
   id: string;
@@ -38,6 +40,7 @@ async function fireReorderEventIfNeeded(item: StockItem, newQty: number) {
 }
 
 export default function InventoryPage() {
+  const { canEdit, isReadOnly } = useCanEdit('inventory');
   const [stock, setStock] = useState<StockItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastSync, setLastSync] = useState<string>('');
@@ -69,7 +72,7 @@ export default function InventoryPage() {
       setStock(data ?? []);
       setLastSync(new Date().toLocaleTimeString());
     } catch (err) {
-      console.error('Error loading inventory:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Error loading inventory:', err);
     } finally {
       setLoading(false);
     }
@@ -218,7 +221,7 @@ export default function InventoryPage() {
       setEditItem(null);
       await loadStock();
     } catch (err) {
-      console.error('Error saving inventory item:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Error saving inventory item:', err);
     } finally {
       setEditSaving(false);
     }
@@ -239,6 +242,11 @@ export default function InventoryPage() {
 
   return (
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
+      {isReadOnly && (
+        <div className="mb-6 px-4 py-2.5 bg-surface-container border-l-2 border-outline/30">
+          <span className="text-[10px] font-label text-outline uppercase tracking-widest">View only — you are not assigned to this department</span>
+        </div>
+      )}
       {/* Header */}
       <header className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
@@ -379,7 +387,7 @@ export default function InventoryPage() {
       </section>
 
       {/* Stock Write Forms */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      {canEdit && <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <div className="bg-surface-container-low ghost-border overflow-hidden">
           {/* Tab switcher */}
           <div className="flex border-b border-outline-variant/10">
@@ -499,10 +507,10 @@ export default function InventoryPage() {
             <p className="mt-4 text-[10px] font-label text-outline/40">[source: inventory_items, events — buziga]</p>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Edit Modal */}
-      {editItem && (
+      {canEdit && editItem && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-surface-container-low border border-outline-variant/20 p-8 max-w-sm w-full">
             <h2 className="text-xl font-bold font-headline mb-1">{editItem.item_name}</h2>

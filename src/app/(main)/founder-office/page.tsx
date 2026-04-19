@@ -8,6 +8,7 @@ export default function FounderOfficePage() {
   const { user } = useAuth();
   const [events, setEvents] = useState<any[]>([]);
   const [deptHealth, setDeptHealth] = useState<Record<string, 'green' | 'amber' | 'red'>>({});
+  const [onlineUsers, setOnlineUsers] = useState<any[]>([]);
   const [stats, setStats] = useState({
     jarsToday: 0,
     jarsSource: '',
@@ -129,8 +130,18 @@ export default function FounderOfficePage() {
       if (compIssues > 0) health['compliance'] = compIssues > 3 ? 'red' : 'amber';
       if (passRate < 100 && (qcData?.length ?? 0) > 0) health['quality'] = passRate === 0 ? 'red' : 'amber';
       setDeptHealth(health);
+
+      // Online now: last_seen_at within last 2 minutes
+      const twoMinsAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+      const { data: onlineData } = await supabase
+        .from('team_members')
+        .select('id, name, role, department_slug, last_seen_at')
+        .eq('location_id', 'buziga')
+        .in('contract_status', ['active', 'probation'])
+        .gte('last_seen_at', twoMinsAgo);
+      setOnlineUsers(onlineData ?? []);
     } catch (err) {
-      console.error('Founder dashboard error:', err);
+      if (process.env.NODE_ENV === 'development') console.error('Founder dashboard error:', err);
     } finally {
       setLoading(false);
     }
@@ -367,6 +378,20 @@ export default function FounderOfficePage() {
             );
           })}
         </div>
+      </div>
+
+      {/* Online Now */}
+      <div className="mb-8 bg-surface-container-low ghost-border px-6 py-4 flex items-center gap-4 flex-wrap">
+        <p className="font-label text-[10px] text-outline uppercase tracking-[0.2em] flex-shrink-0">Online Now</p>
+        {onlineUsers.length === 0 ? (
+          <p className="text-[11px] text-outline/50 font-label italic">No one active in the last 2 minutes.</p>
+        ) : onlineUsers.map((u) => (
+          <div key={u.id} className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
+            <span className="text-xs font-label text-on-surface">{u.name}</span>
+            <span className="text-[9px] text-outline/50 font-label">{u.department_slug}</span>
+          </div>
+        ))}
       </div>
 
       {/* Bottom row: Production vs Target + Signal Summary + Live Events */}

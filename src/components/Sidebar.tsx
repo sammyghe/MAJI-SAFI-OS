@@ -21,6 +21,7 @@ import {
   ChevronDown,
   ChevronRight,
   BarChart2,
+  ShoppingCart,
 } from 'lucide-react';
 
 const ALL_DEPARTMENTS = [
@@ -29,6 +30,7 @@ const ALL_DEPARTMENTS = [
   { slug: 'quality', name: 'Quality', icon: CheckCircle2 },
   { slug: 'inventory', name: 'Inventory', icon: Package },
   { slug: 'dispatch', name: 'Dispatch', icon: Truck },
+  { slug: 'sales', name: 'Sales', icon: ShoppingCart },
   { slug: 'marketing', name: 'Marketing', icon: TrendingUp },
   { slug: 'finance', name: 'Finance', icon: DollarSign },
   { slug: 'compliance', name: 'Compliance', icon: Shield },

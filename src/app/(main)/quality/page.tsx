@@ -135,6 +135,9 @@ export default function QualityPage() {
   };
 
   const failCount = tests.filter((t) => t.result === 'FAIL').length;
+  const REQUIRED_TESTS = ['TDS', 'pH', 'Turbidity', 'Chlorine', 'Bacteria'];
+  const doneTests = REQUIRED_TESTS.filter((type) => tests.some((t) => t.test_type === type));
+  const remainingTests = REQUIRED_TESTS.filter((type) => !tests.some((t) => t.test_type === type));
 
   return (
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
@@ -158,6 +161,34 @@ export default function QualityPage() {
           <span className="material-symbols-outlined text-lg">biotech</span>
           Log Water Test
         </button>
+      </div>
+
+      {/* 5-test daily tracker */}
+      <div className="mb-8 bg-surface-container-low ghost-border p-5">
+        <p className="font-label text-[10px] text-outline uppercase tracking-[0.2em] mb-3">Daily UNBS Test Tracker — {doneTests.length}/5 Complete</p>
+        <div className="flex gap-3 flex-wrap">
+          {REQUIRED_TESTS.map((type) => {
+            const done = doneTests.includes(type);
+            const test = tests.find((t) => t.test_type === type);
+            const passed = test?.result === 'PASS';
+            return (
+              <div key={type} className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${
+                done
+                  ? passed ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'
+                  : 'bg-surface-container border-outline/20 text-outline/50'
+              }`}>
+                <span>{done ? (passed ? '✅' : '❌') : '⬜'}</span>
+                <span>{type}</span>
+              </div>
+            );
+          })}
+        </div>
+        {remainingTests.length > 0 && (
+          <p className="mt-3 text-[10px] text-outline/50 font-label">Remaining: {remainingTests.join(' · ')}</p>
+        )}
+        {doneTests.length === 5 && failCount === 0 && (
+          <p className="mt-3 text-[10px] text-emerald-400 font-bold">All 5 UNBS tests passed — batch cleared for dispatch.</p>
+        )}
       </div>
 
       {/* Fail alert banner */}

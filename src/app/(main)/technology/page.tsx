@@ -21,6 +21,7 @@ export default function TechnologyPage() {
   const [loading, setLoading] = useState(true);
   const [connected, setConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<string>('');
+  const [completeness, setCompleteness] = useState<{ label: string; ok: boolean }[]>([]);
 
   useEffect(() => { loadEvents(); }, []);
 
@@ -38,6 +39,29 @@ export default function TechnologyPage() {
         setLastEvent(new Date(data[0].created_at).toLocaleTimeString());
       }
       setConnected(true);
+
+      // Data completeness check for today
+      const today = new Date().toISOString().split('T')[0];
+      const [
+        { count: prodCount },
+        { count: qcCount },
+        { count: salesCount },
+        { count: cashCount },
+        { count: dispCount },
+      ] = await Promise.all([
+        supabase.from('production_logs').select('id', { count: 'exact', head: true }).eq('location_id', 'buziga').eq('production_date', today),
+        supabase.from('water_tests').select('id', { count: 'exact', head: true }).eq('location_id', 'buziga').gte('tested_at', today),
+        supabase.from('sales_ledger').select('id', { count: 'exact', head: true }).eq('location_id', 'buziga').eq('sale_date', today),
+        supabase.from('daily_cash').select('id', { count: 'exact', head: true }).eq('location_id', 'buziga').eq('date', today),
+        supabase.from('distributors').select('id', { count: 'exact', head: true }).eq('location_id', 'buziga').eq('status', 'active'),
+      ]);
+      setCompleteness([
+        { label: 'Production logged', ok: (prodCount ?? 0) > 0 },
+        { label: 'QC tests done', ok: (qcCount ?? 0) >= 5 },
+        { label: 'Sales recorded', ok: (salesCount ?? 0) > 0 },
+        { label: 'Cash counted', ok: (cashCount ?? 0) > 0 },
+        { label: 'Active distributors', ok: (dispCount ?? 0) > 0 },
+      ]);
     } catch (err) {
       if (process.env.NODE_ENV === 'development') console.error('Technology load error:', err);
       setConnected(false);
@@ -75,6 +99,26 @@ export default function TechnologyPage() {
           <span>Location: buziga</span>
         </div>
       </header>
+
+      {/* Data Completeness Score */}
+      {completeness.length > 0 && (
+        <div className="mb-10 bg-surface-container-low ghost-border p-6">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+            <p className="font-label text-[10px] text-outline uppercase tracking-[0.2em]">Data Completeness — Today</p>
+            <span className={`font-bold text-sm ${completeness.filter((c) => c.ok).length === 5 ? 'text-emerald-400' : 'text-amber-400'}`}>
+              {completeness.filter((c) => c.ok).length}/5 complete
+            </span>
+          </div>
+          <div className="flex gap-3 flex-wrap">
+            {completeness.map((c) => (
+              <div key={c.label} className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold ${c.ok ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'}`}>
+                <span>{c.ok ? '✅' : '❌'}</span>
+                <span>{c.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* System Health Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">

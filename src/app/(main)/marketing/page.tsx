@@ -166,6 +166,34 @@ export default function MarketingPage() {
         ))}
       </div>
 
+      {/* Funnel Visualization */}
+      {prospects.length > 0 && (
+        <div className="mb-8 bg-surface-container-low ghost-border p-6">
+          <p className="font-label text-[10px] text-outline uppercase tracking-[0.2em] mb-4">Distribution Funnel — {prospects.length} total leads</p>
+          <div className="space-y-3">
+            {STATUS_OPTIONS.filter((s) => s !== 'dead').map((stage) => {
+              const count = prospects.filter((p) => p.status === stage).length;
+              const pct = prospects.length > 0 ? (count / prospects.length) * 100 : 0;
+              const colors: Record<string, string> = { new: 'bg-slate-500', contacted: 'bg-blue-500', qualified: 'bg-sky-400', converted: 'bg-emerald-500' };
+              return (
+                <div key={stage} className="flex items-center gap-3">
+                  <span className="text-[10px] font-label text-outline uppercase tracking-widest w-20 text-right flex-shrink-0">{stage}</span>
+                  <div className="flex-1 bg-surface-container-highest h-6 relative overflow-hidden">
+                    <div className={`${colors[stage] ?? 'bg-primary'} h-full transition-all`} style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="text-xs font-bold text-on-surface w-6 text-right">{count}</span>
+                </div>
+              );
+            })}
+          </div>
+          {convertedCount > 0 && (
+            <p className="mt-3 text-[10px] text-emerald-400 font-bold">
+              Conversion rate: {Math.round((convertedCount / prospects.length) * 100)}% — {convertedCount} T1 partner{convertedCount !== 1 ? 's' : ''} active
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Prospect Table */}
       <div className="bg-surface-container-low border border-outline-variant/10 overflow-hidden mb-8">
         <div className="p-6 border-b border-outline-variant/10 flex justify-between items-center bg-surface-container">

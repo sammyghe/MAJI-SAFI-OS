@@ -140,8 +140,28 @@ export default function ComplianceClient({ initialRecords }: { initialRecords: a
     return days > 0 && days < 30;
   });
 
+  const capaTotal = capaRecords.length;
+  const capaClosed = capaRecords.filter((c) => c.status === 'closed').length;
+  const capaResolutionRate = capaTotal > 0 ? Math.round((capaClosed / capaTotal) * 100) : null;
+
   return (
     <div className="space-y-6">
+      {/* CAPA Resolution Rate */}
+      {capaTotal > 0 && (
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { label: 'Total CAPAs', value: capaTotal.toString(), color: 'text-on-surface' },
+            { label: 'Resolved', value: capaClosed.toString(), color: capaClosed > 0 ? 'text-emerald-400' : 'text-outline' },
+            { label: 'Resolution Rate', value: capaResolutionRate !== null ? `${capaResolutionRate}%` : '—', color: (capaResolutionRate ?? 0) === 100 ? 'text-emerald-400' : 'text-amber-400' },
+          ].map((m) => (
+            <div key={m.label} className="bg-surface-container-low p-4 border border-outline-variant/10">
+              <p className="font-label text-[10px] text-outline uppercase tracking-[0.2em] mb-1">{m.label}</p>
+              <p className={`font-body text-2xl font-bold ${m.color}`}>{m.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Expiry alert banner */}
       {expiringSoon.length > 0 && (
         <div className="p-4 bg-tertiary-container/10 border-l-2 border-tertiary-container flex items-start gap-3">

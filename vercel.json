@@ -7,6 +7,14 @@
     {
       "path": "/api/huly-agent?trigger=daily_pulse",
       "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/sync-sheets",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/morning-brief",
+      "schedule": "0 3 * * *"
     }
   ]
 }

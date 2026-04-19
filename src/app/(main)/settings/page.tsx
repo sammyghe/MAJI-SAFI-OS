@@ -26,6 +26,8 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string | null>(null);
 
   // PIN management
   const [pins, setPins] = useState<PinEntry[]>([{ role: '', pin: '', dept: '' }]);
@@ -78,6 +80,18 @@ export default function SettingsPage() {
 
   const handleChange = (key: string, value: string) => {
     setSettings((prev) => prev.map((s) => (s.key === key ? { ...s, value } : s)));
+  };
+
+  const handleSyncSheets = async () => {
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const res = await fetch('/api/sync-sheets');
+      const data = await res.json();
+      if (data.ok) setSyncResult(`Synced ${data.tabs} tabs at ${new Date(data.syncedAt).toLocaleTimeString('en-GB')}`);
+      else setSyncResult(`Error: ${data.error}`);
+    } catch { setSyncResult('Connection error — check env vars'); }
+    finally { setSyncing(false); }
   };
 
   const handleSave = async () => {
@@ -347,6 +361,37 @@ export default function SettingsPage() {
             )}
           </div>
         )}
+      </section>
+
+      {/* Google Sheets Sync */}
+      <section className="glass-panel rounded-[2rem] p-8 space-y-4">
+        <div className="flex items-center gap-3">
+          <RefreshCw className="w-5 h-5 text-brand-sky" />
+          <h2 className="text-lg font-black text-white uppercase tracking-widest">Google Sheets Sync</h2>
+        </div>
+        <p className="text-brand-steel text-sm font-bold">
+          Syncs 8 tabs (Production, Quality, Sales, Inventory, Cash, Team, Compliance, Distributors) to Google Sheets. Runs automatically daily at 6 AM Kampala time (3 AM UTC).
+        </p>
+        <div className="p-4 bg-brand-navy/20 rounded-xl border border-white/5 font-mono text-xs text-brand-steel space-y-1">
+          <p>GOOGLE_SERVICE_ACCOUNT_JSON={"{"}&quot;type&quot;:&quot;service_account&quot;,...{"}"}</p>
+          <p>GOOGLE_SHEETS_ID=your_spreadsheet_id</p>
+          <p>SUPABASE_SERVICE_ROLE_KEY=your_service_role_key</p>
+        </div>
+        <div className="flex items-center gap-4 flex-wrap">
+          <button
+            onClick={handleSyncSheets}
+            disabled={syncing}
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-sky/20 border border-brand-sky/30 text-brand-pale font-black text-sm uppercase tracking-widest hover:bg-brand-sky/30 transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Syncing…' : 'Sync to Google Sheets'}
+          </button>
+          {syncResult && (
+            <span className={`text-xs font-bold ${syncResult.startsWith('Error') ? 'text-red-400' : 'text-emerald-400'}`}>
+              {syncResult}
+            </span>
+          )}
+        </div>
       </section>
 
       {/* Notification bridge */}

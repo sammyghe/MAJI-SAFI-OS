@@ -74,6 +74,8 @@ export default function FinancePage() {
   // EOD state
   const [showEOD, setShowEOD] = useState(false);
   const [salesTotal, setSalesTotal] = useState(0);
+  const [todayRevenue, setTodayRevenue] = useState(0);
+  const [todayExpenses, setTodayExpenses] = useState(0);
   const [eodReason, setEodReason] = useState('');
   const [eodSaving, setEodSaving] = useState(false);
 
@@ -86,7 +88,7 @@ export default function FinancePage() {
     try {
       const { start, end } = periodRange(period);
 
-      const [{ data: txnData }, { data: cashData }] = await Promise.all([
+      const [{ data: txnData }, { data: cashData }, { data: salesData }] = await Promise.all([
         supabase
           .from('transactions')
           .select('*')
@@ -101,7 +103,16 @@ export default function FinancePage() {
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle(),
+        supabase
+          .from('sales_ledger')
+          .select('amount_ugx')
+          .eq('location_id', 'buziga')
+          .eq('sale_date', today),
       ]);
+      const rev = (salesData ?? []).reduce((s: number, r: any) => s + (r.amount_ugx ?? 0), 0);
+      setTodayRevenue(rev);
+      const todayTxns = (txnData ?? []).filter((t: any) => t.transaction_type === 'expense' && t.transaction_date === today);
+      setTodayExpenses(todayTxns.reduce((s: number, t: any) => s + (t.amount_ugx ?? 0), 0));
 
       const txns = txnData ?? [];
       setAllTxns(txns);
@@ -342,6 +353,28 @@ export default function FinancePage() {
           </div>
         </div>
       )}
+
+      {/* Daily P&L Card */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {[
+          { label: "Today's Revenue", value: todayRevenue, color: 'text-emerald-400', source: 'sales_ledger' },
+          { label: "Today's Expenses", value: todayExpenses, color: 'text-red-400', source: 'transactions' },
+          {
+            label: 'Daily P&L',
+            value: todayRevenue - todayExpenses,
+            color: (todayRevenue - todayExpenses) >= 0 ? 'text-emerald-400' : 'text-red-400',
+            source: 'sales_ledger + transactions',
+          },
+        ].map((m) => (
+          <div key={m.label} className="bg-surface-container-low ghost-border px-6 py-5">
+            <p className="font-label text-[10px] text-outline uppercase tracking-[0.2em] mb-2">{m.label}</p>
+            <p className={`font-body text-2xl font-bold ${m.color}`}>
+              {m.value !== 0 ? `UGX ${m.value.toLocaleString()}` : 'No data — enter it.'}
+            </p>
+            <p className="text-[10px] text-outline/40 font-label mt-1">[source: {m.source}, {today}]</p>
+          </div>
+        ))}
+      </div>
 
       {/* Bento grid */}
       <div className="grid grid-cols-12 gap-6 mb-8">

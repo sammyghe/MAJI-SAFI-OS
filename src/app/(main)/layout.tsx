@@ -5,6 +5,7 @@ import { useAuth } from '@/components/AuthProvider';
 import Sidebar from '@/components/Sidebar';
 import TopBar from '@/components/TopBar';
 import AddAnythingButton from '@/components/AddAnythingButton';
+import AskSAFI from '@/components/AskSAFI';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -40,6 +41,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       </main>
 
       <AddAnythingButton />
+      <AskSAFI />
     </>
   );
 }

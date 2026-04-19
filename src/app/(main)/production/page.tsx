@@ -50,7 +50,14 @@ export default function ProductionPage() {
     try {
       if (!formData.jar_count) throw new Error('Jar count is required');
       const jarCount = parseInt(formData.jar_count);
-      const batchId = `BATCH-${Date.now()}`;
+      const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      const { count: batchCount } = await supabase
+        .from('production_logs')
+        .select('id', { count: 'exact', head: true })
+        .eq('location_id', 'buziga')
+        .eq('production_date', new Date().toISOString().split('T')[0]);
+      const seq = String((batchCount ?? 0) + 1).padStart(3, '0');
+      const batchId = `BATCH-${today}-${seq}`;
 
       // 1 — Insert production log (DATA — append-only)
       const { error: insertError } = await supabase
@@ -138,6 +145,7 @@ export default function ProductionPage() {
 
   const jarsToday = batches.reduce((sum, b) => sum + (b.jar_count ?? 0), 0);
   const haltedCount = batches.filter((b) => b.status === 'halted').length;
+  const hitTarget = jarsToday >= 500;
 
   return (
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
@@ -162,6 +170,17 @@ export default function ProductionPage() {
           Log New Batch
         </button>
       </div>
+
+      {/* Celebration banner */}
+      {hitTarget && (
+        <div className="mb-6 p-4 bg-emerald-500/10 border-l-2 border-emerald-500 flex items-center gap-3">
+          <span className="text-2xl">🎉</span>
+          <div>
+            <p className="text-emerald-400 font-bold text-sm uppercase tracking-widest">500-Jar Target Reached!</p>
+            <p className="text-xs text-emerald-300/70 mt-0.5">{jarsToday.toLocaleString()} jars filled today — Month 1 target achieved</p>
+          </div>
+        </div>
+      )}
 
       {/* Halted alert */}
       {haltedCount > 0 && (

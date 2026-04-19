@@ -232,10 +232,19 @@ export default function InventoryPage() {
     (s) => s.quantity > s.reorder_threshold && s.quantity <= s.reorder_threshold * 1.2,
   );
 
+  const totalStockValue = stock.reduce((sum, s) => sum + ((s as any).unit_cost_ugx ?? 0) * (s.quantity ?? 0), 0);
+
   const getStatus = (item: StockItem) => {
     if (item.quantity <= item.reorder_threshold) return 'REORDER';
     if (item.quantity <= item.reorder_threshold * 1.2) return 'NEAR LIMIT';
     return 'OK';
+  };
+
+  const getUrgencyColor = (item: StockItem) => {
+    const ratio = item.reorder_threshold > 0 ? item.quantity / item.reorder_threshold : 1;
+    if (ratio <= 1) return 'border-l-4 border-red-500/60 bg-red-500/5';
+    if (ratio <= 1.2) return 'border-l-4 border-amber-500/60 bg-amber-500/5';
+    return 'border-l-4 border-emerald-500/30';
   };
 
   const selectedItem = stock.find((s) => s.id === selectedItemId);
@@ -298,6 +307,21 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
+
+      {/* Stock Value Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {[
+          { label: 'Total Items', value: stock.length.toString(), color: 'text-on-surface' },
+          { label: 'Below Threshold', value: belowThreshold.length.toString(), color: belowThreshold.length > 0 ? 'text-red-400' : 'text-emerald-400' },
+          { label: 'Near Threshold', value: nearThreshold.length.toString(), color: nearThreshold.length > 0 ? 'text-amber-400' : 'text-emerald-400' },
+          { label: 'Total Stock Value', value: totalStockValue > 0 ? `UGX ${totalStockValue.toLocaleString()}` : 'N/A', color: 'text-sky-400' },
+        ].map((m) => (
+          <div key={m.label} className="bg-surface-container-low ghost-border px-5 py-4">
+            <p className="font-label text-[10px] text-outline uppercase tracking-[0.2em] mb-2">{m.label}</p>
+            <p className={`font-body text-2xl font-bold ${m.color}`}>{m.value}</p>
+          </div>
+        ))}
+      </div>
 
       {/* Material Ledger Table */}
       <section className="mb-8 bg-surface border border-outline-variant/15 overflow-hidden">

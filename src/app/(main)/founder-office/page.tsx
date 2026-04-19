@@ -26,6 +26,8 @@ export default function FounderOfficePage() {
     complianceSource: '',
   });
   const [loading, setLoading] = useState(true);
+  const [briefSending, setBriefSending] = useState(false);
+  const [briefSent, setBriefSent] = useState(false);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const load = async () => {
@@ -165,6 +167,15 @@ export default function FounderOfficePage() {
       if (channelRef.current) supabase.removeChannel(channelRef.current);
     };
   }, []);
+
+  const sendMorningBrief = async () => {
+    setBriefSending(true);
+    try {
+      const res = await fetch('/api/morning-brief');
+      if (res.ok) { setBriefSent(true); setTimeout(() => setBriefSent(false), 4000); }
+    } catch { /* silent */ }
+    finally { setBriefSending(false); }
+  };
 
   const today = new Date().toLocaleDateString('en-GB', {
     day: '2-digit', month: 'short', year: 'numeric',
@@ -405,9 +416,15 @@ export default function FounderOfficePage() {
                 <h3 className="text-2xl font-headline font-bold mb-1">Morning Brief</h3>
                 <p className="text-outline text-sm font-label">Production &amp; Liquidity Summary — {today}</p>
               </div>
-              <button className="flex items-center gap-2 bg-[#25D366] text-[#0a0e14] px-4 py-2 font-label text-xs font-bold hover:brightness-105 transition-all">
-                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
-                Send to WhatsApp
+              <button
+                onClick={sendMorningBrief}
+                disabled={briefSending}
+                className={`flex items-center gap-2 px-4 py-2 font-label text-xs font-bold transition-all ${briefSent ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400' : 'bg-[#229ED9] text-white hover:brightness-110'}`}
+              >
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  {briefSending ? 'sync' : 'send'}
+                </span>
+                {briefSent ? 'Sent!' : briefSending ? 'Sending…' : 'Send Telegram Brief'}
               </button>
             </div>
 

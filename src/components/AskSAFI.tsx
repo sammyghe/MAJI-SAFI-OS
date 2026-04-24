@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  provider?: string;
 }
 
 const DEPT_SLUGS = ['founder-office','production','quality','inventory','dispatch','marketing','finance','compliance','technology'];
@@ -49,7 +50,7 @@ export default function AskSAFI() {
       });
       const data = await res.json();
       if (data.answer) {
-        setMessages((prev) => [...prev, { role: 'assistant', content: data.answer }]);
+        setMessages((prev) => [...prev, { role: 'assistant', content: data.answer, provider: data.provider }]);
       } else {
         setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${data.error ?? 'Unknown error'}` }]);
       }
@@ -119,7 +120,7 @@ export default function AskSAFI() {
                 Ask SAFI
               </div>
               <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.5 }}>
-                {deptLabel} · Gemini 2.0 Flash
+                {deptLabel} · Groq → Gemini → Claude
               </div>
             </div>
           </div>
@@ -139,17 +140,30 @@ export default function AskSAFI() {
                 style={{
                   alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
                   maxWidth: '85%',
-                  background: m.role === 'user' ? '#0077B6' : '#1e293b',
-                  color: '#fff',
-                  borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-                  padding: '9px 13px',
-                  fontSize: 13,
-                  lineHeight: 1.55,
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
                 }}
               >
-                {m.content}
+                <div
+                  style={{
+                    background: m.role === 'user' ? '#0077B6' : '#1e293b',
+                    color: '#fff',
+                    borderRadius: m.role === 'user' ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
+                    padding: '9px 13px',
+                    fontSize: 13,
+                    lineHeight: 1.55,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {m.content}
+                </div>
+                {m.role === 'assistant' && m.provider && m.provider !== 'offline' && (
+                  <div style={{ fontSize: 9, color: '#334155', textTransform: 'uppercase', letterSpacing: 1, paddingLeft: 4 }}>
+                    via {m.provider}
+                  </div>
+                )}
               </div>
             ))}
             {loading && (

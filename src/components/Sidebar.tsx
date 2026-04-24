@@ -24,6 +24,7 @@ import {
   ShoppingCart,
   FlaskConical,
   Bot,
+  Activity,
 } from 'lucide-react';
 
 const ALL_DEPARTMENTS = [
@@ -45,6 +46,7 @@ const moreItems = [
   { slug: 'audit-log', name: 'Audit Log', icon: FileText },
   { slug: 'settings/simulation', name: 'Simulation', icon: FlaskConical, founderOnly: true },
   { slug: 'settings/souls', name: 'AI Souls', icon: Bot, founderOnly: true },
+  { slug: 'settings/ai-health', name: 'AI Health', icon: Activity, founderOnly: true },
 ];
 
 interface SidebarProps {

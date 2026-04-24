@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Groq from 'groq-sdk';
+import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
 
 const DEPT_CONTEXTS: Record<string, string> = {
@@ -25,12 +26,14 @@ Key facts:
 - Break-even: ~220-240 jars/day
 - Month 1 target: 500 jars/day, T1 wholesale only
 - Location: buziga, Kampala
-- Commercial launch: May 3, 2026
+- Commercial launch: post-May 20, 2026
 - Currency: UGX (Ugandan Shilling)
 
 ANTI-HALLUCINATION RULE (Finance & Inventory): Every number MUST end with [source: table_name row id, YYYY-MM-DD]. If you don't have the source row, say: "I don't have data for this — please enter it." Never estimate, extrapolate, or average.
 
 Be concise, actionable, and specific to Maji Safi operations.`;
+
+type Provider = 'groq' | 'gemini' | 'claude' | 'offline';
 
 async function tryGroq(systemPrompt: string, question: string): Promise<string> {
   const key = process.env.GROQ_API_KEY;
@@ -64,10 +67,25 @@ async function tryGemini(systemPrompt: string, question: string): Promise<string
   return text;
 }
 
+async function tryClaudeHaiku(systemPrompt: string, question: string): Promise<string> {
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (!key) throw new Error('ANTHROPIC_API_KEY not set');
+  const client = new Anthropic({ apiKey: key });
+  const msg = await client.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 1024,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: question }],
+  });
+  const block = msg.content[0];
+  if (!block || block.type !== 'text') throw new Error('Claude returned empty response');
+  return block.text;
+}
+
 export async function POST(req: NextRequest) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
   try {
@@ -77,7 +95,6 @@ export async function POST(req: NextRequest) {
     const today = new Date().toISOString().split('T')[0];
     let liveContext = '';
 
-    // Pull live data per department
     if (department === 'finance' || department === 'founder-office') {
       const { data } = await supabase.from('sales_ledger').select('id, amount_ugx, sale_date, product_type').eq('location_id', 'buziga').eq('sale_date', today).order('created_at', { ascending: false }).limit(5);
       if (data?.length) {
@@ -114,10 +131,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Try to load soul system prompt from DB
     let soulPrompt = '';
     if (department) {
-      const { data: soulData } = await supabase.from('department_souls').select('system_prompt, primary_provider, fallback_provider').eq('department_slug', department).maybeSingle();
+      const { data: soulData } = await supabase.from('department_souls').select('system_prompt').eq('department_slug', department).maybeSingle();
       if (soulData?.system_prompt) soulPrompt = `\n\nDEPARTMENT SOUL:\n${soulData.system_prompt}`;
     }
 
@@ -127,26 +143,39 @@ export async function POST(req: NextRequest) {
 
     const fullSystem = SYSTEM_BASE + (soulPrompt || deptFallback) + contextStr + liveStr;
 
-    // Fallback chain: Groq → Gemini → offline
+    const attempted: string[] = [];
     let answer = '';
-    let provider: 'groq' | 'gemini' | 'offline' = 'offline';
+    let provider: Provider = 'offline';
+    let tokensUsed: number | undefined;
 
     try {
+      attempted.push('groq');
       answer = await tryGroq(fullSystem, question);
       provider = 'groq';
+      if (process.env.NODE_ENV === 'development') console.log('[ask] provider: groq ✓');
     } catch (groqErr) {
-      if (process.env.NODE_ENV === 'development') console.error('Groq failed:', groqErr);
+      if (process.env.NODE_ENV === 'development') console.error('[ask] groq failed:', groqErr instanceof Error ? groqErr.message : groqErr);
       try {
+        attempted.push('gemini');
         answer = await tryGemini(fullSystem, question);
         provider = 'gemini';
+        if (process.env.NODE_ENV === 'development') console.log('[ask] provider: gemini ✓');
       } catch (geminiErr) {
-        if (process.env.NODE_ENV === 'development') console.error('Gemini failed:', geminiErr);
-        answer = 'SAFI is temporarily offline. Your input is saved. Try again in a moment.';
-        provider = 'offline';
+        if (process.env.NODE_ENV === 'development') console.error('[ask] gemini failed:', geminiErr instanceof Error ? geminiErr.message : geminiErr);
+        try {
+          attempted.push('claude');
+          answer = await tryClaudeHaiku(fullSystem, question);
+          provider = 'claude';
+          if (process.env.NODE_ENV === 'development') console.log('[ask] provider: claude-haiku ✓');
+        } catch (claudeErr) {
+          if (process.env.NODE_ENV === 'development') console.error('[ask] claude failed:', claudeErr instanceof Error ? claudeErr.message : claudeErr);
+          answer = 'SAFI is temporarily offline. Your input is saved. Try again in a moment.';
+          provider = 'offline';
+        }
       }
     }
 
-    return NextResponse.json({ answer, provider, department: department ?? 'general' });
+    return NextResponse.json({ answer, provider, department: department ?? 'general', tokens_used: tokensUsed });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ error: msg }, { status: 500 });

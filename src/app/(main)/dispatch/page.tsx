@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
 import DeptTeamPanel from '@/components/DeptTeamPanel';
 import { useCanEdit } from '@/hooks/useCanEdit';
 import { SkeletonRows } from '@/components/SkeletonRows';
+import RecentActivity from '@/components/RecentActivity';
 
 // T1 wholesale pricing per CLAUDE.md section 11
 const T1_PRICES: Record<string, number> = {
@@ -41,8 +42,16 @@ export default function DispatchPage() {
   const [editForm, setEditForm] = useState({ distributor: '', product_type: '20L Refill', jars_sold: '', amount_ugx: '' });
   const [editSaving, setEditSaving] = useState(false);
   const [stockWarning, setStockWarning] = useState('');
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  useEffect(() => { loadSales(); }, []);
+  useEffect(() => {
+    loadSales();
+    channelRef.current = supabase
+      .channel('rt:dispatch_sales')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_ledger' }, () => { loadSales(); })
+      .subscribe();
+    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
+  }, []);
 
   const loadSales = async () => {
     try {
@@ -568,6 +577,7 @@ export default function DispatchPage() {
         </div>
       )}
       <DeptTeamPanel departmentSlug="dispatch" />
+      <RecentActivity tables={['sales_ledger', 'daily_cash']} departmentSlug="dispatch" />
     </div>
   );
 }

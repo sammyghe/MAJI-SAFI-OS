@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/components/ToastContainer';
+import RecentActivity from '@/components/RecentActivity';
 
 interface CapaRecord {
   id: string;
@@ -33,7 +34,7 @@ export default function ComplianceClient({ initialRecords }: { initialRecords: a
   // Realtime: subscribe to compliance_records
   useEffect(() => {
     channelRef.current = supabase
-      .channel('rt:compliance_records')
+      .channel('rt:compliance_full')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'compliance_records' }, ({ new: record }) => {
         setRecords((prev) => prev.find((r) => r.id === record.id) ? prev : [record, ...prev]);
         showToast({ type: 'info', message: `New compliance record: ${record.document_name ?? 'document'} added` });
@@ -435,6 +436,7 @@ export default function ComplianceClient({ initialRecords }: { initialRecords: a
           </div>
         </div>
       )}
+      <RecentActivity tables={['compliance_records', 'capa_records']} departmentSlug="compliance" />
     </div>
   );
 }

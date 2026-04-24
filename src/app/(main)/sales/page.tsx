@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
 import { useCanEdit } from '@/hooks/useCanEdit';
 import DeptTeamPanel from '@/components/DeptTeamPanel';
 import { ShoppingCart, TrendingUp, Users, Zap, RefreshCw } from 'lucide-react';
+import RecentActivity from '@/components/RecentActivity';
 
 // T1 pricing per CLAUDE.md §11
 const T1_PRICES: Record<string, number> = {
@@ -67,12 +68,20 @@ export default function SalesPage() {
   });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
   const weekStart = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
 
-  useEffect(() => { loadAll(); }, []);
+  useEffect(() => {
+    loadAll();
+    channelRef.current = supabase
+      .channel('rt:sales_ledger')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sales_ledger' }, () => { loadAll(); })
+      .subscribe();
+    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
+  }, []);
 
   const loadAll = async () => {
     setLoading(true);
@@ -582,6 +591,7 @@ export default function SalesPage() {
       </section>
 
       <DeptTeamPanel departmentSlug="sales" />
+      <RecentActivity tables={['sales_ledger']} departmentSlug="sales" />
     </div>
   );
 }

@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/components/ToastContainer';
 import DeptTeamPanel from '@/components/DeptTeamPanel';
 import { useCanEdit } from '@/hooks/useCanEdit';
 import { SkeletonRows } from '@/components/SkeletonRows';
+import RecentActivity from '@/components/RecentActivity';
 
 interface StockItem {
   id: string;
@@ -56,8 +57,16 @@ export default function InventoryPage() {
   const [stockQty, setStockQty] = useState('');
   const [stockNotes, setStockNotes] = useState('');
   const [stockSaving, setStockSaving] = useState(false);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  useEffect(() => { loadStock(); }, []);
+  useEffect(() => {
+    loadStock();
+    channelRef.current = supabase
+      .channel('rt:inventory_items')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory_items' }, () => { loadStock(); })
+      .subscribe();
+    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
+  }, []);
 
   const loadStock = async () => {
     setLoading(true);
@@ -573,6 +582,7 @@ export default function InventoryPage() {
         </div>
       )}
       <DeptTeamPanel departmentSlug="inventory" />
+      <RecentActivity tables={['inventory_items', 'events']} departmentSlug="inventory" />
     </div>
   );
 }

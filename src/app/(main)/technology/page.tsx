@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useCanEdit } from '@/hooks/useCanEdit';
+import RecentActivity from '@/components/RecentActivity';
 
 interface SystemEvent {
   id: string;
@@ -22,8 +23,16 @@ export default function TechnologyPage() {
   const [connected, setConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<string>('');
   const [completeness, setCompleteness] = useState<{ label: string; ok: boolean }[]>([]);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  useEffect(() => { loadEvents(); }, []);
+  useEffect(() => {
+    loadEvents();
+    channelRef.current = supabase
+      .channel('rt:events_tech')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => { loadEvents(); })
+      .subscribe();
+    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
+  }, []);
 
   const loadEvents = async () => {
     try {
@@ -256,6 +265,7 @@ export default function TechnologyPage() {
           </div>
         ))}
       </div>
+      <RecentActivity tables={['events']} departmentSlug="technology" limit={30} />
     </div>
   );
 }

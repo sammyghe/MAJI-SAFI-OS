@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { showToast } from '@/components/ToastContainer';
 import { useCanEdit } from '@/hooks/useCanEdit';
+import RecentActivity from '@/components/RecentActivity';
 
 interface Prospect {
   id: string;
@@ -28,8 +29,16 @@ export default function MarketingPage() {
   const [editProspect, setEditProspect] = useState<Prospect | null>(null);
   const [editForm, setEditForm] = useState({ status: 'new', phone: '', notes: '' });
   const [editSaving, setEditSaving] = useState(false);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  useEffect(() => { loadProspects(); }, []);
+  useEffect(() => {
+    loadProspects();
+    channelRef.current = supabase
+      .channel('rt:prospects')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'prospects' }, () => { loadProspects(); })
+      .subscribe();
+    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
+  }, []);
 
   const loadProspects = async () => {
     try {
@@ -364,6 +373,9 @@ export default function MarketingPage() {
           </div>
         </div>
       )}
+      <div className="px-4 md:px-8 pb-10">
+        <RecentActivity tables={['prospects']} departmentSlug="marketing" />
+      </div>
     </div>
   );
 }

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
 import DeptTeamPanel from '@/components/DeptTeamPanel';
 import { useCanEdit } from '@/hooks/useCanEdit';
 import { SkeletonRows } from '@/components/SkeletonRows';
+import RecentActivity from '@/components/RecentActivity';
 
 const PRODUCT_TYPES = ['20L Refill', '20L Single-Use', '20L Reusable Jar', '5L Single-Use'];
 
@@ -24,8 +25,16 @@ export default function ProductionPage() {
   const [editBatch, setEditBatch] = useState<any | null>(null);
   const [editForm, setEditForm] = useState({ jar_count: '', notes: '', status: 'created' });
   const [editSaving, setEditSaving] = useState(false);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  useEffect(() => { loadBatches(); }, []);
+  useEffect(() => {
+    loadBatches();
+    channelRef.current = supabase
+      .channel('rt:production_logs')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'production_logs' }, () => { loadBatches(); })
+      .subscribe();
+    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
+  }, []);
 
   const loadBatches = async () => {
     try {
@@ -457,6 +466,7 @@ export default function ProductionPage() {
         </div>
       )}
       <DeptTeamPanel departmentSlug="production" />
+      <RecentActivity tables={['production_logs', 'events']} departmentSlug="production" />
     </div>
   );
 }

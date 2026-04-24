@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
 import DeptTeamPanel from '@/components/DeptTeamPanel';
 import { useCanEdit } from '@/hooks/useCanEdit';
 import { SkeletonRows } from '@/components/SkeletonRows';
+import RecentActivity from '@/components/RecentActivity';
 
 const THRESHOLDS: Record<string, { min: number; max: number }> = {
   TDS:       { min: 0,   max: 150 },
@@ -24,8 +25,16 @@ export default function QualityPage() {
   const [passRate, setPassRate] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  useEffect(() => { loadTests(); }, []);
+  useEffect(() => {
+    loadTests();
+    channelRef.current = supabase
+      .channel('rt:water_tests')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'water_tests' }, () => { loadTests(); })
+      .subscribe();
+    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
+  }, []);
 
   const loadTests = async () => {
     try {
@@ -405,6 +414,7 @@ export default function QualityPage() {
         </div>
       </div>}
       <DeptTeamPanel departmentSlug="quality" />
+      <RecentActivity tables={['water_tests', 'events']} departmentSlug="quality" />
     </div>
   );
 }

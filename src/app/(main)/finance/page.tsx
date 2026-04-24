@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
 import { useCanEdit } from '@/hooks/useCanEdit';
+import RecentActivity from '@/components/RecentActivity';
 
 // Ledger row computed from transactions table
 interface LedgerRow {
@@ -81,8 +82,17 @@ export default function FinancePage() {
 
   const period = new Date().toISOString().slice(0, 7); // YYYY-MM
   const today = new Date().toISOString().split('T')[0];
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    loadData();
+    channelRef.current = supabase
+      .channel('rt:finance')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => { loadData(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_cash' }, () => { loadData(); })
+      .subscribe();
+    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
+  }, []);
 
   const loadData = async () => {
     try {
@@ -786,6 +796,9 @@ export default function FinancePage() {
           </div>
         </div>
       )}
+      <div className="px-4 md:px-8 pb-10">
+        <RecentActivity tables={['transactions', 'daily_cash']} departmentSlug="finance" />
+      </div>
     </div>
   );
 }

@@ -31,7 +31,7 @@ export async function askSAFI(question: string, context?: SAFIContext): Promise<
   // return (msg.content[0] as { text: string }).text;
 
   // ── Offline mock — useful for local dev without API key ──────────────
-  console.log('[askSAFI] Q:', question, '| context:', context);
+  if (process.env.NODE_ENV === 'development') console.log('[askSAFI] Q:', question, '| context:', context);
   return mockResponse(question, context);
 }
 

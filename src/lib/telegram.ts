@@ -31,7 +31,7 @@ const EMOJI: Record<TelegramAlertEvent, string> = {
  */
 export async function sendEmailNotification(subject: string, body: string): Promise<void> {
   const text = `📧 *MajiSafi EMAIL DISPATCH*\nSubject: ${subject}\n\n${body}`;
-  console.log(`[EmailMock] ${text}`);
+  if (process.env.NODE_ENV === 'development') console.log(`[EmailMock] ${text}`);
 }
 
 export async function sendTelegramAlert(event: TelegramAlertEvent, message: string): Promise<void> {
@@ -50,5 +50,5 @@ export async function sendTelegramAlert(event: TelegramAlertEvent, message: stri
   // ── ────────────────────────────────────────────────────────────────────
 
   // Mock: log to console so it's visible during development
-  console.log(`[TelegramMock] ${text}`);
+  if (process.env.NODE_ENV === 'development') console.log(`[TelegramMock] ${text}`);
 }

@@ -25,6 +25,7 @@ import {
   FlaskConical,
   Bot,
   Activity,
+  Lock,
 } from 'lucide-react';
 
 const ALL_DEPARTMENTS = [
@@ -47,6 +48,7 @@ const moreItems = [
   { slug: 'settings/simulation', name: 'Simulation', icon: FlaskConical, founderOnly: true },
   { slug: 'settings/souls', name: 'AI Souls', icon: Bot, founderOnly: true },
   { slug: 'settings/ai-health', name: 'AI Health', icon: Activity, founderOnly: true },
+  { slug: 'settings/security', name: 'Security', icon: Lock, founderOnly: true },
 ];
 
 interface SidebarProps {

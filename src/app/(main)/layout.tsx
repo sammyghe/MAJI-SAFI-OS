@@ -6,6 +6,7 @@ import Sidebar from '@/components/Sidebar';
 import TopBar from '@/components/TopBar';
 import AddAnythingButton from '@/components/AddAnythingButton';
 import AskSAFI from '@/components/AskSAFI';
+import SimulationBanner from '@/components/SimulationBanner';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -26,6 +27,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <TopBar onMenuClick={() => setSidebarOpen(true)} />
+      <SimulationBanner />
 
       {sidebarOpen && (
         <div

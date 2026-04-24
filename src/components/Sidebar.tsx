@@ -22,6 +22,8 @@ import {
   ChevronRight,
   BarChart2,
   ShoppingCart,
+  FlaskConical,
+  Bot,
 } from 'lucide-react';
 
 const ALL_DEPARTMENTS = [
@@ -41,6 +43,8 @@ const moreItems = [
   { slug: 'settings', name: 'Settings', icon: Settings },
   { slug: 'team', name: 'Team', icon: Users2 },
   { slug: 'audit-log', name: 'Audit Log', icon: FileText },
+  { slug: 'settings/simulation', name: 'Simulation', icon: FlaskConical, founderOnly: true },
+  { slug: 'settings/souls', name: 'AI Souls', icon: Bot, founderOnly: true },
 ];
 
 interface SidebarProps {
@@ -81,6 +85,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     if (slug === 'settings') return '/settings';
     if (slug === 'team') return '/compliance/team';
     if (slug === 'audit-log') return '/compliance/audit-log';
+    if (slug.includes('/')) return `/${slug}`;
     return `/${slug}`;
   };
 
@@ -180,7 +185,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             {isMoreOpen && (
               <div className="mt-2 space-y-1">
-                {moreItems.map((item) => {
+                {moreItems.filter((item) => !('founderOnly' in item && item.founderOnly) || user?.role === 'founder').map((item) => {
                   const Icon = item.icon;
                   const isActive = isActiveDept(item.slug);
 

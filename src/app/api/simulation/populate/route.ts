@@ -7,21 +7,21 @@ const T1_PRICES: Record<string, number> = {
 const PRODUCT_TYPES = Object.keys(T1_PRICES);
 
 const DISTRIBUTORS_SEED = [
-  { name: 'Kato Enterprises',     phone: '+256 772 100 001', zone: 'Buziga',    tier: 'T1', status: 'active' },
-  { name: 'Nakato Water Depot',   phone: '+256 772 100 002', zone: 'Kansanga',  tier: 'T1', status: 'active' },
-  { name: 'Ssemwogerere Bros',    phone: '+256 772 100 003', zone: 'Makindye',  tier: 'T1', status: 'active' },
-  { name: 'Kabanda Supplies',     phone: '+256 772 100 004', zone: 'Namuwongo', tier: 'T1', status: 'active' },
-  { name: 'Mirembe Shop',         phone: '+256 772 100 005', zone: 'Muyenga',   tier: 'T1', status: 'active' },
-  { name: 'Turyamureeba General', phone: '+256 772 100 006', zone: 'Buziga',    tier: 'T1', status: 'active' },
-  { name: 'Namukasa Trading',     phone: '+256 772 100 007', zone: 'Kansanga',  tier: 'T1', status: 'active' },
-  { name: 'Okello Distributors',  phone: '+256 772 100 008', zone: 'Makindye',  tier: 'T1', status: 'active' },
-  { name: 'Namutebi Stores',      phone: '+256 772 100 009', zone: 'Namuwongo', tier: 'T1', status: 'active' },
-  { name: 'Lwanga Water Co',      phone: '+256 772 100 010', zone: 'Muyenga',   tier: 'T1', status: 'active' },
-  { name: 'Mukasa Brothers',      phone: '+256 772 100 011', zone: 'Buziga',    tier: 'T1', status: 'sleeping' },
-  { name: 'Nakirya Depot',        phone: '+256 772 100 012', zone: 'Kansanga',  tier: 'T1', status: 'sleeping' },
-  { name: 'Ssali Wholesale',      phone: '+256 772 100 013', zone: 'Makindye',  tier: 'T1', status: 'sleeping' },
-  { name: 'Apio Supplies',        phone: '+256 772 100 014', zone: 'Namuwongo', tier: 'T1', status: 'churned' },
-  { name: 'Byarugaba Traders',    phone: '+256 772 100 015', zone: 'Muyenga',   tier: 'T1', status: 'churned' },
+  { name: 'Kato Enterprises',     zone: 'Buziga',    tier: 'T1', status: 'active' },
+  { name: 'Nakato Water Depot',   zone: 'Kansanga',  tier: 'T1', status: 'active' },
+  { name: 'Ssemwogerere Bros',    zone: 'Makindye',  tier: 'T1', status: 'active' },
+  { name: 'Kabanda Supplies',     zone: 'Namuwongo', tier: 'T1', status: 'active' },
+  { name: 'Mirembe Shop',         zone: 'Muyenga',   tier: 'T1', status: 'active' },
+  { name: 'Turyamureeba General', zone: 'Buziga',    tier: 'T1', status: 'active' },
+  { name: 'Namukasa Trading',     zone: 'Kansanga',  tier: 'T1', status: 'active' },
+  { name: 'Okello Distributors',  zone: 'Makindye',  tier: 'T1', status: 'active' },
+  { name: 'Namutebi Stores',      zone: 'Namuwongo', tier: 'T1', status: 'active' },
+  { name: 'Lwanga Water Co',      zone: 'Muyenga',   tier: 'T1', status: 'active' },
+  { name: 'Mukasa Brothers',      zone: 'Buziga',    tier: 'T1', status: 'sleeping' },
+  { name: 'Nakirya Depot',        zone: 'Kansanga',  tier: 'T1', status: 'sleeping' },
+  { name: 'Ssali Wholesale',      zone: 'Makindye',  tier: 'T1', status: 'sleeping' },
+  { name: 'Apio Supplies',        zone: 'Namuwongo', tier: 'T1', status: 'churned' },
+  { name: 'Byarugaba Traders',    zone: 'Muyenga',   tier: 'T1', status: 'churned' },
 ];
 
 const QC_TESTS = ['TDS', 'pH', 'Turbidity', 'Chlorine', 'Bacteria'];

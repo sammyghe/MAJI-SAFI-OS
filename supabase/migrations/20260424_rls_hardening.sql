@@ -16,6 +16,14 @@ DECLARE
   ];
 BEGIN
   FOREACH t IN ARRAY tables_with_location LOOP
+    -- Skip tables that don't exist in this schema
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = t
+    ) THEN
+      CONTINUE;
+    END IF;
+
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', t);
 
     -- Drop legacy permissive policies

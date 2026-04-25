@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 const SIM_TABLES = [
   'production_logs', 'water_tests', 'sales_ledger', 'inventory_items',
   'daily_cash', 'transactions', 'distributors', 'events', 'capa_records',
+  'scenarios', 'issues', 'rocks', 'entity_comments',
 ] as const;
 
 export async function POST(req: NextRequest) {

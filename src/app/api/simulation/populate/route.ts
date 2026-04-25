@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
     const today = new Date();
     const startDate = addDays(today, -30);
-    const counts = { production_logs: 0, water_tests: 0, sales_ledger: 0, daily_cash: 0, distributors: 0, events: 0, capa_records: 0 };
+    const counts = { production_logs: 0, water_tests: 0, sales_ledger: 0, daily_cash: 0, distributors: 0, events: 0, capa_records: 0, transactions: 0 };
 
     // 1. Insert distributors
     const { data: insertedDists, error: distErr } = await supabase
@@ -95,6 +95,7 @@ export async function POST(req: NextRequest) {
     const cashRows: any[] = [];
     const eventRows: any[] = [];
     const capaRows: any[] = [];
+    const txnRows: any[] = [];
 
     for (let day = 0; day < 30; day++) {
       const date = addDays(startDate, day);
@@ -211,11 +212,33 @@ export async function POST(req: NextRequest) {
           distributor: dist?.name ?? 'Unknown',
           product_type: product,
           jar_count: jars,
+          jars_sold: jars,
           amount_ugx: amount,
           tier: 'T1',
           sale_date: dateStr,
           location_id: 'buziga',
           logged_by: 'Bosco',
+          is_simulated: true,
+        });
+      }
+
+      // Daily expense transactions (OpEx seed for P&L)
+      const OPEX_SEED = [
+        { category: 'Chemicals', amount: randBetween(15000, 25000) },
+        { category: 'Salaries', amount: day === 0 ? 650000 : 0 },  // once/month
+        { category: 'Utilities', amount: day % 7 === 0 ? 45000 : 0 },
+        { category: 'Transport', amount: randBetween(5000, 12000) },
+      ];
+      for (const exp of OPEX_SEED) {
+        if (exp.amount === 0) continue;
+        txnRows.push({
+          transaction_date: dateStr,
+          transaction_type: 'expense',
+          category: exp.category,
+          amount_ugx: exp.amount,
+          description: `Simulated ${exp.category}`,
+          recorded_by: 'founder',
+          location_id: 'buziga',
           is_simulated: true,
         });
       }
@@ -262,6 +285,29 @@ export async function POST(req: NextRequest) {
       if (error) throw new Error(`capa_records: ${error.message}`);
       counts.capa_records = capaRows.length;
     }
+    if (txnRows.length) {
+      const { error } = await supabase.from('transactions').insert(txnRows);
+      if (error) throw new Error(`transactions: ${error.message}`);
+      counts.transactions = txnRows.length;
+    }
+
+    // Seed a simulated bank account for cash position
+    await supabase.from('bank_accounts').upsert({
+      name: 'Simulation Account (Stanbic)',
+      currency: 'UGX',
+      current_balance: 8500000,
+      active: true,
+      is_simulated: true,
+    } as any, { onConflict: 'name' });
+
+    // Seed one scenario
+    await supabase.from('scenarios').insert({
+      name: 'Sim: 2x Volume',
+      description: 'What if jars/day doubled during this simulation period?',
+      base_period: new Date().toISOString().slice(0, 7),
+      created_by: 'simulation',
+      is_simulated: true,
+    } as any).select().single();
 
     // Mark simulation active
     await supabase

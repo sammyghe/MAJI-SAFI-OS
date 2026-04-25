@@ -104,13 +104,20 @@ export async function POST(request: NextRequest) {
 
     // Successful login
     await supabase.from('pin_attempts').insert({ ip_address: ip, success: true });
-    await supabase.from('login_audit').insert({
-      user_id: member.id,
-      user_name: member.name,
-      ip_address: ip,
-      user_agent: userAgent,
-      success: true,
-    });
+    await Promise.all([
+      supabase.from('login_audit').insert({
+        user_id: member.id,
+        user_name: member.name,
+        ip_address: ip,
+        user_agent: userAgent,
+        success: true,
+      }),
+      supabase.from('user_sessions').insert({
+        user_id: member.id,
+        ip_address: ip,
+        user_agent: userAgent,
+      }),
+    ]);
 
     return NextResponse.json({
       id: member.id,

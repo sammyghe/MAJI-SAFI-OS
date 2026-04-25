@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { Shield, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
+import TodaysFocus from '@/components/TodaysFocus';
 
 interface ComplianceRecord {
   id: string;
@@ -138,6 +139,11 @@ export default function ComplianceHome() {
       <div>
         <h1 className="text-2xl font-black text-white uppercase tracking-tight">Compliance</h1>
         <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">{user?.name?.split(' ')[0]} · Regulatory Calendar</p>
+      </div>
+
+      {/* Today's Focus */}
+      <div className="mb-2">
+        <TodaysFocus department="compliance" />
       </div>
 
       {/* Key Cert Status Badges */}

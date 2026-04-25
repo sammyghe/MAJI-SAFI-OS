@@ -3,12 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 
 const LOCATION = 'buziga';
 
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
@@ -43,7 +37,8 @@ function determineStatus(
   }
 }
 
-async function computeKPI(supabase: ReturnType<typeof createClient>, kpi: any): Promise<number | null> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function computeKPI(supabase: any, kpi: any): Promise<number | null> {
   const q = kpi.source_query as Record<string, any>;
   const table = kpi.source_table as string;
   const daysBack = q.days_back as number | undefined;
@@ -139,7 +134,10 @@ async function computeKPI(supabase: ReturnType<typeof createClient>, kpi: any): 
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = getSupabase();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const today = todayISO();
 
   const { data: kpis, error: kpiErr } = await supabase

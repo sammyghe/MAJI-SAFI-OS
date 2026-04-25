@@ -8,6 +8,7 @@ import {
   Factory, CheckCircle2, DollarSign, AlertTriangle, Users,
   Users2, Package, Truck, ShoppingCart, TrendingUp, Shield, Zap,
 } from 'lucide-react';
+import TodaysFocus from '@/components/TodaysFocus';
 
 interface KPIs {
   jarsToday: number;
@@ -121,6 +122,11 @@ export default function FounderHome() {
             </div>
           );
         })}
+      </div>
+
+      {/* Today's Focus */}
+      <div className="mb-8">
+        <TodaysFocus department="founder-office" />
       </div>
 
       {/* Needs Attention */}

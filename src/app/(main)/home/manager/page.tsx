@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { Factory, CheckCircle2, Package, Users, AlertTriangle } from 'lucide-react';
+import TodaysFocus from '@/components/TodaysFocus';
 
 interface ManagerKPIs {
   jarsTarget: number;
@@ -100,6 +101,11 @@ export default function ManagerHome() {
             style={{ width: `${attainment}%` }}
           />
         </div>
+      </div>
+
+      {/* Today's Focus */}
+      <div className="mb-8">
+        <TodaysFocus department="production" compact />
       </div>
 
       {/* 4 KPI Cards */}

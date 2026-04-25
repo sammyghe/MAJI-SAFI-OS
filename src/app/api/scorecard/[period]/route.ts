@@ -3,14 +3,15 @@ import { createClient } from '@supabase/supabase-js';
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { period: string } }
+  { params }: { params: Promise<{ period: string }> }
 ) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const period = params.period; // 'today' | 'YYYY-MM-DD'
+  const { period: periodParam } = await params;
+  const period = periodParam; // 'today' | 'YYYY-MM-DD'
   const date = period === 'today' ? new Date().toISOString().slice(0, 10) : period;
 
   const { data: snapshots, error: snapErr } = await supabase

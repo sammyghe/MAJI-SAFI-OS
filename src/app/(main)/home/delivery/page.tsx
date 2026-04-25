@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { CheckCircle2, MapPin, Package } from 'lucide-react';
+import TodaysFocus from '@/components/TodaysFocus';
 
 interface Stop {
   id: string;
@@ -70,6 +71,11 @@ export default function DeliveryHome() {
         <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">
           {user?.name?.split(' ')[0]} · {stops.length} stops · {doneCount} done
         </p>
+      </div>
+
+      {/* Today's Focus */}
+      <div className="mb-6">
+        <TodaysFocus department="dispatch" compact />
       </div>
 
       {loading ? (

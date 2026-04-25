@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { Plus } from 'lucide-react';
+import TodaysFocus from '@/components/TodaysFocus';
 
 type PipelineStage = 'lead' | 'contacted' | 'qualified' | 'converted';
 
@@ -86,6 +87,11 @@ export default function MarketingHome() {
 
   return (
     <div className="px-5 py-6 max-w-7xl mx-auto">
+      {/* Today's Focus */}
+      <div className="mb-6">
+        <TodaysFocus department="marketing" compact />
+      </div>
+
       <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-black text-white uppercase tracking-tight">Pipeline</h1>

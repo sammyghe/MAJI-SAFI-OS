@@ -43,6 +43,9 @@ const ALL_DEPARTMENTS = [
 ];
 
 const moreItems = [
+  { slug: 'rhythm/rocks',    name: 'Rocks',       icon: BarChart2 },
+  { slug: 'rhythm/issues',   name: 'Issues',      icon: Activity },
+  { slug: 'rhythm/meeting',  name: 'Level 10',    icon: Users2 },
   { slug: 'settings',             name: 'Settings',    icon: Settings },
   { slug: 'team',                 name: 'Team',        icon: Users2 },
   { slug: 'audit-log',            name: 'Audit Log',   icon: FileText },

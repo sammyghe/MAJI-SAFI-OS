@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { ClipboardList, Beaker, LogOut, PlayCircle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import TodaysFocus from '@/components/TodaysFocus';
 
 interface ShiftData {
   target: number;
@@ -80,6 +81,11 @@ export default function OperatorHome() {
       <div className="mb-8">
         <p className="text-slate-500 text-xs uppercase tracking-widest font-label">Welcome back</p>
         <h1 className="text-2xl font-black text-white uppercase tracking-tight">{user?.name?.split(' ')[0]}</h1>
+      </div>
+
+      {/* Today's Focus */}
+      <div className="mb-6">
+        <TodaysFocus department="production" compact />
       </div>
 
       {/* Target block — large numbers */}

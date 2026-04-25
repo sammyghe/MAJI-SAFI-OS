@@ -26,29 +26,30 @@ import {
   Bot,
   Activity,
   Lock,
+  Home,
 } from 'lucide-react';
 
 const ALL_DEPARTMENTS = [
   { slug: 'founder-office', name: 'Founder Office', icon: Users },
-  { slug: 'production', name: 'Production', icon: Factory },
-  { slug: 'quality', name: 'Quality', icon: CheckCircle2 },
-  { slug: 'inventory', name: 'Inventory', icon: Package },
-  { slug: 'dispatch', name: 'Dispatch', icon: Truck },
-  { slug: 'sales', name: 'Sales', icon: ShoppingCart },
-  { slug: 'marketing', name: 'Marketing', icon: TrendingUp },
-  { slug: 'finance', name: 'Finance', icon: DollarSign },
-  { slug: 'compliance', name: 'Compliance', icon: Shield },
-  { slug: 'technology', name: 'Technology', icon: Zap },
+  { slug: 'production',     name: 'Production',     icon: Factory },
+  { slug: 'quality',        name: 'Quality',         icon: CheckCircle2 },
+  { slug: 'inventory',      name: 'Inventory',       icon: Package },
+  { slug: 'dispatch',       name: 'Dispatch',        icon: Truck },
+  { slug: 'sales',          name: 'Sales',           icon: ShoppingCart },
+  { slug: 'marketing',      name: 'Marketing',       icon: TrendingUp },
+  { slug: 'finance',        name: 'Finance',         icon: DollarSign },
+  { slug: 'compliance',     name: 'Compliance',      icon: Shield },
+  { slug: 'technology',     name: 'Technology',      icon: Zap },
 ];
 
 const moreItems = [
-  { slug: 'settings', name: 'Settings', icon: Settings },
-  { slug: 'team', name: 'Team', icon: Users2 },
-  { slug: 'audit-log', name: 'Audit Log', icon: FileText },
-  { slug: 'settings/simulation', name: 'Simulation', icon: FlaskConical, founderOnly: true },
-  { slug: 'settings/souls', name: 'AI Souls', icon: Bot, founderOnly: true },
-  { slug: 'settings/ai-health', name: 'AI Health', icon: Activity, founderOnly: true },
-  { slug: 'settings/security', name: 'Security', icon: Lock, founderOnly: true },
+  { slug: 'settings',             name: 'Settings',    icon: Settings },
+  { slug: 'team',                 name: 'Team',        icon: Users2 },
+  { slug: 'audit-log',            name: 'Audit Log',   icon: FileText },
+  { slug: 'settings/simulation',  name: 'Simulation',  icon: FlaskConical, founderOnly: true },
+  { slug: 'settings/souls',       name: 'AI Souls',    icon: Bot,          founderOnly: true },
+  { slug: 'settings/ai-health',   name: 'AI Health',   icon: Activity,     founderOnly: true },
+  { slug: 'settings/security',    name: 'Security',    icon: Lock,         founderOnly: true },
 ];
 
 interface SidebarProps {
@@ -98,18 +99,25 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     return pathname.startsWith(deptPath);
   };
 
-  // Access filtering
+  // Role-based sidebar items filtering
+  const userSidebarItems: string[] = user?.sidebar_items ?? [];
+  const hasRoleFilter = userSidebarItems.length > 0;
+
   const visibleDepts = ALL_DEPARTMENTS.filter((dept) => {
-    if (!user) return true; // loading state — show all
+    if (!user) return true;
+    // Role-based: only show depts listed in sidebar_items
+    if (hasRoleFilter) return userSidebarItems.includes(dept.slug);
+    // Legacy fallback: founder sees all, others see own departments
     if (user.role === 'founder') return true;
     const userDepts: string[] = [
       ...(user.departments ?? []),
       user.department_slug,
     ].filter(Boolean);
-    if (user.role === 'manager') return userDepts.includes(dept.slug);
-    // operator/supervisor/viewer: own dept only
     return userDepts.includes(dept.slug);
   });
+
+  const showHome = hasRoleFilter && userSidebarItems.includes('home');
+  const homePath = user?.landing_page ?? '/home';
 
   return (
     <div
@@ -129,11 +137,26 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         style={{ height: '100%' }}
       >
         <nav className="h-full bg-zinc-950 border-r border-[#262a31]/30 flex flex-col overflow-hidden">
-          {/* Primary Departments */}
           <div className="flex-1 overflow-y-auto px-3 py-6 space-y-1">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] px-3 mb-6">
-              Departments
+              Navigation
             </p>
+
+            {/* Home link — shown when role has 'home' in sidebar_items */}
+            {showHome && (
+              <Link
+                href={homePath}
+                onClick={onClose}
+                className={`flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative ${
+                  pathname === homePath || pathname.startsWith('/home')
+                    ? 'text-[#0077B6] font-semibold border-r-2 border-[#0077B6] bg-[#262a31]/30'
+                    : 'text-slate-500 hover:text-slate-200 hover:bg-[#262a31]/20'
+                }`}
+              >
+                <Home className="w-[15px] h-[15px] flex-shrink-0" />
+                <span className="text-sm font-label tracking-wide">Home</span>
+              </Link>
+            )}
 
             {visibleDepts.map((dept) => {
               const Icon = dept.icon;
@@ -189,26 +212,28 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             {isMoreOpen && (
               <div className="mt-2 space-y-1">
-                {moreItems.filter((item) => !('founderOnly' in item && item.founderOnly) || user?.role === 'founder').map((item) => {
-                  const Icon = item.icon;
-                  const isActive = isActiveDept(item.slug);
+                {moreItems
+                  .filter((item) => !('founderOnly' in item && item.founderOnly) || user?.role === 'founder')
+                  .map((item) => {
+                    const Icon = item.icon;
+                    const isActive = isActiveDept(item.slug);
 
-                  return (
-                    <Link
-                      key={item.slug}
-                      href={getDepartmentPath(item.slug)}
-                      onClick={onClose}
-                      className={`flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative ${
-                        isActive
-                          ? 'text-[#0077B6] font-semibold border-r-2 border-[#0077B6] bg-[#262a31]/30'
-                          : 'text-slate-500 hover:text-slate-200 hover:bg-[#262a31]/20'
-                      }`}
-                    >
-                      <Icon className="w-[15px] h-[15px] flex-shrink-0" />
-                      <span className="text-sm font-label tracking-wide">{item.name}</span>
-                    </Link>
-                  );
-                })}
+                    return (
+                      <Link
+                        key={item.slug}
+                        href={getDepartmentPath(item.slug)}
+                        onClick={onClose}
+                        className={`flex items-center gap-3 px-3 py-2.5 transition-all duration-150 relative ${
+                          isActive
+                            ? 'text-[#0077B6] font-semibold border-r-2 border-[#0077B6] bg-[#262a31]/30'
+                            : 'text-slate-500 hover:text-slate-200 hover:bg-[#262a31]/20'
+                        }`}
+                      >
+                        <Icon className="w-[15px] h-[15px] flex-shrink-0" />
+                        <span className="text-sm font-label tracking-wide">{item.name}</span>
+                      </Link>
+                    );
+                  })}
               </div>
             )}
           </div>

@@ -24,21 +24,26 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   );
   if (!user) return null;
 
+  // Large-density roles (operator, delivery) get full-screen layout — no sidebar
+  const isLargeDensity = user.ui_density === 'large';
+
   return (
     <>
       <TopBar onMenuClick={() => setSidebarOpen(true)} />
       <SimulationBanner />
 
-      {sidebarOpen && (
+      {!isLargeDensity && sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      {!isLargeDensity && (
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      )}
 
-      <main className="pt-16 bg-[#10141a] min-h-screen md:ml-[var(--sidebar-w,240px)]">
+      <main className={`pt-16 bg-[#10141a] min-h-screen ${isLargeDensity ? '' : 'md:ml-[var(--sidebar-w,240px)]'}`}>
         {children}
       </main>
 

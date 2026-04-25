@@ -49,7 +49,7 @@ const moreItems = [
   { slug: 'finance/scenarios',  name: 'Scenarios',   icon: FlaskConical },
   { slug: 'settings',             name: 'Settings',    icon: Settings },
   { slug: 'team',                 name: 'Team',        icon: Users2 },
-  { slug: 'audit-log',            name: 'Audit Log',   icon: FileText },
+  { slug: 'finance/audit',         name: 'Audit Log',   icon: FileText },
   { slug: 'settings/team-roles',  name: 'Team Roles',  icon: Users2,       founderOnly: true },
   { slug: 'settings/simulation',  name: 'Simulation',  icon: FlaskConical, founderOnly: true },
   { slug: 'settings/souls',       name: 'AI Souls',    icon: Bot,          founderOnly: true },

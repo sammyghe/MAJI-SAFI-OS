@@ -46,6 +46,7 @@ const moreItems = [
   { slug: 'settings',             name: 'Settings',    icon: Settings },
   { slug: 'team',                 name: 'Team',        icon: Users2 },
   { slug: 'audit-log',            name: 'Audit Log',   icon: FileText },
+  { slug: 'settings/team-roles',  name: 'Team Roles',  icon: Users2,       founderOnly: true },
   { slug: 'settings/simulation',  name: 'Simulation',  icon: FlaskConical, founderOnly: true },
   { slug: 'settings/souls',       name: 'AI Souls',    icon: Bot,          founderOnly: true },
   { slug: 'settings/ai-health',   name: 'AI Health',   icon: Activity,     founderOnly: true },

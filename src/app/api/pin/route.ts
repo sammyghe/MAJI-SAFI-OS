@@ -88,14 +88,14 @@ export async function POST(request: NextRequest) {
     const legacyRole = isFounder ? 'founder' : (member.access_level ?? 'operator');
 
     // Load role from roles table if role_id is set
-    let roleData: { slug: string; landing_page: string; permissions: any; sidebar_items: any; ui_density: string } | null = null;
+    let roleData: { role_slug: string; landing_page: string; permissions: any; sidebar_items: any; ui_density: string } | null = null;
     if (member.role_id) {
       const { data: rd } = await supabase
         .from('roles')
         .select('slug, landing_page, permissions, sidebar_items, ui_density')
         .eq('id', member.role_id)
         .maybeSingle();
-      if (rd) roleData = rd;
+      if (rd) roleData = { role_slug: rd.slug, landing_page: rd.landing_page, permissions: rd.permissions, sidebar_items: rd.sidebar_items, ui_density: rd.ui_density };
     }
 
     // Fallback: if no role assigned, use legacy-derived defaults
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       id: member.id,
       name: member.name,
       role: legacyRole,
-      role_slug: resolved.slug,
+      role_slug: resolved.role_slug,
       department_slug: member.department_slug,
       departments: member.departments || [],
       phone: member.phone,

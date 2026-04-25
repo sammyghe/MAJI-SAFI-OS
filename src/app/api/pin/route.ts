@@ -7,6 +7,23 @@ function getClientIP(req: NextRequest): string {
   return req.headers.get('x-real-ip') ?? 'unknown';
 }
 
+// Default role data for legacy users without role_id assigned
+const FOUNDER_DEFAULTS = {
+  role_slug: 'founder',
+  landing_page: '/home/founder',
+  permissions: { all: true },
+  sidebar_items: ['home','founder-office','production','quality','inventory','dispatch','sales','marketing','finance','compliance','technology','investor','settings'],
+  ui_density: 'normal',
+};
+
+const GENERIC_DEFAULTS = {
+  role_slug: 'lead_operator',
+  landing_page: '/home/operator',
+  permissions: { departments: ['production','quality'], scope: 'own_shift' },
+  sidebar_items: ['home','production','quality'],
+  ui_density: 'large',
+};
+
 export async function POST(request: NextRequest) {
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -63,6 +80,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid PIN' }, { status: 401 });
     }
 
+    // Determine role
+    const isFounder =
+      member.access_level === 'founder' ||
+      (member.department_slug ?? '').startsWith('founder');
+
+    const legacyRole = isFounder ? 'founder' : (member.access_level ?? 'operator');
+
+    // Load role from roles table if role_id is set
+    let roleData: { slug: string; landing_page: string; permissions: any; sidebar_items: any; ui_density: string } | null = null;
+    if (member.role_id) {
+      const { data: rd } = await supabase
+        .from('roles')
+        .select('slug, landing_page, permissions, sidebar_items, ui_density')
+        .eq('id', member.role_id)
+        .maybeSingle();
+      if (rd) roleData = rd;
+    }
+
+    // Fallback: if no role assigned, use legacy-derived defaults
+    const defaults = isFounder ? FOUNDER_DEFAULTS : GENERIC_DEFAULTS;
+    const resolved = roleData ?? defaults;
+
     // Successful login
     await supabase.from('pin_attempts').insert({ ip_address: ip, success: true });
     await supabase.from('login_audit').insert({
@@ -73,17 +112,18 @@ export async function POST(request: NextRequest) {
       success: true,
     });
 
-    const isFounder =
-      member.access_level === 'founder' ||
-      (member.department_slug ?? '').startsWith('founder');
-
     return NextResponse.json({
       id: member.id,
       name: member.name,
-      role: isFounder ? 'founder' : member.access_level,
+      role: legacyRole,
+      role_slug: resolved.slug,
       department_slug: member.department_slug,
       departments: member.departments || [],
       phone: member.phone,
+      landing_page: resolved.landing_page,
+      permissions: resolved.permissions,
+      sidebar_items: resolved.sidebar_items,
+      ui_density: resolved.ui_density,
     });
   } catch (error) {
     if (process.env.NODE_ENV === 'development') console.error('PIN auth error:', error);

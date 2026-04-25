@@ -6,16 +6,22 @@ import { supabase } from '@/lib/supabase';
 export interface User {
   id: string;
   name: string;
-  role: string;
+  role: string;               // backward-compat: 'founder' | access_level
+  role_slug: string;          // from roles table slug
   department_slug: string;
   departments: string[];
   phone?: string;
+  // role-driven fields
+  landing_page: string;
+  permissions: Record<string, any>;
+  sidebar_items: string[];
+  ui_density: string;         // 'normal' | 'large'
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (pin: string) => Promise<void>;
+  login: (pin: string) => Promise<{ landing_page: string }>;
   logout: () => void;
 }
 
@@ -62,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => stopPing();
   }, []);
 
-  const login = async (pin: string) => {
+  const login = async (pin: string): Promise<{ landing_page: string }> => {
     setLoading(true);
     try {
       const response = await fetch('/api/pin', {
@@ -70,11 +76,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin }),
       });
-      if (!response.ok) throw new Error('Invalid PIN');
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error ?? 'Invalid PIN');
+      }
       const userData = await response.json() as User;
       setUser(userData);
       localStorage.setItem('maji-safi-user', JSON.stringify(userData));
       startPing(userData);
+      return { landing_page: userData.landing_page ?? '/founder-office' };
     } finally {
       setLoading(false);
     }

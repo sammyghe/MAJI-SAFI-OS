@@ -12,7 +12,7 @@ interface SearchResult {
   href: string;
 }
 
-const TYPE_ICONS: Record<string, React.ElementType> = {
+const TYPE_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Product: Package,
   Account: BookOpen,
   Issue: AlertCircle,

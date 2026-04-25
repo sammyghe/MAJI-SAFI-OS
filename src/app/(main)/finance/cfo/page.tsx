@@ -31,7 +31,7 @@ interface Budget {
 }
 
 function MetricCard({ label, value, sub, icon: Icon, color, link }: {
-  label: string; value: string; sub?: string; icon: React.ElementType; color: string; link?: string;
+  label: string; value: string; sub?: string; icon: React.ComponentType<{ className?: string }>; color: string; link?: string;
 }) {
   return (
     <div className={`bg-zinc-900 border ${color} rounded-2xl p-5`}>

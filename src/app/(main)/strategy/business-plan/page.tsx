@@ -24,7 +24,7 @@ const CAT_LABELS: Record<string, string> = {
   team: 'Team', funding: 'Funding & Cap Table', milestones: 'Milestones', risks: 'Risks', regulatory: 'Regulatory',
 };
 
-const STATUS_CONFIG: Record<string, { icon: React.ElementType; color: string; bg: string; label: string }> = {
+const STATUS_CONFIG: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string; bg: string; label: string }> = {
   on_track:    { icon: TrendingUp,  color: 'text-emerald-400', bg: 'bg-emerald-500/10', label: 'On Track' },
   at_risk:     { icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/10',   label: 'At Risk' },
   off_track:   { icon: XCircle,    color: 'text-red-400',    bg: 'bg-red-500/10',      label: 'Off Track' },

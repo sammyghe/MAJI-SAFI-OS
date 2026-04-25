@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { CheckCircle2, MapPin, Package } from 'lucide-react';
 import TodaysFocus from '@/components/TodaysFocus';
+import InboxPanel from '@/components/InboxPanel';
 
 interface Stop {
   id: string;
@@ -71,6 +72,11 @@ export default function DeliveryHome() {
         <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">
           {user?.name?.split(' ')[0]} · {stops.length} stops · {doneCount} done
         </p>
+      </div>
+
+      {/* Inbox */}
+      <div className="mb-4">
+        <InboxPanel compact />
       </div>
 
       {/* Today's Focus */}

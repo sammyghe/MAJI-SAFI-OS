@@ -9,6 +9,7 @@ import {
   Users2, Package, Truck, ShoppingCart, TrendingUp, Shield, Zap,
 } from 'lucide-react';
 import TodaysFocus from '@/components/TodaysFocus';
+import InboxPanel from '@/components/InboxPanel';
 
 interface KPIs {
   jarsToday: number;
@@ -122,6 +123,11 @@ export default function FounderHome() {
             </div>
           );
         })}
+      </div>
+
+      {/* Inbox — what happened since last visit */}
+      <div className="mb-6">
+        <InboxPanel />
       </div>
 
       {/* Today's Focus */}

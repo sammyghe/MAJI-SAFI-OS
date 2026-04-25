@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { Factory, CheckCircle2, Package, Users, AlertTriangle } from 'lucide-react';
 import TodaysFocus from '@/components/TodaysFocus';
+import InboxPanel from '@/components/InboxPanel';
 
 interface ManagerKPIs {
   jarsTarget: number;
@@ -101,6 +102,11 @@ export default function ManagerHome() {
             style={{ width: `${attainment}%` }}
           />
         </div>
+      </div>
+
+      {/* Inbox */}
+      <div className="mb-4">
+        <InboxPanel compact />
       </div>
 
       {/* Today's Focus */}

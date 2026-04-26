@@ -27,7 +27,7 @@ export default function TopBar({ onMenuClick }: TopBarProps) {
         >
           <Menu className="w-5 h-5" />
         </button>
-        <img src="/maji-safi-logo.png" alt="Maji Safi Logo" className="w-8 h-8 object-contain" />
+        <img src="/maji-safi-logo.png?v=2" alt="Maji Safi Logo" className="w-8 h-8 object-contain" />
         <div className="flex flex-col">
           <h1 className="text-xl font-bold tracking-tighter text-[#0077B6] font-headline leading-tight">
             Maji Safi OS

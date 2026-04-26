@@ -87,8 +87,8 @@ export default function RootLayout({
           }
         ` }} />
       </head>
-      <body className="bg-white dark:bg-[#10141a] text-zinc-900 dark:text-[#dfe2eb] relative transition-colors duration-300">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+      <body className="bg-[#FAFBFC] text-[#0F172A] relative">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <AuthProvider>
             <ThemeSync />
             <ToastContainer />

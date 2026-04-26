@@ -49,8 +49,8 @@ export default function SimulationBanner() {
         left: 0,
         right: 0,
         zIndex: 35,
-        background: 'linear-gradient(90deg, #92400e, #b45309)',
-        color: '#fef3c7',
+        background: 'linear-gradient(90deg, #EFF8FF, #DBEAFE)',
+        color: '#0077B6',
         padding: '8px 24px',
         display: 'flex',
         alignItems: 'center',
@@ -58,13 +58,13 @@ export default function SimulationBanner() {
         fontSize: 12,
         fontWeight: 700,
         letterSpacing: '0.05em',
-        borderBottom: '1px solid #b45309',
+        borderBottom: '1px solid #BFDBFE',
       }}
     >
-      <span>⚠️ SIMULATION MODE ACTIVE — {totalRows.toLocaleString()} simulated records. Real data is unaffected.</span>
+      <span>🔬 Simulation mode active — {totalRows.toLocaleString()} demo records. Your real data is safe.</span>
       <a
         href="/settings/simulation"
-        style={{ color: '#fde68a', textDecoration: 'underline', fontSize: 11, letterSpacing: '0.1em' }}
+        style={{ color: '#0077B6', textDecoration: 'underline', fontSize: 11, letterSpacing: '0.1em' }}
       >
         MANAGE →
       </a>

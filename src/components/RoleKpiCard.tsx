@@ -2,62 +2,79 @@
 
 import { motion } from 'framer-motion';
 
-const ACCENT_COLOR: Record<string, string> = {
-  founder: '#FFD700',
-  manager: '#0077B6',
-  operator: '#94a3b8',
-  delivery: '#f97316',
-  marketing: '#ec4899',
-  compliance: '#10b981',
+const ROLE_ACCENT: Record<string, string> = {
+  founder:    '#FFD700',
+  manager:    '#0077B6',
+  operator:   '#10B981',
+  delivery:   '#6366F1',
+  marketing:  '#EC4899',
+  compliance: '#F59E0B',
 };
 
-const EMPTY_HINT: Record<string, string> = {
-  'Jars Today': 'Log first batch',
-  'Revenue Today': 'Add first sale',
-  'Team Present': 'No active sessions',
-  'Open Issues': '',
-  'QC Pass Rate': 'Run first test',
-  'Low Stock Items': '',
-  'Machine Status': '',
+const EMPTY_CTA: Record<string, string> = {
+  'Jars Today':     '↑ Log first batch',
+  'Revenue Today':  '↑ Record first sale',
+  'Team Present':   '↑ Start a shift',
+  'QC Pass Rate':   '↑ Run first test',
+  'Low Stock Items':'All good',
+  'Open Issues':    'All clear',
+  'Machine Status': 'Online',
 };
 
-export default function RoleKpiCard({ label, value, icon: Icon, ok, role }: any) {
-  const accent = ACCENT_COLOR[role as string] ?? '#0077B6';
-  const isEmpty = value === '0' || value === 'No tests' || value === '—';
-  const hint = isEmpty ? EMPTY_HINT[label as string] : '';
+export default function RoleKpiCard({
+  label, value, icon: Icon, ok, role, trend, context,
+}: {
+  label: string;
+  value: string;
+  icon: React.ElementType;
+  ok: boolean;
+  role: string;
+  trend?: string;
+  context?: string;
+}) {
+  const accent = ROLE_ACCENT[role] ?? '#0077B6';
+  const isEmpty = value === '0' || value === 'No tests' || value === '—' || value === 'UGX 0K';
+  const cta = isEmpty ? (EMPTY_CTA[label] ?? '') : '';
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02, boxShadow: `0 0 20px ${accent}33` }}
+      whileHover={{ y: -2, boxShadow: `0 12px 32px rgba(0,0,0,0.10)` }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm cursor-default min-h-[160px] flex flex-col justify-between"
       style={{ borderLeft: `4px solid ${accent}` }}
-      className="bg-white dark:bg-[#1A2541] border-y border-r border-zinc-200 dark:border-[#2A3A5C] rounded-2xl p-5 shadow-sm dark:shadow-none transition-colors duration-200 min-h-[140px] flex flex-col justify-between"
     >
-      <div className="flex items-start justify-between mb-3">
+      {/* Top row */}
+      <div className="flex items-start justify-between">
         <div
-          className="p-2 rounded-xl"
-          style={{ background: `${accent}18`, filter: `drop-shadow(0 0 6px ${accent}44)` }}
+          className="w-12 h-12 rounded-xl flex items-center justify-center"
+          style={{ background: `${accent}18` }}
         >
-          <Icon style={{ width: 20, height: 20, color: accent }} />
+          <Icon className="w-6 h-6" style={{ color: accent }} />
         </div>
-        <span
-          className={`w-2.5 h-2.5 rounded-full mt-1 ${ok ? 'bg-emerald-500 dark:bg-emerald-400' : 'bg-amber-500 dark:bg-amber-400'}`}
-          style={{ boxShadow: ok ? '0 0 6px rgba(52,211,153,0.5)' : '0 0 6px rgba(245,158,11,0.5)' }}
-        />
+        <div className="flex items-center gap-1.5">
+          {trend && (
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+              trend.startsWith('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'
+            }`}>
+              {trend}
+            </span>
+          )}
+          <span className={`w-2 h-2 rounded-full ${ok ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+        </div>
       </div>
 
-      <div>
-        {isEmpty && hint ? (
+      {/* Value */}
+      <div className="mt-4">
+        {isEmpty && cta ? (
           <div>
-            <p className="text-3xl font-black text-zinc-300 dark:text-white/30 tabular-nums leading-none">0</p>
-            <p className="text-[10px] mt-1 font-semibold" style={{ color: accent }}>↑ {hint}</p>
+            <p className="text-4xl font-black text-slate-200 tabular-nums leading-none">—</p>
+            <p className="text-xs font-semibold mt-1" style={{ color: accent }}>{cta}</p>
           </div>
         ) : (
-          <p className="text-4xl font-black text-zinc-900 dark:text-white tabular-nums leading-none" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)' }}>
-            {value}
-          </p>
+          <p className="text-4xl font-black text-slate-900 tabular-nums leading-none">{value}</p>
         )}
-        <p className="text-[10px] text-zinc-500 dark:text-slate-400 uppercase tracking-widest mt-2">{label}</p>
+        <p className="text-sm text-slate-500 mt-2 font-medium">{label}</p>
+        {context && <p className="text-xs text-slate-400 mt-0.5">{context}</p>}
       </div>
     </motion.div>
   );

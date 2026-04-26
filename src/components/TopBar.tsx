@@ -1,60 +1,85 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Menu, LogOut } from 'lucide-react';
 import { useAuth } from './AuthProvider';
 
-interface TopBarProps {
-  onMenuClick?: () => void;
+const ROLE_COLORS: Record<string, string> = {
+  founder:    '#FFD700',
+  manager:    '#0077B6',
+  operator:   '#10B981',
+  delivery:   '#6366F1',
+  marketing:  '#EC4899',
+  compliance: '#F59E0B',
+};
+
+function Clock() {
+  const [time, setTime] = useState('');
+  useEffect(() => {
+    const tick = () => {
+      setTime(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <span className="hidden md:block text-sm font-semibold text-slate-400 tabular-nums tracking-wide">
+      {time}
+    </span>
+  );
 }
+
+interface TopBarProps { onMenuClick?: () => void; }
 
 export default function TopBar({ onMenuClick }: TopBarProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const accent = ROLE_COLORS[user?.role ?? ''] ?? '#0077B6';
 
-  const handleLogout = () => {
-    logout();
-    router.push('/login');
-  };
+  const handleLogout = () => { logout(); router.push('/login'); };
 
   return (
-    <header className="fixed top-0 w-full z-50 flex justify-between items-center px-4 md:px-6 h-16 bg-white dark:bg-[#10141a] border-b border-zinc-200 dark:border-[#262a31]/15 shadow-sm dark:shadow-none transition-colors">
+    <header className="fixed top-0 w-full z-50 flex items-center justify-between px-4 md:px-6 h-16 bg-white border-b border-slate-200 shadow-sm">
+      {/* Left — logo + menu */}
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}
-          className="md:hidden p-1.5 text-zinc-500 dark:text-slate-400 hover:text-zinc-900 dark:hover:text-slate-200 transition-colors"
+          className="md:hidden p-1.5 text-slate-400 hover:text-slate-700 transition-colors rounded-lg hover:bg-slate-100"
           aria-label="Open menu"
         >
           <Menu className="w-5 h-5" />
         </button>
-        <img src="/maji-safi-logo.png?v=2" alt="Maji Safi Logo" className="w-8 h-8 object-contain" />
-        <div className="flex flex-col">
-          <h1 className="text-xl font-bold tracking-tighter text-[#0077B6] font-headline leading-tight">
-            Maji Safi OS
-          </h1>
-        </div>
-      </div>
-      <div className="flex items-center gap-4">
-        <span className="font-label text-[10px] font-medium text-zinc-500 dark:text-slate-500 tracking-[0.2em] uppercase hidden md:block">
-          System Status: Optimal
+        <img src="/maji-safi-logo.png?v=2" alt="Maji Safi" className="w-8 h-8 object-contain" />
+        <span className="font-black text-xl tracking-tight text-[#0077B6]" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          Maji Safi OS
         </span>
+      </div>
+
+      {/* Center — clock */}
+      <Clock />
+
+      {/* Right — user */}
+      <div className="flex items-center gap-3">
         {user && (
           <>
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-[#95d4b3]" />
-              <span className="font-label text-xs text-zinc-600 dark:text-slate-400">{user.name}</span>
-              {user.role === 'founder' && (
-                <span className="text-[9px] font-label uppercase tracking-widest text-[#0077B6] bg-[#0077B6]/10 px-1.5 py-0.5">
-                  Founder
-                </span>
-              )}
+            <div className="hidden md:flex items-center gap-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-sm font-medium text-slate-600">{user.name}</span>
+              <span
+                className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                style={{ background: `${accent}18`, color: accent }}
+              >
+                {user.role}
+              </span>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 text-zinc-500 dark:text-slate-500 hover:text-zinc-900 dark:hover:text-slate-200 transition-colors text-xs font-label"
+              className="flex items-center gap-1.5 text-slate-400 hover:text-slate-700 transition-colors text-sm font-medium p-2 rounded-lg hover:bg-slate-100"
               title="Logout"
             >
-              <LogOut className="w-3.5 h-3.5" />
+              <LogOut className="w-4 h-4" />
               <span className="hidden md:inline">Logout</span>
             </button>
           </>

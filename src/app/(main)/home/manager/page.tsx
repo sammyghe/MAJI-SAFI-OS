@@ -9,6 +9,7 @@ import TodaysFocus from '@/components/TodaysFocus';
 import InboxPanel from '@/components/InboxPanel';
 import CrossDeptSummary from '@/components/CrossDeptSummary';
 import TeamAwarenessPanel from '@/components/TeamAwarenessPanel';
+import RoleKpiCard from '@/components/RoleKpiCard';
 
 interface ManagerKPIs {
   jarsTarget: number;
@@ -70,8 +71,8 @@ export default function ManagerHome() {
   return (
     <div className="px-6 py-8 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-black tracking-tighter text-white uppercase italic">Operations</h1>
-        <p className="text-slate-500 text-xs font-label uppercase tracking-widest mt-1">
+        <h1 className="text-3xl font-black tracking-tighter text-zinc-900 dark:text-white uppercase italic">Operations</h1>
+        <p className="text-zinc-500 dark:text-slate-500 text-xs font-label uppercase tracking-widest mt-1">
           {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
       </div>
@@ -80,28 +81,28 @@ export default function ManagerHome() {
       <TeamAwarenessPanel />
 
       {/* Production Scorecard */}
-      <div className="mb-8 bg-zinc-900 border border-zinc-800 rounded-2xl p-8">
-        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Today's Production</p>
+      <div className="mb-8 bg-white dark:bg-[#1A2541] border border-zinc-200 dark:border-[#2A3A5C] rounded-2xl p-8 shadow-sm dark:shadow-none">
+        <p className="text-[10px] font-bold text-zinc-500 dark:text-slate-500 uppercase tracking-[0.2em] mb-2">Today's Production</p>
         <div className="flex items-end gap-6 flex-wrap">
           <div>
-            <p className="text-7xl font-black text-white tabular-nums leading-none">
+            <p className="text-7xl font-black text-zinc-900 dark:text-white tabular-nums leading-none">
               {loading ? '—' : kpis.jarsActual.toLocaleString()}
             </p>
-            <p className="text-slate-500 text-sm mt-1">jars produced</p>
+            <p className="text-zinc-500 dark:text-slate-500 text-sm mt-1">jars produced</p>
           </div>
-          <div className="text-slate-600 text-5xl font-thin">/</div>
+          <div className="text-zinc-400 dark:text-slate-600 text-5xl font-thin">/</div>
           <div>
-            <p className="text-4xl font-black text-slate-400 tabular-nums">{kpis.jarsTarget.toLocaleString()}</p>
-            <p className="text-slate-500 text-sm mt-1">target</p>
+            <p className="text-4xl font-black text-zinc-400 dark:text-slate-400 tabular-nums">{kpis.jarsTarget.toLocaleString()}</p>
+            <p className="text-zinc-500 dark:text-slate-500 text-sm mt-1">target</p>
           </div>
           <div className="ml-auto text-right">
             <p className={`text-5xl font-black tabular-nums ${attainment >= 80 ? 'text-emerald-400' : attainment >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
               {loading ? '—' : `${attainment}%`}
             </p>
-            <p className="text-slate-500 text-sm mt-1">attainment</p>
+            <p className="text-zinc-500 dark:text-slate-500 text-sm mt-1">attainment</p>
           </div>
         </div>
-        <div className="mt-4 h-2 bg-zinc-800 rounded-full overflow-hidden">
+        <div className="mt-4 h-2 bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all ${attainment >= 80 ? 'bg-emerald-400' : attainment >= 50 ? 'bg-amber-400' : 'bg-red-400'}`}
             style={{ width: `${attainment}%` }}
@@ -134,10 +135,8 @@ export default function ManagerHome() {
         ].map((c) => {
           const Icon = c.icon;
           return (
-            <div key={c.label} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-              <Icon className={`w-4 h-4 mb-3 ${c.ok ? 'text-emerald-400' : 'text-amber-400'}`} />
-              <p className="text-2xl font-black text-white">{loading ? '—' : c.value}</p>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">{c.label}</p>
+            <div key={c.label} className="h-full">
+              <RoleKpiCard label={c.label} value={loading ? '—' : c.value} icon={Icon} ok={c.ok} role="manager" />
             </div>
           );
         })}
@@ -145,17 +144,17 @@ export default function ManagerHome() {
 
       {/* Open Issues */}
       {kpis.openIssues.length > 0 && (
-        <div className="mb-8 bg-zinc-900 border border-amber-500/20 rounded-2xl p-6">
+        <div className="mb-8 bg-white dark:bg-[#1A2541] border border-amber-300/40 dark:border-[#2A3A5C] rounded-2xl p-6 shadow-sm dark:shadow-none">
           <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-4 h-4 text-amber-400" />
-            <h2 className="text-sm font-black text-white uppercase tracking-widest">Open Issues Today</h2>
+            <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            <h2 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest">Open Issues Today</h2>
           </div>
           <div className="space-y-2">
             {kpis.openIssues.map((iss) => (
-              <div key={iss.id} className="flex items-center gap-3 py-2 border-b border-zinc-800 last:border-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                <p className="text-xs font-bold text-white flex-1">{(iss.type ?? '').replace(/_/g, ' ').toUpperCase()}</p>
-                {iss.dept && <span className="text-[10px] text-slate-500">{iss.dept}</span>}
+              <div key={iss.id} className="flex items-center gap-3 py-2 border-b border-zinc-200 dark:border-zinc-800 last:border-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400 flex-shrink-0" />
+                <p className="text-xs font-bold text-zinc-900 dark:text-white flex-1">{(iss.type ?? '').replace(/_/g, ' ').toUpperCase()}</p>
+                {iss.dept && <span className="text-[10px] text-zinc-500 dark:text-slate-500">{iss.dept}</span>}
               </div>
             ))}
           </div>
@@ -170,7 +169,7 @@ export default function ManagerHome() {
           { label: 'Inventory', href: '/inventory' },
           { label: 'Team', href: '/compliance/team' },
         ].map((l) => (
-          <Link key={l.href} href={l.href} className="px-4 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-xs font-bold text-slate-300 hover:text-white hover:border-zinc-500 transition-colors">
+          <Link key={l.href} href={l.href} className="px-4 py-2 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-lg text-xs font-bold text-zinc-600 dark:text-slate-300 hover:text-zinc-900 dark:hover:text-white hover:border-zinc-400 dark:hover:border-zinc-500 transition-colors shadow-sm dark:shadow-none">
             {l.label}
           </Link>
         ))}

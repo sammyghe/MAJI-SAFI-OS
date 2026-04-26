@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Settings, Save, RefreshCw, Shield, Bell, Zap, Users, QrCode, Building2, GitBranch } from 'lucide-react';
+import { Settings, Save, RefreshCw, Shield, Bell, Zap, Users, QrCode, Building2, GitBranch, Sun, Moon } from 'lucide-react';
 import { QRCodeCanvas as QRCode } from 'qrcode.react';
+import { useTheme } from 'next-themes';
+import { useSound } from '@/hooks/useSound';
 
 interface CompanySetting {
   key: string;
@@ -21,6 +23,8 @@ interface PinEntry {
 const APP_URL = typeof window !== 'undefined' ? window.location.origin : '';
 
 export default function SettingsPage() {
+  const { soundEnabled, toggleSound } = useSound();
+  const { theme, setTheme } = useTheme();
   const [settings, setSettings] = useState<CompanySetting[]>([]);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -198,6 +202,43 @@ export default function SettingsPage() {
             })}
           </div>
         )}
+      </section>
+
+      {/* Personal Settings */}
+      <section className="glass-panel rounded-[2rem] p-8 space-y-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Settings className="w-5 h-5 text-brand-sky" />
+          <h2 className="text-lg font-black text-white uppercase tracking-widest">Personal Preferences</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-brand-navy/20 rounded-xl px-4 py-4 border border-white/5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] text-brand-steel font-bold uppercase tracking-widest mb-1">System Sounds</p>
+              <p className="text-xs text-white/70">Play subtle chimes on success/alerts</p>
+            </div>
+            <button
+              onClick={toggleSound}
+              className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-colors ${
+                soundEnabled ? 'bg-brand-sky/20 text-brand-sky' : 'bg-red-500/20 text-red-400'
+              }`}
+            >
+              {soundEnabled ? 'Enabled' : 'Muted'}
+            </button>
+          </div>
+          
+          <div className="bg-brand-navy/5 dark:bg-brand-navy/20 rounded-xl px-4 py-4 border border-zinc-200 dark:border-white/5 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] text-zinc-500 dark:text-brand-steel font-bold uppercase tracking-widest mb-1">Appearance</p>
+              <p className="text-xs text-zinc-600 dark:text-white/70">Toggle Light / Dark mode</p>
+            </div>
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 rounded-lg bg-zinc-200 dark:bg-brand-sky/20 text-zinc-600 dark:text-brand-sky hover:bg-zinc-300 dark:hover:bg-brand-sky/30 transition-colors"
+            >
+              {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* Company Settings */}
@@ -394,6 +435,18 @@ export default function SettingsPage() {
         </div>
       </section>
 
+      {/* Schema reload */}
+      <section className="glass-panel rounded-[2rem] p-8 space-y-4">
+        <div className="flex items-center gap-3 mb-2">
+          <Zap className="w-5 h-5 text-brand-sky" />
+          <h2 className="text-lg font-black text-white uppercase tracking-widest">Database Schema</h2>
+        </div>
+        <p className="text-brand-steel text-sm font-bold">
+          If you see "column not found in schema cache" errors after a migration, force PostgREST to reload the schema.
+        </p>
+        <SchemaReloadButton />
+      </section>
+
       {/* Notification bridge */}
       <section className="glass-panel rounded-[2rem] p-8 space-y-4">
         <div className="flex items-center gap-3">
@@ -409,6 +462,36 @@ export default function SettingsPage() {
           <p>NEXT_PUBLIC_APP_URL=https://your-domain.com</p>
         </div>
       </section>
+    </div>
+  );
+}
+
+function SchemaReloadButton() {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle');
+  const [msg, setMsg] = useState('');
+
+  const reload = async () => {
+    setStatus('loading');
+    try {
+      const res = await fetch('/api/admin/reload-schema', { method: 'POST' });
+      const data = await res.json();
+      if (data.ok) { setStatus('ok'); setMsg(`Reloaded at ${new Date(data.reloaded_at).toLocaleTimeString('en-GB')}`); }
+      else { setStatus('error'); setMsg(data.error ?? 'Unknown error'); }
+    } catch { setStatus('error'); setMsg('Network error'); }
+    setTimeout(() => setStatus('idle'), 5000);
+  };
+
+  return (
+    <div className="flex items-center gap-4 flex-wrap">
+      <button
+        onClick={reload}
+        disabled={status === 'loading'}
+        className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-brand-sky/20 border border-brand-sky/30 text-brand-pale font-black text-sm uppercase tracking-widest hover:bg-brand-sky/30 transition-all disabled:opacity-50"
+      >
+        <RefreshCw className={`w-4 h-4 ${status === 'loading' ? 'animate-spin' : ''}`} />
+        {status === 'loading' ? 'Reloading…' : 'Reload Schema'}
+      </button>
+      {msg && <span className={`text-xs font-bold ${status === 'error' ? 'text-red-400' : 'text-emerald-400'}`}>{msg}</span>}
     </div>
   );
 }

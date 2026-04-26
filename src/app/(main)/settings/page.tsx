@@ -47,11 +47,6 @@ export default function SettingsPage() {
     window.addEventListener('beforeinstallprompt', handler);
     window.addEventListener('appinstalled', () => setPwaInstalled(true));
 
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
-    }
-
     fetchSettings();
     fetchTeam();
     return () => window.removeEventListener('beforeinstallprompt', handler);

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthProvider';
-import { Droplet } from 'lucide-react';
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,9 +44,7 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md px-6 py-12">
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-2xl p-8 backdrop-blur-xl">
           <div className="flex justify-center mb-8">
-            <div className="p-4 bg-gradient-to-br from-[#0077B6] to-[#7EC8E3] rounded-lg">
-              <Droplet className="w-8 h-8 text-white" />
-            </div>
+            <img src="/maji-safi-logo-white.svg" alt="Maji Safi Logo" className="w-24 h-24 object-contain" />
           </div>
 
           <h1 className="text-3xl font-bold text-center text-white mb-2 font-headline">Maji Safi OS</h1>

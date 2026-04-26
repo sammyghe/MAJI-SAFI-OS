@@ -3,6 +3,8 @@ import { Geist, Geist_Mono, Montserrat, Open_Sans, Inter, Space_Grotesk } from "
 import "./globals.css";
 import ToastContainer from "@/components/ToastContainer";
 import { AuthProvider } from "@/components/AuthProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import ThemeSync from "@/components/ThemeSync";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,8 +48,12 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "Maji Safi OS",
-  description: "Hydrate. Elevate.",
+  description: "Operational intelligence for Maji Safi water factory — Hydrate. Elevate.",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: "/maji-safi-logo.svg",
+    apple: "/maji-safi-logo.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -67,7 +73,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${openSans.variable} ${inter.variable} ${spaceGrotesk.variable} h-full antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} ${openSans.variable} ${inter.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
         <link
@@ -76,23 +83,25 @@ export default function RootLayout({
         />
         <script dangerouslySetInnerHTML={{ __html: `
           if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-              for (let registration of registrations) {
-                registration.unregister();
-              }
-            });
-            caches.keys().then(function(names) {
-              for (let name of names) caches.delete(name);
+            window.addEventListener('load', function() {
+              navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+              }, function(err) {
+                console.log('ServiceWorker registration failed: ', err);
+              });
             });
           }
         ` }} />
       </head>
-      <body className="bg-[#10141a] text-[#dfe2eb] relative">
-        <AuthProvider>
-          <ToastContainer />
-          {/* Child layouts like (main)/layout and /investor control the actual flex flows */}
-          {children}
-        </AuthProvider>
+      <body className="bg-white dark:bg-[#10141a] text-zinc-900 dark:text-[#dfe2eb] relative transition-colors duration-300">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <AuthProvider>
+            <ThemeSync />
+            <ToastContainer />
+            {/* Child layouts like (main)/layout and /investor control the actual flex flows */}
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

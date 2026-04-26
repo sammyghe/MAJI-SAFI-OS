@@ -51,8 +51,8 @@ export const metadata: Metadata = {
   description: "Operational intelligence for Maji Safi water factory — Hydrate. Elevate.",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/maji-safi-logo.svg",
-    apple: "/maji-safi-logo.svg",
+    icon: "/maji-safi-logo.png",
+    apple: "/maji-safi-logo.png",
   },
   appleWebApp: {
     capable: true,

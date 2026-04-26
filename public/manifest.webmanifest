@@ -11,9 +11,15 @@
   "lang": "en",
   "icons": [
     {
-      "src": "/maji-safi-logo.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "/maji-safi-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/maji-safi-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ],

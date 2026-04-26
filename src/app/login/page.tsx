@@ -44,7 +44,7 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md px-6 py-12">
         <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-2xl p-8 backdrop-blur-xl">
           <div className="flex justify-center mb-8">
-            <img src="/maji-safi-logo-white.svg" alt="Maji Safi Logo" className="w-24 h-24 object-contain" />
+            <img src="/maji-safi-logo-white.png" alt="Maji Safi Logo" className="w-24 h-24 object-contain" />
           </div>
 
           <h1 className="text-3xl font-bold text-center text-white mb-2 font-headline">Maji Safi OS</h1>

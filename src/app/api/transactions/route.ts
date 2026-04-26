@@ -18,10 +18,11 @@ export async function GET(request: NextRequest) {
   const userDepts = (request.headers.get('x-user-departments') ?? '').split(',').filter(Boolean);
   const canFinancials = request.headers.get('x-can-view-financials') === 'true';
 
-  const user: User = {
-    role: userRole as User['role'],
+  const user = {
+    role: userRole,
+    departments: userDepts,
     permissions: { departments: userDepts, can_view_financials: canFinancials },
-  };
+  } as unknown as User;
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -1,8 +1,12 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader2, Bot } from 'lucide-react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { MessageCircle, X, Send, Loader2, Bot, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { useAuth } from '@/components/AuthProvider';
+import { supabase } from '@/lib/supabase';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -26,6 +30,141 @@ export default function AskSAFI() {
   const inputRef = useRef<HTMLInputElement>(null);
   const pathname = usePathname();
   const department = getDeptFromPath(pathname ?? '');
+  const { user } = useAuth();
+
+  // Voice state
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [micSupported, setMicSupported] = useState(true);
+  const [micError, setMicError] = useState('');
+  
+  const recognitionRef = useRef<any>(null);
+  const silenceTimer = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    // Check browser support
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        setMicSupported(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Load preference
+    if (user) {
+      const prefs = ((user as any).preferences as Record<string, any>) || {};
+      const enabled = prefs.voice_enabled ?? localStorage.getItem('safi_voice_enabled') === 'true';
+      setVoiceEnabled(enabled);
+    }
+  }, [user]);
+
+  const toggleVoice = async () => {
+    const newVal = !voiceEnabled;
+    setVoiceEnabled(newVal);
+    localStorage.setItem('safi_voice_enabled', String(newVal));
+    if (user) {
+      const prefs = ((user as any).preferences as Record<string, any>) || {};
+      await supabase.from('team_members').update({ preferences: { ...prefs, voice_enabled: newVal } }).eq('id', user.id);
+    }
+    if (!newVal && isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
+  const startListening = () => {
+    if (!micSupported) return;
+    setMicError('');
+    
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event: any) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+
+      const currentText = finalTranscript || interimTranscript;
+      setInput(currentText);
+
+      // Auto-stop after 2s of silence
+      if (silenceTimer.current) clearTimeout(silenceTimer.current);
+      silenceTimer.current = setTimeout(() => {
+        stopListening(true);
+      }, 2000);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error', event.error);
+      if (event.error === 'not-allowed') {
+        setMicError('Microphone access denied.');
+      }
+      stopListening(false);
+    };
+
+    recognition.onend = () => {
+      if (isListening) {
+        // Only trigger send if it ended naturally (silence)
+        stopListening(false);
+      }
+    };
+
+    try {
+      recognition.start();
+    } catch (e) {
+      console.error('Failed to start recognition', e);
+    }
+  };
+
+  const stopListening = (autoSend: boolean = false) => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsListening(false);
+    if (silenceTimer.current) clearTimeout(silenceTimer.current);
+    
+    if (autoSend && inputRef.current && inputRef.current.value.trim()) {
+      // Small delay to allow final transcript to settle
+      setTimeout(() => {
+        send(inputRef.current?.value);
+      }, 500);
+    }
+  };
+
+  const speakText = (text: string) => {
+    if (!voiceEnabled || !window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    // Simple cleaning for TTS
+    utterance.text = text.replace(/\[source:.*?\]/g, '').replace(/[*#]/g, '');
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    
+    window.speechSynthesis.speak(utterance);
+  };
 
   useEffect(() => {
     if (open && inputRef.current) inputRef.current.focus();
@@ -35,10 +174,12 @@ export default function AskSAFI() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const send = async () => {
-    const q = input.trim();
+  const send = async (overrideInput?: string) => {
+    const q = (overrideInput || input).trim();
     if (!q || loading) return;
     setInput('');
+    if (isListening) stopListening(false);
+    
     setMessages((prev) => [...prev, { role: 'user', content: q }]);
     setLoading(true);
 
@@ -51,11 +192,16 @@ export default function AskSAFI() {
       const data = await res.json();
       if (data.answer) {
         setMessages((prev) => [...prev, { role: 'assistant', content: data.answer, provider: data.provider }]);
+        speakText(data.answer);
       } else {
-        setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${data.error ?? 'Unknown error'}` }]);
+        const errStr = `Error: ${data.error ?? 'Unknown error'}`;
+        setMessages((prev) => [...prev, { role: 'assistant', content: errStr }]);
+        speakText(errStr);
       }
     } catch {
-      setMessages((prev) => [...prev, { role: 'assistant', content: 'Connection error — please try again.' }]);
+      const errStr = 'Connection error — please try again.';
+      setMessages((prev) => [...prev, { role: 'assistant', content: errStr }]);
+      speakText(errStr);
     } finally {
       setLoading(false);
     }
@@ -95,7 +241,7 @@ export default function AskSAFI() {
 
       {/* Chat panel */}
       {open && (
-        <div
+        <motion.div
           style={{
             position: 'fixed',
             bottom: 152,
@@ -113,17 +259,27 @@ export default function AskSAFI() {
           }}
         >
           {/* Header */}
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 10, background: '#0A0A0A' }}>
-            <Bot size={18} color="#7EC8E3" />
-            <div>
-              <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 13, color: '#fff', letterSpacing: -0.3 }}>
-                Ask SAFI
-              </div>
-              <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.5 }}>
-                {deptLabel} · Groq → Gemini → Claude
+          <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#0A0A0A' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Bot size={18} color="#7EC8E3" />
+              <div>
+                <div style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 13, color: '#fff', letterSpacing: -0.3 }}>
+                  Ask SAFI
+                </div>
+                <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.5 }}>
+                  {deptLabel} · Groq → Gemini → Claude
+                </div>
               </div>
             </div>
+            <button 
+              onClick={toggleVoice}
+              style={{ background: 'none', border: 'none', color: voiceEnabled ? '#7EC8E3' : '#475569', cursor: 'pointer' }}
+              title={voiceEnabled ? 'Voice output on' : 'Voice output off'}
+            >
+              {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            </button>
           </div>
+
 
           {/* Messages */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '14px 14px 8px', display: 'flex', flexDirection: 'column', gap: 10, minHeight: 180, maxHeight: 360 }}>
@@ -160,8 +316,15 @@ export default function AskSAFI() {
                   {m.content}
                 </div>
                 {m.role === 'assistant' && m.provider && m.provider !== 'offline' && (
-                  <div style={{ fontSize: 9, color: '#334155', textTransform: 'uppercase', letterSpacing: 1, paddingLeft: 4 }}>
+                  <div style={{ fontSize: 9, color: '#334155', textTransform: 'uppercase', letterSpacing: 1, paddingLeft: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
                     via {m.provider}
+                    {isSpeaking && i === messages.length - 1 && (
+                      <motion.div
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ repeat: Infinity, duration: 1.5 }}
+                        style={{ width: 4, height: 4, borderRadius: '50%', background: '#7EC8E3' }}
+                      />
+                    )}
                   </div>
                 )}
               </div>
@@ -195,8 +358,41 @@ export default function AskSAFI() {
                 outline: 'none',
               }}
             />
+            {micSupported && (
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38 }}>
+                {isListening && (
+                  <motion.div
+                    animate={{ scale: [1, 1.5], opacity: [0.8, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.2, ease: "easeOut" }}
+                    style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid #0077B6', pointerEvents: 'none' }}
+                  />
+                )}
+                {isListening && (
+                  <motion.div
+                    animate={{ scale: [1, 1.2], opacity: [0.6, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.2, delay: 0.3, ease: "easeOut" }}
+                    style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid #0077B6', pointerEvents: 'none' }}
+                  />
+                )}
+                <button
+                  onClick={() => isListening ? stopListening(false) : startListening()}
+                  disabled={loading}
+                  style={{
+                    width: '100%', height: '100%', borderRadius: 12, border: 'none',
+                    background: isListening ? '#1e293b' : 'transparent',
+                    color: isListening ? '#ef4444' : '#64748b',
+                    cursor: loading ? 'default' : 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    position: 'relative', zIndex: 2
+                  }}
+                  title="Voice input"
+                >
+                  {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+                </button>
+              </div>
+            )}
             <button
-              onClick={send}
+              onClick={() => send()}
               disabled={loading || !input.trim()}
               style={{
                 width: 38,
@@ -216,7 +412,12 @@ export default function AskSAFI() {
               <Send size={16} />
             </button>
           </div>
-        </div>
+          {micError && (
+            <div style={{ padding: '4px 12px 10px', background: '#0A0A0A', color: '#ef4444', fontSize: 10, textAlign: 'center' }}>
+              {micError}
+            </div>
+          )}
+        </motion.div>
       )}
     </>
   );

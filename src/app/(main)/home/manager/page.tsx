@@ -8,6 +8,7 @@ import { Factory, CheckCircle2, Package, Users, AlertTriangle } from 'lucide-rea
 import TodaysFocus from '@/components/TodaysFocus';
 import InboxPanel from '@/components/InboxPanel';
 import CrossDeptSummary from '@/components/CrossDeptSummary';
+import TeamAwarenessPanel from '@/components/TeamAwarenessPanel';
 
 interface ManagerKPIs {
   jarsTarget: number;
@@ -74,6 +75,9 @@ export default function ManagerHome() {
           {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
       </div>
+
+      {/* Team Awareness */}
+      <TeamAwarenessPanel />
 
       {/* Production Scorecard */}
       <div className="mb-8 bg-zinc-900 border border-zinc-800 rounded-2xl p-8">

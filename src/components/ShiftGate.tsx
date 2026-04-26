@@ -29,7 +29,8 @@ interface ShiftGateProps {
 
 export default function ShiftGate({ onShiftActive }: ShiftGateProps) {
   const { user } = useAuth();
-  const [shift, setShift] = useState<Shift | null | 'loading'>('loading');
+  const [shiftLoading, setShiftLoading] = useState(true);
+  const [shift, setShift] = useState<Shift | null>(null);
   const [pendingHandover, setPendingHandover] = useState<Handover | null>(null);
   const [showHandoverModal, setShowHandoverModal] = useState(false);
   const [showEndForm, setShowEndForm] = useState(false);
@@ -62,6 +63,7 @@ export default function ShiftGate({ onShiftActive }: ShiftGateProps) {
       .maybeSingle();
 
     setShift(shiftData ?? null);
+    setShiftLoading(false);
     if (shiftData?.status === 'active') onShiftActive?.(shiftData.id);
 
     // Check for unacknowledged handover (from previous shift, not created by this user)
@@ -117,7 +119,7 @@ export default function ShiftGate({ onShiftActive }: ShiftGateProps) {
   };
 
   const endShift = async () => {
-    if (!user?.id || !shift || shift === 'loading' || shift.status !== 'active') return;
+    if (!user?.id || !shift || shift.status !== 'active') return;
     setWorking(true);
     // Update shift
     await supabase
@@ -136,12 +138,12 @@ export default function ShiftGate({ onShiftActive }: ShiftGateProps) {
       location_id: 'buziga',
     }]);
 
-    setShift({ ...(shift as Shift), status: 'ended', actual_end: new Date().toISOString() });
+    setShift({ ...shift, status: 'ended', actual_end: new Date().toISOString() });
     setShowEndForm(false);
     setWorking(false);
   };
 
-  if (shift === 'loading') return null;
+  if (shiftLoading) return null;
 
   const hoursOnShift = shift?.actual_start
     ? Math.floor((Date.now() - new Date(shift.actual_start).getTime()) / 3600000)
@@ -272,11 +274,11 @@ export default function ShiftGate({ onShiftActive }: ShiftGateProps) {
         </div>
       )}
 
-      {shift && shift !== 'loading' && shift.status === 'active' && (
+      {shift?.status === 'active' && (
         <div className="mb-6 bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 flex items-center justify-between">
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Shift Active</p>
-            <p className="text-white font-black text-sm">{hoursOnShift}h {Math.floor(((Date.now() - new Date((shift as Shift).actual_start!).getTime()) % 3600000) / 60000)}m</p>
+            <p className="text-white font-black text-sm">{hoursOnShift}h {shift.actual_start ? Math.floor(((Date.now() - new Date(shift.actual_start).getTime()) % 3600000) / 60000) : 0}m</p>
           </div>
           <button
             onClick={() => setShowEndForm(true)}
@@ -288,7 +290,7 @@ export default function ShiftGate({ onShiftActive }: ShiftGateProps) {
         </div>
       )}
 
-      {shift && shift !== 'loading' && shift.status === 'ended' && (
+      {shift?.status === 'ended' && (
         <div className="mb-6 bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 flex items-center gap-3">
           <CheckCircle className="w-4 h-4 text-emerald-400" />
           <div>

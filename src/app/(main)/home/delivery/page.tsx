@@ -7,6 +7,7 @@ import { CheckCircle2, MapPin, Package } from 'lucide-react';
 import TodaysFocus from '@/components/TodaysFocus';
 import InboxPanel from '@/components/InboxPanel';
 import CrossDeptSummary from '@/components/CrossDeptSummary';
+import ShiftGate from '@/components/ShiftGate';
 
 interface Stop {
   id: string;
@@ -74,6 +75,9 @@ export default function DeliveryHome() {
           {user?.name?.split(' ')[0]} · {stops.length} stops · {doneCount} done
         </p>
       </div>
+
+      {/* Shift gate */}
+      <ShiftGate />
 
       {/* Inbox */}
       <div className="mb-4">

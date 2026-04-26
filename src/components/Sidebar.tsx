@@ -30,6 +30,10 @@ import {
   Activity,
   Lock,
   Home,
+  Globe2,
+  BarChart3,
+  CalendarClock,
+  Zap as ZapIcon,
 } from 'lucide-react';
 
 const ALL_DEPARTMENTS = [
@@ -53,6 +57,10 @@ const moreItems = [
   { slug: 'search',                    name: 'Search',        icon: Search },
   { slug: 'strategy/business-plan',   name: 'Business Plan', icon: BookOpen,   founderOnly: true },
   { slug: 'strategy/data-flow',       name: 'Data Flow',     icon: GitBranch,  founderOnly: true },
+  { slug: 'my-work',                  name: 'My Work',       icon: BarChart3 },
+  { slug: 'galaxy',                   name: 'Galaxy Map',    icon: Globe2 },
+  { slug: 'admin/shifts',             name: 'Shifts',        icon: CalendarClock, managerOnly: true },
+  { slug: 'admin/action-rules',       name: 'Action Rules',  icon: ZapIcon,       managerOnly: true },
   { slug: 'settings',                 name: 'Settings',      icon: Settings },
   { slug: 'team',                 name: 'Team',        icon: Users2 },
   { slug: 'finance/audit',         name: 'Audit Log',   icon: FileText },
@@ -224,7 +232,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             {isMoreOpen && (
               <div className="mt-2 space-y-1">
                 {moreItems
-                  .filter((item) => !('founderOnly' in item && item.founderOnly) || user?.role === 'founder')
+                  .filter((item) => {
+                    if ('founderOnly' in item && item.founderOnly) return user?.role === 'founder';
+                    if ('managerOnly' in item && item.managerOnly) return user?.role === 'founder' || user?.role_slug === 'operations_manager';
+                    return true;
+                  })
                   .map((item) => {
                     const Icon = item.icon;
                     const isActive = isActiveDept(item.slug);

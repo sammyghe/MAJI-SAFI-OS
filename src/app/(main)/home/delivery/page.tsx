@@ -6,6 +6,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { CheckCircle2, MapPin, Package } from 'lucide-react';
 import TodaysFocus from '@/components/TodaysFocus';
 import InboxPanel from '@/components/InboxPanel';
+import CrossDeptSummary from '@/components/CrossDeptSummary';
 
 interface Stop {
   id: string;
@@ -77,6 +78,11 @@ export default function DeliveryHome() {
       {/* Inbox */}
       <div className="mb-4">
         <InboxPanel compact />
+      </div>
+
+      {/* Cross-dept signals */}
+      <div className="mb-4">
+        <CrossDeptSummary deptSlug="dispatch" />
       </div>
 
       {/* Today's Focus */}

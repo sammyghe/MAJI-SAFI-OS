@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import TodaysFocus from '@/components/TodaysFocus';
 import InboxPanel from '@/components/InboxPanel';
+import CrossDeptSummary from '@/components/CrossDeptSummary';
 
 interface KPIs {
   jarsToday: number;
@@ -128,6 +129,11 @@ export default function FounderHome() {
       {/* Inbox — what happened since last visit */}
       <div className="mb-6">
         <InboxPanel />
+      </div>
+
+      {/* Cross-department signals */}
+      <div className="mb-8">
+        <CrossDeptSummary deptSlug="founder-office" />
       </div>
 
       {/* Today's Focus */}

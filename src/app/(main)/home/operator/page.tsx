@@ -7,6 +7,7 @@ import { ClipboardList, Beaker, LogOut, PlayCircle, AlertCircle } from 'lucide-r
 import Link from 'next/link';
 import TodaysFocus from '@/components/TodaysFocus';
 import InboxPanel from '@/components/InboxPanel';
+import CrossDeptSummary from '@/components/CrossDeptSummary';
 
 interface ShiftData {
   target: number;
@@ -87,6 +88,11 @@ export default function OperatorHome() {
       {/* Inbox */}
       <div className="mb-4">
         <InboxPanel compact />
+      </div>
+
+      {/* Cross-dept signals */}
+      <div className="mb-4">
+        <CrossDeptSummary deptSlug="production" />
       </div>
 
       {/* Today's Focus */}

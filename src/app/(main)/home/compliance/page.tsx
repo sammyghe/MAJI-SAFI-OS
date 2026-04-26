@@ -6,6 +6,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { Shield, AlertTriangle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import TodaysFocus from '@/components/TodaysFocus';
 import InboxPanel from '@/components/InboxPanel';
+import CrossDeptSummary from '@/components/CrossDeptSummary';
 
 interface ComplianceRecord {
   id: string;
@@ -145,6 +146,11 @@ export default function ComplianceHome() {
       {/* Inbox */}
       <div className="mb-4">
         <InboxPanel compact />
+      </div>
+
+      {/* Cross-dept signals */}
+      <div className="mb-4">
+        <CrossDeptSummary deptSlug="compliance" />
       </div>
 
       {/* Today's Focus */}

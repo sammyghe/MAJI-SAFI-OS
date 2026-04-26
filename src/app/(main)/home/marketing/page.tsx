@@ -6,6 +6,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { Plus } from 'lucide-react';
 import TodaysFocus from '@/components/TodaysFocus';
 import InboxPanel from '@/components/InboxPanel';
+import CrossDeptSummary from '@/components/CrossDeptSummary';
 
 type PipelineStage = 'lead' | 'contacted' | 'qualified' | 'converted';
 
@@ -91,6 +92,11 @@ export default function MarketingHome() {
       {/* Inbox */}
       <div className="mb-4">
         <InboxPanel compact />
+      </div>
+
+      {/* Cross-dept signals */}
+      <div className="mb-6">
+        <CrossDeptSummary deptSlug="marketing" />
       </div>
 
       {/* Today's Focus */}

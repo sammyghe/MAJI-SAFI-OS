@@ -8,6 +8,9 @@ import DeptTeamPanel from '@/components/DeptTeamPanel';
 import { useCanEdit } from '@/hooks/useCanEdit';
 import { SkeletonRows } from '@/components/SkeletonRows';
 import RecentActivity from '@/components/RecentActivity';
+import VoiceInputButton from '@/components/VoiceInputButton';
+import PhotoCapture from '@/components/PhotoCapture';
+import AchievementToast from '@/components/AchievementToast';
 
 const PRODUCT_TYPES = ['20L Refill', '20L Single-Use', '20L Reusable Jar', '5L Single-Use'];
 
@@ -19,6 +22,8 @@ export default function ProductionPage() {
     product_type: '20L Refill',
     notes: '',
   });
+  const [attachments, setAttachments] = useState<string[]>([]);
+  const [newAchievement, setNewAchievement] = useState<any>(null);
   const [batches, setBatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -83,6 +88,7 @@ export default function ProductionPage() {
           operator_name: user?.name ?? 'Unknown',
           location_id: 'buziga',
           notes: formData.notes,
+          attachments,
         }]);
       if (insertError) throw insertError;
 
@@ -121,7 +127,20 @@ export default function ProductionPage() {
         message: `Batch ${batchId} logged — ${jarCount} × ${formData.product_type}. Inventory updated.`,
       });
       setFormData({ jar_count: '', product_type: '20L Refill', notes: '' });
+      setAttachments([]);
       await loadBatches();
+
+      // Check achievements asynchronously — don't block UI
+      if (user?.id) {
+        fetch('/api/achievements/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ team_member_id: user.id, member_name: user.name }),
+        })
+          .then((r) => r.json())
+          .then((d) => { if (d.earned?.length) setNewAchievement(d.earned[0]); })
+          .catch(() => {});
+      }
     } catch (err: any) {
       setError(err.message ?? 'Error logging batch');
     } finally {
@@ -162,6 +181,8 @@ export default function ProductionPage() {
   const hitTarget = jarsToday >= 500;
 
   return (
+    <>
+    <AchievementToast achievement={newAchievement} onDismiss={() => setNewAchievement(null)} />
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
       {isReadOnly && (
         <div className="mb-6 px-4 py-2.5 bg-surface-container border-l-2 border-outline/30 flex items-center gap-2">
@@ -372,12 +393,22 @@ export default function ProductionPage() {
             </div>
             <div className="space-y-1">
               <label className="text-[10px] uppercase text-outline font-label tracking-widest">Notes</label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={2}
-                className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface resize-none"
-              />
+              <div className="flex gap-2 items-start">
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  rows={2}
+                  className="flex-1 bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface resize-none"
+                />
+                <VoiceInputButton
+                  currentValue={formData.notes}
+                  onTranscript={(t) => setFormData({ ...formData, notes: t })}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase text-outline font-label tracking-widest">Photos</label>
+              <PhotoCapture userId={user?.id ?? 'anon'} onUploaded={setAttachments} />
             </div>
             {error && (
               <div className="p-3 bg-tertiary-container/10 border-l-2 border-tertiary-container">
@@ -473,5 +504,6 @@ export default function ProductionPage() {
       <DeptTeamPanel departmentSlug="production" />
       <RecentActivity tables={['production_logs', 'events']} departmentSlug="production" />
     </div>
+    </>
   );
 }

@@ -8,6 +8,9 @@ import DeptTeamPanel from '@/components/DeptTeamPanel';
 import { useCanEdit } from '@/hooks/useCanEdit';
 import { SkeletonRows } from '@/components/SkeletonRows';
 import RecentActivity from '@/components/RecentActivity';
+import VoiceInputButton from '@/components/VoiceInputButton';
+import PhotoCapture from '@/components/PhotoCapture';
+import AchievementToast from '@/components/AchievementToast';
 
 const THRESHOLDS: Record<string, { min: number; max: number }> = {
   TDS:       { min: 0,   max: 150 },
@@ -21,6 +24,8 @@ export default function QualityPage() {
   const { user } = useAuth();
   const { canEdit, isReadOnly } = useCanEdit('quality');
   const [testForm, setTestForm] = useState({ batch_id: '', test_type: 'TDS', reading: '' });
+  const [testAttachments, setTestAttachments] = useState<string[]>([]);
+  const [newAchievement, setNewAchievement] = useState<any>(null);
   const [tests, setTests] = useState<any[]>([]);
   const [passRate, setPassRate] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -83,6 +88,7 @@ export default function QualityPage() {
           result,
           location_id: 'buziga',
           tested_by: user?.name ?? 'Unknown',
+          attachments: testAttachments,
         }]);
       if (insertError) throw insertError;
 
@@ -140,7 +146,19 @@ export default function QualityPage() {
       }
 
       setTestForm({ batch_id: '', test_type: 'TDS', reading: '' });
+      setTestAttachments([]);
       await loadTests();
+
+      if (user?.id && result === 'PASS') {
+        fetch('/api/achievements/check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ team_member_id: user.id, member_name: user.name }),
+        })
+          .then((r) => r.json())
+          .then((d) => { if (d.earned?.length) setNewAchievement(d.earned[0]); })
+          .catch(() => {});
+      }
     } catch (err: any) {
       setError(err.message ?? 'Error logging test');
     } finally {
@@ -154,6 +172,8 @@ export default function QualityPage() {
   const remainingTests = REQUIRED_TESTS.filter((type) => !tests.some((t) => t.test_type === type));
 
   return (
+    <>
+    <AchievementToast achievement={newAchievement} onDismiss={() => setNewAchievement(null)} />
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
       {isReadOnly && (
         <div className="mb-6 px-4 py-2.5 bg-surface-container border-l-2 border-outline/30 flex items-center gap-2">
@@ -379,6 +399,10 @@ export default function QualityPage() {
                   : '✗ Will FAIL — batch will be halted'}
               </div>
             )}
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase text-outline font-label tracking-widest">Test Strip Photo</label>
+              <PhotoCapture userId={user?.id ?? 'anon'} onUploaded={setTestAttachments} maxPhotos={1} />
+            </div>
             {error && (
               <div className="p-3 bg-tertiary-container/10 border-l-2 border-tertiary-container">
                 <p className="text-tertiary text-xs font-label">{error}</p>
@@ -421,5 +445,6 @@ export default function QualityPage() {
       <DeptTeamPanel departmentSlug="quality" />
       <RecentActivity tables={['water_tests', 'events']} departmentSlug="quality" />
     </div>
+    </>
   );
 }

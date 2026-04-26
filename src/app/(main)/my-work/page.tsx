@@ -232,26 +232,26 @@ export default function MyWorkPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <div className="text-slate-500 text-sm animate-pulse">Loading your stats…</div>
+      <div className="text-zinc-400 dark:text-slate-500 text-sm animate-pulse">Loading your stats…</div>
     </div>
   );
 
   return (
-    <div className="min-h-[calc(100vh-64px)] bg-[#10141a] px-5 py-8 max-w-2xl mx-auto">
+    <div className="min-h-[calc(100vh-64px)] bg-white dark:bg-[#10141a] px-5 py-8 max-w-2xl mx-auto transition-colors">
       {/* Header */}
       <div className="mb-8">
-        <p className="text-slate-500 text-xs uppercase tracking-widest">My Work</p>
-        <h1 className="text-3xl font-black text-white uppercase tracking-tight">{user?.name?.split(' ')[0]}</h1>
+        <p className="text-zinc-500 dark:text-slate-500 text-xs uppercase tracking-widest">My Work</p>
+        <h1 className="text-3xl font-black text-zinc-900 dark:text-white uppercase tracking-tight">{user?.name?.split(' ')[0]}</h1>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-8 bg-zinc-900 border border-zinc-800 rounded-2xl p-1">
+      <div className="flex gap-1 mb-8 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-1 shadow-sm dark:shadow-none transition-colors">
         {TAB_CONFIG.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setTab(id as Tab)}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide transition-all ${
-              tab === id ? 'bg-[#0077B6] text-white' : 'text-slate-500 hover:text-slate-300'
+              tab === id ? 'bg-[#0077B6] text-white shadow-md' : 'text-zinc-500 dark:text-slate-500 hover:text-zinc-900 dark:hover:text-slate-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
             }`}
           >
             <Icon size={12} />
@@ -270,35 +270,35 @@ export default function MyWorkPage() {
               { label: 'QC Tests', value: testsToday, color: '#22c55e' },
               { label: 'Hours Worked', value: shiftHoursToday, color: '#8b5cf6' },
             ].map((stat) => (
-              <div key={stat.label} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-center">
+              <div key={stat.label} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-center shadow-sm dark:shadow-none transition-colors">
                 <p className="text-3xl font-black" style={{ color: stat.color }}>{stat.value}</p>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">{stat.label}</p>
+                <p className="text-[10px] font-bold text-zinc-500 dark:text-slate-500 uppercase tracking-wider mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
 
           {qcPassToday !== null && (
-            <div className={`mb-6 p-4 rounded-2xl border ${qcPassToday === 100 ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-amber-500/10 border-amber-500/30'}`}>
-              <p className={`font-black text-sm uppercase tracking-widest ${qcPassToday === 100 ? 'text-emerald-400' : 'text-amber-400'}`}>
+            <div className={`mb-6 p-4 rounded-2xl border shadow-sm dark:shadow-none transition-colors ${qcPassToday === 100 ? 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30' : 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30'}`}>
+              <p className={`font-black text-sm uppercase tracking-widest ${qcPassToday === 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
                 QC Pass Rate: {qcPassToday}%
               </p>
             </div>
           )}
 
           {/* Hourly rhythm */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Hourly Output (EAT)</p>
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 mb-6 shadow-sm dark:shadow-none transition-colors">
+            <p className="text-[10px] font-bold text-zinc-500 dark:text-slate-500 uppercase tracking-[0.2em] mb-4">Hourly Output (EAT)</p>
             <div className="flex items-end gap-1 h-24">
               {hourlyOutput.map((count, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
                   <div
-                    className="w-full rounded-sm transition-all"
+                    className={`w-full rounded-sm transition-all${count === 0 ? ' bg-zinc-100 dark:bg-zinc-800' : ''}`}
                     style={{
                       height: `${Math.max(2, (count / maxHourly) * 80)}px`,
-                      background: count > 0 ? '#0077B6' : '#1e293b',
+                      background: count > 0 ? '#0077B6' : undefined,
                     }}
                   />
-                  <span className="text-[8px] text-slate-600">{HOURS[i]}</span>
+                  <span className="text-[8px] text-zinc-400 dark:text-slate-600">{HOURS[i]}</span>
                 </div>
               ))}
             </div>
@@ -315,28 +315,28 @@ export default function MyWorkPage() {
               { label: 'Days Worked', value: daysWorkedWeek, color: '#22c55e' },
               { label: 'QC Pass %', value: qcPassRateWeek !== null ? `${qcPassRateWeek}%` : '—', color: '#f59e0b' },
             ].map((stat) => (
-              <div key={stat.label} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-center">
+              <div key={stat.label} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-center shadow-sm dark:shadow-none transition-colors">
                 <p className="text-3xl font-black" style={{ color: stat.color }}>{stat.value}</p>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">{stat.label}</p>
+                <p className="text-[10px] font-bold text-zinc-500 dark:text-slate-500 uppercase tracking-wider mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
 
           {/* Weekly bar chart */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">Daily Output (Last 7 Days)</p>
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm dark:shadow-none transition-colors">
+            <p className="text-[10px] font-bold text-zinc-500 dark:text-slate-500 uppercase tracking-[0.2em] mb-4">Daily Output (Last 7 Days)</p>
             <div className="flex items-end gap-2 h-32">
               {weeklyOutput.map((d, i) => (
                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
                   <p className="text-[9px] text-slate-500 font-bold">{d.jars > 0 ? d.jars : ''}</p>
                   <div
-                    className="w-full rounded-t-sm"
+                    className={`w-full rounded-t-sm${d.jars === 0 ? ' bg-zinc-100 dark:bg-zinc-800' : ''}`}
                     style={{
                       height: `${Math.max(2, (d.jars / maxWeekly) * 96)}px`,
-                      background: d.jars > 0 ? (d.jars >= 500 ? '#22c55e' : '#0077B6') : '#1e293b',
+                      background: d.jars > 0 ? (d.jars >= 500 ? '#22c55e' : '#0077B6') : undefined,
                     }}
                   />
-                  <span className="text-[9px] text-slate-600">{d.day}</span>
+                  <span className="text-[9px] text-zinc-400 dark:text-slate-600">{d.day}</span>
                 </div>
               ))}
             </div>
@@ -353,17 +353,17 @@ export default function MyWorkPage() {
               { label: 'Shift Days', value: daysWorkedMonth, color: '#22c55e' },
               { label: 'Team Rank', value: leaderRank !== null ? `#${leaderRank}` : '—', color: '#f59e0b' },
             ].map((stat) => (
-              <div key={stat.label} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 text-center">
+              <div key={stat.label} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-center shadow-sm dark:shadow-none transition-colors">
                 <p className="text-3xl font-black" style={{ color: stat.color }}>{stat.value}</p>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">{stat.label}</p>
+                <p className="text-[10px] font-bold text-zinc-500 dark:text-slate-500 uppercase tracking-wider mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
 
           {/* Personal goals */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm dark:shadow-none transition-colors">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">My Goals</p>
+              <p className="text-[10px] font-bold text-zinc-500 dark:text-slate-500 uppercase tracking-[0.2em]">My Goals</p>
               <button
                 onClick={() => setShowGoalForm(!showGoalForm)}
                 className="flex items-center gap-1 text-[#0077B6] hover:text-[#7EC8E3] text-xs font-bold"
@@ -379,7 +379,7 @@ export default function MyWorkPage() {
                   onChange={(e) => setNewGoal(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') addGoal(); }}
                   placeholder='e.g. "50 batches this week"'
-                  className="flex-1 bg-zinc-800 border border-zinc-700 text-white text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-[#0077B6]"
+                  className="flex-1 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white text-sm rounded-xl px-3 py-2 focus:outline-none focus:border-[#0077B6]"
                 />
                 <button
                   onClick={addGoal}
@@ -392,7 +392,7 @@ export default function MyWorkPage() {
             )}
 
             {goals.length === 0 ? (
-              <p className="text-slate-600 text-sm">No goals set yet. Add one above.</p>
+              <p className="text-zinc-500 dark:text-slate-600 text-sm">No goals set yet. Add one above.</p>
             ) : (
               <div className="space-y-3">
                 {goals.map((goal) => {
@@ -400,25 +400,25 @@ export default function MyWorkPage() {
                     ? Math.min(100, Math.round((goal.current_value / goal.target_value) * 100))
                     : null;
                   return (
-                    <div key={goal.id} className="bg-zinc-800 rounded-xl p-3">
+                    <div key={goal.id} className="bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-transparent rounded-xl p-3">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm text-white">{goal.goal_text}</p>
+                        <p className="text-sm text-zinc-900 dark:text-white">{goal.goal_text}</p>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          {goal.status === 'achieved' && <CheckCircle className="w-4 h-4 text-emerald-400" />}
+                          {goal.status === 'achieved' && <CheckCircle className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />}
                           {goal.status === 'active' && (
-                            <button onClick={() => dropGoal(goal.id)} className="text-slate-600 hover:text-red-400 text-xs">drop</button>
+                            <button onClick={() => dropGoal(goal.id)} className="text-zinc-400 dark:text-slate-600 hover:text-red-500 text-xs">drop</button>
                           )}
                         </div>
                       </div>
                       {pct !== null && (
                         <div className="mt-2">
-                          <div className="h-1.5 bg-zinc-700 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full"
                               style={{ width: `${pct}%`, background: pct >= 100 ? '#22c55e' : '#0077B6' }}
                             />
                           </div>
-                          <p className="text-[10px] text-slate-500 mt-1">{goal.current_value} / {goal.target_value} ({pct}%)</p>
+                          <p className="text-[10px] text-zinc-500 dark:text-slate-500 mt-1">{goal.current_value} / {goal.target_value} ({pct}%)</p>
                         </div>
                       )}
                     </div>
@@ -440,18 +440,18 @@ export default function MyWorkPage() {
               { label: 'Achievements', value: achievements.length, color: '#f59e0b' },
               { label: 'QC Streak', value: `${longestQCStreak}d`, color: '#8b5cf6' },
             ].map((stat) => (
-              <div key={stat.label} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-center">
+              <div key={stat.label} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 text-center shadow-sm dark:shadow-none transition-colors">
                 <p className="text-4xl font-black" style={{ color: stat.color }}>{stat.value}</p>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-1">{stat.label}</p>
+                <p className="text-[10px] font-bold text-zinc-500 dark:text-slate-500 uppercase tracking-wider mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
 
           {/* Achievements gallery */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm dark:shadow-none transition-colors">
             <div className="flex items-center gap-2 mb-4">
               <Trophy className="w-4 h-4 text-[#f59e0b]" />
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+              <p className="text-[10px] font-bold text-zinc-500 dark:text-slate-500 uppercase tracking-[0.2em]">
                 Achievements ({achievements.length})
               </p>
             </div>
@@ -465,12 +465,12 @@ export default function MyWorkPage() {
                   return (
                     <div
                       key={a.id}
-                      className="rounded-xl p-3 border"
+                      className="rounded-xl p-3 border shadow-sm dark:shadow-none"
                       style={{ borderColor: `${color}40`, background: `${color}10` }}
                     >
                       <div className="text-2xl mb-2">{def?.icon ?? '🏆'}</div>
-                      <p className="text-xs font-black text-white">{def?.name}</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">{def?.description}</p>
+                      <p className="text-xs font-black text-zinc-900 dark:text-white">{def?.name}</p>
+                      <p className="text-[10px] text-zinc-500 dark:text-slate-500 mt-0.5">{def?.description}</p>
                       <p className="text-[9px] mt-1" style={{ color }}>
                         {def?.rarity?.toUpperCase()} · {new Date(a.earned_at).toLocaleDateString('en-GB')}
                       </p>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { AlertCircle, Plus, ChevronDown, CheckCircle2, ArrowRight } from 'lucide-react';
@@ -265,7 +265,21 @@ export default function IssuesPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+  useEffect(() => {
+    load();
+    channelRef.current = supabase
+      .channel('rt:issues')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'issues' }, () => load())
+      .subscribe();
+    const handleVisibility = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const active = issues.filter((i) => i.stage !== 'resolved');
   const resolved = issues.filter((i) => i.stage === 'resolved');

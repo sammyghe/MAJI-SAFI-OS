@@ -33,7 +33,12 @@ export default function ProductionPage() {
       .channel('rt:production_logs')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'production_logs' }, () => { loadBatches(); })
       .subscribe();
-    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
+    const onVisible = () => { if (document.visibilityState === 'visible') loadBatches(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   const loadBatches = async () => {

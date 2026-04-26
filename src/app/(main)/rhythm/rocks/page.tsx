@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { Target, Plus, ChevronDown, ChevronUp, CheckCircle2, AlertTriangle, XCircle, TrendingUp } from 'lucide-react';
@@ -227,6 +227,7 @@ export default function RocksPage() {
   const [loading, setLoading] = useState(true);
   const [quarter, setQuarter] = useState(currentQuarter());
   const [showAdd, setShowAdd] = useState(false);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -241,7 +242,19 @@ export default function RocksPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [quarter]);
+  useEffect(() => {
+    load();
+    channelRef.current = supabase
+      .channel('rt:rocks')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rocks' }, () => load())
+      .subscribe();
+    const handleVisibility = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [quarter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const prevQuarters = [-1, 0, 1, 2].map((offset) => {
     const d = new Date();

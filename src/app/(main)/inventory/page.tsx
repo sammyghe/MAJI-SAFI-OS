@@ -65,7 +65,12 @@ export default function InventoryPage() {
       .channel('rt:inventory_items')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory_items' }, () => { loadStock(); })
       .subscribe();
-    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
+    const onVisible = () => { if (document.visibilityState === 'visible') loadStock(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   const loadStock = async () => {

@@ -33,7 +33,12 @@ export default function QualityPage() {
       .channel('rt:water_tests')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'water_tests' }, () => { loadTests(); })
       .subscribe();
-    return () => { if (channelRef.current) supabase.removeChannel(channelRef.current); };
+    const onVisible = () => { if (document.visibilityState === 'visible') loadTests(); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      if (channelRef.current) supabase.removeChannel(channelRef.current);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   const loadTests = async () => {

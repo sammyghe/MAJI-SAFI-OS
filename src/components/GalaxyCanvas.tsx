@@ -433,6 +433,15 @@ export default function GalaxyCanvas() {
         </div>
       )}
 
+      {!loading && graphData.nodes.length === 0 && (
+        <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', zIndex:10, pointerEvents:'none' }}>
+          <div style={{ textAlign:'center', padding:'32px', background:'rgba(10,10,20,0.85)', borderRadius:20, border:'1px solid rgba(0,119,182,0.2)', backdropFilter:'blur(12px)' }}>
+            <p style={{ color:'#7EC8E3', fontFamily:'Montserrat', fontSize:14, fontWeight:700, marginBottom:8 }}>No data yet</p>
+            <p style={{ color:'#475569', fontSize:12 }}>Add team members, projects, or customers<br/>to populate the galaxy.</p>
+          </div>
+        </div>
+      )}
+
       <ForceGraph2D
         ref={fgRef}
         graphData={graphData}

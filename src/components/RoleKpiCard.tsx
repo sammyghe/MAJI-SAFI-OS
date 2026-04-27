@@ -26,7 +26,7 @@ export default function RoleKpiCard({
 }: {
   label: string;
   value: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   ok: boolean;
   role: string;
   trend?: string;

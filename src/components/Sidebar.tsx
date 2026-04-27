@@ -102,7 +102,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const showHome = hasRoleFilter && userSidebarItems.includes('home');
   const homePath = user?.landing_page ?? '/home';
 
-  const navItem = (slug: string, label: string, Icon: React.ElementType) => {
+  const navItem = (slug: string, label: string, Icon: React.ComponentType<{ className?: string }>) => {
     const active = isActive(slug);
     return (
       <Link

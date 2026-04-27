@@ -3,15 +3,17 @@
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import CountUp from 'react-countup';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import {
   Factory, CheckCircle2, DollarSign, AlertTriangle, Users,
   Users2, Package, Truck, ShoppingCart, TrendingUp, Shield, Zap,
-  CheckCircle, ArrowRight, Play,
+  ArrowRight, ArrowUpRight,
 } from 'lucide-react';
 import InboxPanel from '@/components/InboxPanel';
 import RoleKpiCard from '@/components/RoleKpiCard';
+import ActivityFeed from '@/components/ActivityFeed';
 
 interface KPIs {
   jarsToday: number;
@@ -20,6 +22,8 @@ interface KPIs {
   openIssues: number;
   teamPresent: number;
 }
+
+interface SparkPoint { day: string; jars: number; }
 
 const DEPT_LINKS = [
   { slug: 'founder-office', name: 'Founder Office', icon: Users2,      color: '#FFD700' },
@@ -36,9 +40,35 @@ const DEPT_LINKS = [
 
 function greeting() {
   const h = new Date().getHours();
-  if (h < 12) return 'Good morning';
+  if (h < 12) return 'Welcome back';
   if (h < 17) return 'Good afternoon';
   return 'Good evening';
+}
+
+function Sparkline({ data, width = 120, height = 40 }: { data: number[]; width?: number; height?: number }) {
+  if (data.length < 2) return null;
+  const max = Math.max(...data, 1);
+  const pts = data.map((v, i) => ({
+    x: (i / (data.length - 1)) * width,
+    y: height - (v / max) * (height - 4) - 2,
+  }));
+  const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+  const areaPath = `${path} L ${width} ${height} L 0 ${height} Z`;
+  return (
+    <svg width={width} height={height} className="overflow-visible">
+      <defs>
+        <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#7EC8E3" stopOpacity="0.4" />
+          <stop offset="100%" stopColor="#7EC8E3" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={areaPath} fill="url(#spark-fill)" />
+      <path d={path} fill="none" stroke="#7EC8E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {pts[pts.length - 1] && (
+        <circle cx={pts[pts.length - 1].x} cy={pts[pts.length - 1].y} r="3" fill="#7EC8E3" />
+      )}
+    </svg>
+  );
 }
 
 export default function FounderHome() {
@@ -46,6 +76,7 @@ export default function FounderHome() {
   const [kpis, setKpis] = useState<KPIs>({ jarsToday: 0, qcPassRate: null, revenueToday: 0, openIssues: 0, teamPresent: 0 });
   const [loading, setLoading] = useState(true);
   const [alerts, setAlerts] = useState<{ id: string; type: string; msg: string }[]>([]);
+  const [sparkData, setSparkData] = useState<number[]>([]);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   useEffect(() => {
@@ -61,108 +92,164 @@ export default function FounderHome() {
   const load = async () => {
     const today = new Date().toISOString().split('T')[0];
     const hourAgo = new Date(Date.now() - 3600000).toISOString();
-    const [prod, qc, sales, events, team] = await Promise.all([
+    // Last 7 days for sparkline
+    const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+
+    const [prod, qc, sales, events, team, sparkRaw] = await Promise.all([
       supabase.from('production_logs').select('jar_count').eq('location_id', 'buziga').eq('production_date', today),
       supabase.from('water_tests').select('result').eq('location_id', 'buziga').gte('tested_at', today),
       supabase.from('sales_ledger').select('amount_ugx').eq('location_id', 'buziga').eq('sale_date', today),
       supabase.from('events').select('id, event_type, payload').eq('location_id', 'buziga').eq('severity', 'critical').order('created_at', { ascending: false }).limit(5),
       supabase.from('team_members').select('id').eq('contract_status', 'active').gte('last_seen_at', hourAgo),
+      supabase.from('production_logs').select('production_date, jar_count').eq('location_id', 'buziga').gte('production_date', sevenDaysAgo).order('production_date', { ascending: true }),
     ]);
+
     const jarsToday = (prod.data ?? []).reduce((s, r) => s + (r.jar_count ?? 0), 0);
     const qcTests = qc.data ?? [];
     const qcPassRate = qcTests.length > 0 ? Math.round(qcTests.filter(t => t.result === 'PASS').length / qcTests.length * 100) : null;
     const revenueToday = (sales.data ?? []).reduce((s, r) => s + (r.amount_ugx ?? 0), 0);
+
+    // Aggregate spark data by day
+    const byDay: Record<string, number> = {};
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000).toISOString().split('T')[0];
+      byDay[d] = 0;
+    }
+    (sparkRaw.data ?? []).forEach(r => { if (r.production_date in byDay) byDay[r.production_date] += r.jar_count ?? 0; });
+    setSparkData(Object.values(byDay));
+
     setKpis({ jarsToday, qcPassRate, revenueToday, openIssues: events.data?.length ?? 0, teamPresent: team.data?.length ?? 0 });
     setAlerts((events.data ?? []).map(e => ({ id: e.id, type: e.event_type ?? 'event', msg: e.payload ? JSON.stringify(e.payload).slice(0, 80) : e.event_type })));
     setLoading(false);
   };
 
   const allClear = alerts.length === 0;
+  const attainment = Math.min(100, Math.round((kpis.jarsToday / 500) * 100));
+  const firstName = user?.name?.split(' ')[0] ?? 'Sammy';
+  const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() ?? 'SG';
   const date = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
-    <div className="px-6 py-8 max-w-7xl mx-auto space-y-8">
+    <div className="px-4 md:px-6 py-6 md:py-8 max-w-7xl mx-auto space-y-6">
 
-      {/* Greeting bar */}
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              {greeting()}, {user?.name?.split(' ')[0]}
-            </h1>
-            <p className="text-slate-500 text-sm mt-1">{date} · Founder Office</p>
+      {/* ── Greeting + Hero ──────────────────────────────────────── */}
+      <motion.div
+        className="grid md:grid-cols-5 gap-5"
+        initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+      >
+        {/* Left: Greeting */}
+        <div className="md:col-span-2 flex flex-col justify-center gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center text-xl font-black text-white flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, #FFD700, #F59E0B)' }}>
+              {initials}
+            </div>
+            <div>
+              <p className="text-slate-500 text-sm">{date}</p>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                {greeting()}, {firstName}
+              </h1>
+              <p className="text-slate-400 text-sm">Let's see your operations</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm">
+
+          <div className="flex items-center gap-2 px-4 py-2.5 glass-card-strong rounded-2xl w-fit">
             <div className={`w-2 h-2 rounded-full ${allClear ? 'bg-emerald-400 animate-pulse' : 'bg-red-400 animate-ping'}`} />
             <span className={`text-sm font-semibold ${allClear ? 'text-emerald-600' : 'text-red-600'}`}>
               {allClear ? 'All systems nominal' : `${alerts.length} issue${alerts.length > 1 ? 's' : ''} need attention`}
             </span>
           </div>
         </div>
-      </motion.div>
 
-      {/* Today's One Thing */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 }}>
-        {allClear ? (
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl p-6 text-white flex items-center gap-5 shadow-lg">
-            <CheckCircle className="w-12 h-12 flex-shrink-0 opacity-90" />
-            <div className="flex-1">
-              <p className="text-xs font-bold uppercase tracking-widest opacity-75 mb-1">Today's Priority</p>
-              <p className="text-xl font-black">Operations begin May 20 — use simulation to preview launch day</p>
-              <p className="text-sm opacity-75 mt-1">No critical issues. Review your department readiness below.</p>
+        {/* Right: Hero dark card */}
+        <div className="md:col-span-3 hero-card-dark p-6 flex flex-col justify-between min-h-[180px]">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1" style={{ color: '#CAE7F5' }}>
+                Today's Production
+              </p>
+              {loading ? (
+                <p className="text-7xl font-black text-white/30 tabular-nums leading-none">—</p>
+              ) : (
+                <p className="text-7xl font-black text-white tabular-nums leading-none">
+                  <CountUp end={kpis.jarsToday} duration={1.5} separator="," />
+                </p>
+              )}
+              <p className="text-[#CAE7F5] text-sm mt-1 opacity-80">jars produced today</p>
             </div>
-            <Link href="/settings/simulation" className="flex-shrink-0 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-sm font-bold transition-colors flex items-center gap-1.5">
-              Simulate <ArrowRight className="w-4 h-4" />
+            <Sparkline data={sparkData.length > 0 ? sparkData : [0, 0, 0, 0, 0, 0, 0]} width={120} height={48} />
+          </div>
+
+          {/* Battery progress bar */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="text-[#CAE7F5] opacity-70">{attainment}% of 500-jar target</span>
+              <span className="text-[#7EC8E3] font-bold">{500 - kpis.jarsToday > 0 ? `${500 - kpis.jarsToday} remaining` : 'Target hit!'}</span>
+            </div>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <div
+                className="h-full rounded-full transition-all duration-1000"
+                style={{ width: `${attainment}%`, background: attainment >= 80 ? '#10B981' : attainment >= 40 ? '#7EC8E3' : '#F59E0B' }}
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 mt-4">
+            <Link href="/production" className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold text-sm transition-all hover:opacity-90"
+              style={{ background: 'rgba(126,200,227,0.2)', color: '#7EC8E3', border: '1px solid rgba(126,200,227,0.3)' }}>
+              <ArrowUpRight className="w-4 h-4" /> View Production
+            </Link>
+            <Link href="/finance/cfo" className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold text-sm text-white/60 hover:text-white transition-colors">
+              Finances <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-        ) : (
-          <div className="bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl p-6 text-white flex items-center gap-5 shadow-lg">
-            <AlertTriangle className="w-12 h-12 flex-shrink-0 opacity-90" />
-            <div className="flex-1">
-              <p className="text-xs font-bold uppercase tracking-widest opacity-75 mb-1">Today's Priority</p>
-              <p className="text-xl font-black">{alerts[0]?.type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</p>
-              <p className="text-sm opacity-75 mt-1">{alerts[0]?.msg}</p>
-            </div>
-          </div>
-        )}
+        </div>
       </motion.div>
 
-      {/* KPI Cards */}
+      {/* ── KPI Cards ────────────────────────────────────────────── */}
       <motion.div
         className="grid grid-cols-2 md:grid-cols-5 gap-4"
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
       >
         {[
-          { label: 'Jars Today',    value: loading ? '—' : kpis.jarsToday.toLocaleString(),                                       icon: Factory,      ok: kpis.jarsToday >= 220, context: 'Target: 500/day' },
-          { label: 'QC Pass Rate',  value: loading ? '—' : kpis.qcPassRate !== null ? `${kpis.qcPassRate}%` : 'No tests',         icon: CheckCircle2, ok: (kpis.qcPassRate ?? 100) === 100, context: '100% required' },
-          { label: 'Revenue Today', value: loading ? '—' : `UGX ${(kpis.revenueToday / 1000).toFixed(0)}K`,                       icon: DollarSign,   ok: kpis.revenueToday > 0, context: 'Wholesale only' },
-          { label: 'Open Issues',   value: loading ? '—' : kpis.openIssues.toString(),                                             icon: AlertTriangle, ok: kpis.openIssues === 0, context: 'Critical events' },
-          { label: 'Team Present',  value: loading ? '—' : kpis.teamPresent.toString(),                                            icon: Users,        ok: kpis.teamPresent > 0, context: 'Active in last hour' },
+          { label: 'Jars Today',    value: loading ? '—' : kpis.jarsToday.toLocaleString(), icon: Factory,      ok: kpis.jarsToday >= 220, context: 'Target: 500/day' },
+          { label: 'QC Pass Rate',  value: loading ? '—' : kpis.qcPassRate !== null ? `${kpis.qcPassRate}%` : 'No tests', icon: CheckCircle2, ok: (kpis.qcPassRate ?? 100) === 100, context: '100% required' },
+          { label: 'Revenue Today', value: loading ? '—' : `UGX ${(kpis.revenueToday / 1000).toFixed(0)}K`, icon: DollarSign, ok: kpis.revenueToday > 0, context: 'Wholesale only' },
+          { label: 'Open Issues',   value: loading ? '—' : kpis.openIssues.toString(), icon: AlertTriangle, ok: kpis.openIssues === 0, context: 'Critical events' },
+          { label: 'Team Present',  value: loading ? '—' : kpis.teamPresent.toString(), icon: Users, ok: kpis.teamPresent > 0, context: 'Active in last hour' },
         ].map((kpi) => (
           <RoleKpiCard key={kpi.label} label={kpi.label} value={kpi.value} icon={kpi.icon} ok={kpi.ok} role="founder" context={kpi.context} />
         ))}
       </motion.div>
 
-      {/* Activity + Dept grid */}
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Inbox — 2/3 width */}
-        <motion.div className="md:col-span-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
+      {/* ── Activity + Inbox + Depts ─────────────────────────────── */}
+      <div className="grid md:grid-cols-3 gap-5">
+        {/* Activity feed */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
+          <ActivityFeed limit={6} />
+        </motion.div>
+
+        {/* Inbox */}
+        <motion.div className="md:col-span-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
           <InboxPanel />
         </motion.div>
 
-        {/* Quick links — 1/3 */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">All Departments</p>
-          <div className="space-y-1">
+        {/* Dept links */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 px-1">All Departments</p>
+          <div className="glass-card p-3 space-y-1">
             {DEPT_LINKS.map((d) => {
               const Icon = d.icon;
               return (
                 <Link key={d.slug} href={`/${d.slug}`}
-                  className="flex items-center gap-3 px-3 py-2.5 bg-white border border-slate-200 rounded-xl hover:border-slate-300 hover:shadow-sm transition-all group"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/60 transition-all group"
                 >
-                  <Icon className="w-4 h-4 flex-shrink-0" style={{ color: d.color }} />
+                  <div className="w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: `${d.color}20` }}>
+                    <Icon className="w-3.5 h-3.5" style={{ color: d.color }} />
+                  </div>
                   <span className="text-sm font-medium text-slate-600 group-hover:text-slate-900 transition-colors">{d.name}</span>
-                  <ArrowRight className="w-3.5 h-3.5 ml-auto text-slate-300 group-hover:text-slate-500 transition-colors" />
+                  <ArrowRight className="w-3 h-3 ml-auto text-slate-300 group-hover:text-slate-500 transition-colors" />
                 </Link>
               );
             })}
@@ -170,25 +257,27 @@ export default function FounderHome() {
         </motion.div>
       </div>
 
-      {/* Alerts */}
+      {/* ── Alerts ───────────────────────────────────────────────── */}
       {alerts.length > 0 && (
-        <div className="bg-white border border-red-200 rounded-2xl p-6 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-4 h-4 text-red-500" />
-            <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Needs Attention</h2>
-          </div>
-          <div className="space-y-2">
-            {alerts.map((a) => (
-              <div key={a.id} className="flex items-start gap-3 py-2 border-b border-slate-100 last:border-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 flex-shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-slate-800">{a.type.replace(/_/g, ' ').toUpperCase()}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{a.msg}</p>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+          <div className="glass-card p-5 border border-red-200/50">
+            <div className="flex items-center gap-2 mb-4">
+              <AlertTriangle className="w-4 h-4 text-red-500" />
+              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Needs Attention</h2>
+            </div>
+            <div className="space-y-2">
+              {alerts.map((a) => (
+                <div key={a.id} className="flex items-start gap-3 py-2 border-b border-slate-100/60 last:border-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">{a.type.replace(/_/g, ' ').toUpperCase()}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{a.msg}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

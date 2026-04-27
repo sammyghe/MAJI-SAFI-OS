@@ -11,6 +11,7 @@ import RecentActivity from '@/components/RecentActivity';
 import VoiceInputButton from '@/components/VoiceInputButton';
 import PhotoCapture from '@/components/PhotoCapture';
 import AchievementToast from '@/components/AchievementToast';
+import QmsDocsPanel from '@/components/QmsDocsPanel';
 
 const THRESHOLDS: Record<string, { min: number; max: number }> = {
   TDS:       { min: 0,   max: 150 },
@@ -442,6 +443,7 @@ export default function QualityPage() {
           </p>
         </div>
       </div>}
+      <QmsDocsPanel category="quality" />
       <DeptTeamPanel departmentSlug="quality" />
       <RecentActivity tables={['water_tests', 'events']} departmentSlug="quality" />
     </div>

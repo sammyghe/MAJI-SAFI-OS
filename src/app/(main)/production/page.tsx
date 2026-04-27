@@ -11,6 +11,7 @@ import RecentActivity from '@/components/RecentActivity';
 import VoiceInputButton from '@/components/VoiceInputButton';
 import PhotoCapture from '@/components/PhotoCapture';
 import AchievementToast from '@/components/AchievementToast';
+import QmsDocsPanel from '@/components/QmsDocsPanel';
 
 const PRODUCT_TYPES = ['20L Refill', '20L Single-Use', '20L Reusable Jar', '5L Single-Use'];
 
@@ -501,6 +502,7 @@ export default function ProductionPage() {
           </div>
         </div>
       )}
+      <QmsDocsPanel category="production" />
       <DeptTeamPanel departmentSlug="production" />
       <RecentActivity tables={['production_logs', 'events']} departmentSlug="production" />
     </div>

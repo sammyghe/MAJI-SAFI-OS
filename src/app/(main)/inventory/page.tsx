@@ -7,6 +7,7 @@ import DeptTeamPanel from '@/components/DeptTeamPanel';
 import { useCanEdit } from '@/hooks/useCanEdit';
 import { SkeletonRows } from '@/components/SkeletonRows';
 import RecentActivity from '@/components/RecentActivity';
+import QmsDocsPanel from '@/components/QmsDocsPanel';
 
 interface StockItem {
   id: string;
@@ -586,6 +587,7 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
+      <QmsDocsPanel category="inventory" />
       <DeptTeamPanel departmentSlug="inventory" />
       <RecentActivity tables={['inventory_items', 'events']} departmentSlug="inventory" />
     </div>

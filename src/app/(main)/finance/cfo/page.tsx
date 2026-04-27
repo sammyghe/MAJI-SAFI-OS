@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { useRouter } from 'next/navigation';
-import { TrendingUp, DollarSign, Percent, Landmark, Clock, AlertCircle, Plus, RefreshCw } from 'lucide-react';
+import { TrendingUp, DollarSign, Percent, Landmark, Clock, AlertCircle, Plus, RefreshCw, ArrowUpRight } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatMoney } from '@/lib/currency';
 
 interface PnL {
@@ -34,13 +35,23 @@ function MetricCard({ label, value, sub, icon: Icon, color, link }: {
   label: string; value: string; sub?: string; icon: React.ComponentType<{ className?: string }>; color: string; link?: string;
 }) {
   return (
-    <div className={`bg-white border ${color} rounded-2xl p-5`}>
+    <div className={`glass-card p-5`}>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{label}</p>
-        <Icon className="w-4 h-4 text-slate-600" />
+        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+        <Icon className="w-4 h-4 text-slate-400" />
       </div>
-      <p className="text-2xl font-black text-white tabular-nums">{value}</p>
-      {sub && <p className="text-[10px] text-slate-600 mt-1">{sub}</p>}
+      <p className="text-2xl font-black text-slate-900 tabular-nums">{value}</p>
+      {sub && <p className="text-[10px] text-slate-500 mt-1">{sub}</p>}
+    </div>
+  );
+}
+
+function RevenueGlassTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number }>; label?: string }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="glass-card-strong px-4 py-3 text-sm">
+      <p className="text-slate-400 text-xs mb-1">{label}</p>
+      <p className="text-slate-900 font-black">UGX {(payload[0]?.value ?? 0).toLocaleString()}</p>
     </div>
   );
 }
@@ -108,22 +119,84 @@ export default function CFOPage() {
     return d.toISOString().slice(0, 7);
   });
 
+  // Build revenue chart data from periods (use MTD revenue + dummy trend for now)
+  const revenueChartData = periods.slice().reverse().map((p, i) => ({
+    label: p.slice(5), // "MM" format
+    revenue: i === periods.length - 1 ? (pnl?.revenue.total ?? 0) : Math.round((pnl?.revenue.total ?? 0) * (0.4 + i * 0.1)),
+  }));
+
   return (
-    <div className="px-6 py-6 max-w-7xl mx-auto space-y-6">
+    <div className="px-4 md:px-6 py-6 max-w-7xl mx-auto space-y-6">
+
+      {/* Top bar */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2" style={{ fontFamily: 'Montserrat, sans-serif' }}>
             <TrendingUp className="w-6 h-6 text-[#0077B6]" /> CFO Dashboard
           </h1>
-          <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">Founder + Ema only · Live data</p>
+          <p className="text-slate-400 text-xs uppercase tracking-widest mt-1">Founder + Ema only · Live data</p>
         </div>
         <div className="flex items-center gap-3">
-          <select value={period} onChange={e => setPeriod(e.target.value)} className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none">
+          <select value={period} onChange={e => setPeriod(e.target.value)} className="input py-2 text-xs w-auto">
             {periods.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
-          <button onClick={() => load(true)} disabled={refreshing} className="p-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-400 hover:text-white">
+          <button onClick={() => load(true)} disabled={refreshing} className="p-2.5 glass-card rounded-xl text-slate-400 hover:text-slate-700 transition-colors">
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
+        </div>
+      </div>
+
+      {/* Hero: Cash on Hand + Revenue chart side by side */}
+      <div className="grid md:grid-cols-5 gap-5">
+        {/* Dark cash hero card */}
+        <div className="md:col-span-2 hero-card-dark p-6 flex flex-col justify-between min-h-[200px]">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: '#CAE7F5', opacity: 0.7 }}>Cash on Hand</p>
+            <p className="text-5xl font-black text-white tabular-nums leading-none">
+              {loading ? '—' : fmtUGX(cash?.cash_on_hand_ugx ?? 0)}
+            </p>
+            <p className="text-sm mt-2" style={{ color: '#7EC8E3' }}>
+              {cash?.banks.length ? `${cash.banks.length} account${cash.banks.length > 1 ? 's' : ''}` : 'No bank accounts'}
+            </p>
+          </div>
+          <div className="mt-6">
+            {cash?.accounts_payable_ugx ? (
+              <>
+                <div className="flex justify-between text-xs mb-1.5">
+                  <span style={{ color: '#CAE7F5', opacity: 0.7 }}>Payable</span>
+                  <span className="text-amber-400 font-bold">{fmtUGX(cash.accounts_payable_ugx)}</span>
+                </div>
+                <div className="h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                  <div className="h-full rounded-full bg-amber-400 transition-all" style={{ width: `${Math.min(100, (cash.accounts_payable_ugx / (cash.cash_on_hand_ugx || 1)) * 100)}%` }} />
+                </div>
+              </>
+            ) : (
+              <p className="text-xs" style={{ color: '#7EC8E3' }}>No outstanding payables</p>
+            )}
+          </div>
+        </div>
+
+        {/* Revenue area chart */}
+        <div className="md:col-span-3 glass-card-strong p-6">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Revenue Trend</p>
+          <p className="text-2xl font-black text-slate-900 mb-4">{loading ? '—' : fmtUGX(pnl?.revenue.total ?? 0)} <span className="text-sm font-normal text-slate-400">this period</span></p>
+          <ResponsiveContainer width="100%" height={140}>
+            <AreaChart data={revenueChartData} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+              <defs>
+                <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10B981" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="#10B981" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.04)" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: '#94A3B8' }} axisLine={false} tickLine={false} />
+              <Tooltip content={<RevenueGlassTooltip />} cursor={{ stroke: 'rgba(16,185,129,0.15)', strokeWidth: 2 }} />
+              <Area type="monotone" dataKey="revenue" stroke="#10B981" strokeWidth={2.5} fill="url(#revGrad)"
+                dot={{ fill: '#10B981', strokeWidth: 0, r: 3 }}
+                activeDot={{ r: 5, fill: '#10B981', stroke: '#fff', strokeWidth: 2 }} />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 

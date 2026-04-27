@@ -1,9 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { notifyDepartment } from '@/lib/notify';
 import { formatDistanceToNow } from 'date-fns';
+import ProductionChart from '@/components/ProductionChart';
 
 // ── Types ─────────────────────────────────────────────────────
 interface PulsePost {
@@ -104,8 +105,8 @@ function PostCard({
 
   return (
     <div
-      className="rounded-[1.5rem] border border-white/10 overflow-hidden bg-brand-deep/60 backdrop-blur-md"
-      style={{ borderLeftWidth: '4px', borderLeftColor: post.color, borderLeftStyle: 'solid' }}
+      className="glass-card overflow-hidden"
+      style={{ borderLeft: `4px solid ${post.color}` }}
     >
       {/* Header */}
       <div
@@ -114,19 +115,17 @@ function PostCard({
       >
         <span className="text-lg">{post.emoji}</span>
         <span style={{ color: post.color }}>{cfg.label}</span>
-        <span className="text-brand-steel">·</span>
+        <span className="text-slate-300">·</span>
         {post.department_slug && (
           <>
-            <span
-              className="px-2 py-0.5 rounded-full text-[10px] font-black"
-              style={{ backgroundColor: (DEPT_COLORS[post.department_slug] ?? '#5483B3') + '33', color: DEPT_COLORS[post.department_slug] ?? '#C1E8FF' }}
-            >
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-black"
+              style={{ backgroundColor: (DEPT_COLORS[post.department_slug] ?? '#0077B6') + '22', color: DEPT_COLORS[post.department_slug] ?? '#0077B6' }}>
               {post.department_slug.replace('-', ' ').toUpperCase()}
             </span>
-            <span className="text-brand-steel">·</span>
+            <span className="text-slate-300">·</span>
           </>
         )}
-        <span className="text-brand-steel font-bold normal-case tracking-normal">
+        <span className="text-slate-400 font-medium normal-case tracking-normal">
           {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
         </span>
         {post.pinned && <span className="ml-auto text-amber-400">📌 Pinned</span>}
@@ -134,7 +133,7 @@ function PostCard({
 
       {/* Body */}
       <div className="px-5 py-4">
-        <p className="text-white font-semibold text-sm leading-relaxed">{post.content}</p>
+        <p className="text-slate-800 font-medium text-sm leading-relaxed">{post.content}</p>
 
         {/* Link */}
         {post.link_url && (
@@ -142,7 +141,7 @@ function PostCard({
             href={post.link_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 mt-3 text-brand-sky text-[11px] font-black uppercase tracking-widest hover:text-brand-pale transition-colors"
+            className="inline-flex items-center gap-1.5 mt-3 text-[#0077B6] text-[11px] font-black uppercase tracking-widest hover:opacity-80 transition-opacity"
           >
             📎 {post.link_label ?? 'View Link'}
           </a>
@@ -166,17 +165,17 @@ function PostCard({
           <button
             key={emoji}
             onClick={() => onReact(post.id, emoji)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors text-sm font-bold"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/50 border border-white/60 hover:bg-white/80 transition-colors text-sm font-bold"
           >
             {emoji}
-            <span className="text-brand-steel text-[11px]">
+            <span className="text-slate-500 text-[11px]">
               {(post.reactions as Record<string, number>)[emoji] ?? 0}
             </span>
           </button>
         ))}
         <button
           onClick={() => setShowReplyBox((p) => !p)}
-          className="ml-2 text-[11px] font-black text-brand-sky uppercase tracking-widest hover:text-brand-pale transition-colors"
+          className="ml-2 text-[11px] font-black text-[#0077B6] uppercase tracking-widest hover:opacity-70 transition-opacity"
         >
           + Reply {replies.length > 0 && `(${replies.length})`}
         </button>
@@ -184,18 +183,18 @@ function PostCard({
 
       {/* Replies */}
       {replies.length > 0 && (
-        <div className="px-5 pb-3 space-y-2 border-t border-white/5 pt-3">
+        <div className="px-5 pb-3 space-y-2 border-t border-slate-100/60 pt-3">
           {replies.map((r) => (
             <div key={r.id} className="flex gap-2 text-xs">
               <span
                 className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0"
-                style={{ backgroundColor: DEPT_COLORS[r.department_slug ?? ''] ?? '#5483B3' }}
+                style={{ backgroundColor: DEPT_COLORS[r.department_slug ?? ''] ?? '#0077B6' }}
               />
               <div>
-                <span className="font-black text-brand-sky uppercase tracking-widest text-[10px]">
+                <span className="font-black text-[#0077B6] uppercase tracking-widest text-[10px]">
                   {r.author_role}
                 </span>
-                <p className="text-brand-steel leading-relaxed">{r.content}</p>
+                <p className="text-slate-500 leading-relaxed">{r.content}</p>
               </div>
             </div>
           ))}
@@ -204,18 +203,18 @@ function PostCard({
 
       {/* Reply box */}
       {showReplyBox && (
-        <div className="px-5 pb-4 flex gap-2 border-t border-white/5 pt-3">
+        <div className="px-5 pb-4 flex gap-2 border-t border-slate-100/60 pt-3">
           <input
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="Write a reply…"
-            className="flex-1 bg-brand-navy/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-brand-steel focus:outline-none focus:border-brand-sky/40"
+            className="flex-1 input py-2 text-sm"
             onKeyDown={(e) => e.key === 'Enter' && handleReply()}
           />
           <button
             onClick={handleReply}
             disabled={submitting}
-            className="px-4 py-2 rounded-xl bg-brand-sky/20 border border-brand-sky/30 text-brand-pale text-xs font-black uppercase tracking-widest hover:bg-brand-sky/30 transition-colors disabled:opacity-50"
+            className="px-4 py-2 rounded-xl bg-[#0077B6] text-white text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             Send
           </button>
@@ -340,30 +339,33 @@ export default function PulsePage() {
     : posts;
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
+    <div className="space-y-6 max-w-3xl mx-auto px-4 md:px-6 py-6">
+
+      {/* Production chart at top */}
+      <ProductionChart />
 
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tighter text-white uppercase italic">
-            Maji Safi <span className="text-brand-sky">Pulse</span>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            Maji Safi <span style={{ color: '#0077B6' }}>Pulse</span>
           </h1>
           <div className="flex items-center gap-2 mt-1">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <p className="text-[11px] font-black text-brand-steel uppercase tracking-widest">Company Feed · Live</p>
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Company Feed · Live</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 p-1 bg-brand-navy/30 rounded-xl border border-white/5">
+        <div className="flex gap-1 p-1 glass-card rounded-2xl">
           {(['all', 'department'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
                 tab === t
-                  ? 'bg-brand-sky/20 text-brand-pale border border-brand-sky/30'
-                  : 'text-brand-steel hover:text-white'
+                  ? 'bg-[#0077B6] text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
             >
               {t === 'all' ? 'All' : 'My Department'}
@@ -373,7 +375,7 @@ export default function PulsePage() {
       </div>
 
       {/* Compose Box */}
-      <div className="rounded-[2rem] bg-brand-deep/60 backdrop-blur-md border border-white/10 p-6 space-y-4">
+      <div className="glass-card p-6 space-y-4">
         <div className="flex gap-3 items-start">
           <div
             className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0 mt-1"
@@ -386,20 +388,19 @@ export default function PulsePage() {
             value={content}
             onChange={(e) => {
               setContent(e.target.value);
-              // Show mention menu when @ is typed
               const last = e.target.value.split(' ').pop() ?? '';
               setShowMentionMenu(last.startsWith('@'));
             }}
             onBlur={() => setTimeout(() => setShowMentionMenu(false), 150)}
             placeholder="What's happening at Maji Safi? (Use @ to mention a department)"
             rows={3}
-            className="flex-1 bg-transparent text-white placeholder:text-brand-steel/60 text-sm font-semibold leading-relaxed resize-none focus:outline-none"
+            className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-sm font-medium leading-relaxed resize-none focus:outline-none"
           />
         </div>
 
         {/* @mention dropdown */}
         {showMentionMenu && (
-          <div className="ml-13 bg-brand-navy border border-white/10 rounded-xl overflow-hidden text-xs">
+          <div className="ml-13 glass-card-strong border border-white/40 rounded-xl overflow-hidden text-xs">
             {DEPT_SLUGS.map((slug) => (
               <button
                 key={slug}
@@ -410,7 +411,7 @@ export default function PulsePage() {
                   setShowMentionMenu(false);
                   contentRef.current?.focus();
                 }}
-                className="w-full text-left px-4 py-2 font-bold text-brand-steel hover:bg-white/5 hover:text-white transition-colors"
+                className="w-full text-left px-4 py-2 font-bold text-slate-600 hover:bg-white/60 hover:text-slate-900 transition-colors"
                 style={{ color: DEPT_COLORS[slug] }}
               >
                 @{slug}
@@ -428,7 +429,7 @@ export default function PulsePage() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest border transition-all ${
                 postType === t.type
                   ? 'border-transparent text-white'
-                  : 'border-white/10 text-brand-steel hover:text-white hover:border-white/20'
+                  : 'border-white/10 text-slate-500 hover:text-slate-800 hover:border-slate-200'
               }`}
               style={postType === t.type ? { backgroundColor: t.color + '33', borderColor: t.color + '66', color: t.color } : {}}
             >
@@ -439,34 +440,13 @@ export default function PulsePage() {
 
         {/* Role + Dept + Link */}
         <div className="grid grid-cols-2 gap-3">
-          <input
-            value={authorRole}
-            onChange={(e) => setAuthorRole(e.target.value)}
-            placeholder="Your role (e.g. Ops Lead)"
-            className="bg-brand-navy/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-brand-steel focus:outline-none focus:border-brand-sky/40"
-          />
-          <select
-            value={deptSlug}
-            onChange={(e) => setDeptSlug(e.target.value)}
-            className="bg-brand-navy/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-sky/40"
-          >
+          <input value={authorRole} onChange={(e) => setAuthorRole(e.target.value)} placeholder="Your role (e.g. Ops Lead)" className="input" />
+          <select value={deptSlug} onChange={(e) => setDeptSlug(e.target.value)} className="input">
             <option value="">Department (optional)</option>
-            {DEPT_SLUGS.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
+            {DEPT_SLUGS.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-          <input
-            value={linkUrl}
-            onChange={(e) => setLinkUrl(e.target.value)}
-            placeholder="Link URL (optional)"
-            className="bg-brand-navy/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-brand-steel focus:outline-none focus:border-brand-sky/40"
-          />
-          <input
-            value={linkLabel}
-            onChange={(e) => setLinkLabel(e.target.value)}
-            placeholder="Link label (optional)"
-            className="bg-brand-navy/30 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-brand-steel focus:outline-none focus:border-brand-sky/40"
-          />
+          <input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="Link URL (optional)" className="input" />
+          <input value={linkLabel} onChange={(e) => setLinkLabel(e.target.value)} placeholder="Link label (optional)" className="input" />
         </div>
 
         {/* Post button */}
@@ -485,11 +465,11 @@ export default function PulsePage() {
       {/* Feed */}
       {loading ? (
         <div className="text-center py-20">
-          <p className="text-brand-steel font-black text-xs uppercase tracking-widest animate-pulse">Loading pulse…</p>
+          <p className="text-slate-500 font-black text-xs uppercase tracking-widest animate-pulse">Loading pulse…</p>
         </div>
       ) : displayedPosts.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-brand-steel font-black text-xs uppercase tracking-widest">No posts yet. Be the first.</p>
+          <p className="text-slate-500 font-black text-xs uppercase tracking-widest">No posts yet. Be the first.</p>
         </div>
       ) : (
         <div className="space-y-4">

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/components/AuthProvider';
@@ -33,7 +33,7 @@ const OVERRIDE_TYPES = [
 function DeltaBadge({ value, unit = 'UGX', invert = false }: { value: number; unit?: string; invert?: boolean }) {
   const positive = invert ? value < 0 : value > 0;
   const neutral = value === 0;
-  const color = neutral ? 'text-zinc-500' : positive ? 'text-emerald-400' : 'text-red-400';
+  const color = neutral ? 'text-slate-500' : positive ? 'text-emerald-400' : 'text-red-400';
   const Icon = neutral ? Minus : positive ? TrendingUp : TrendingDown;
   const display = unit === 'UGX' ? formatMoney(Math.abs(value), { compact: true }) : `${Math.abs(value)}${unit}`;
   return (
@@ -140,7 +140,7 @@ export default function ScenariosPage() {
           <h1 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2">
             <FlaskConical className="w-6 h-6 text-[#0077B6]" /> What-If Scenarios
           </h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">Model assumptions · Never touches real data</p>
+          <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">Model assumptions · Never touches real data</p>
         </div>
         <button onClick={() => setShowNew(!showNew)} className="flex items-center gap-2 px-4 py-2 bg-[#0077B6]/20 border border-[#0077B6]/30 rounded-xl text-xs font-black text-[#7EC8E3] hover:bg-[#0077B6]/30">
           <Plus className="w-3.5 h-3.5" /> New Scenario
@@ -149,21 +149,21 @@ export default function ScenariosPage() {
 
       {/* New scenario form */}
       {showNew && (
-        <div className="bg-zinc-900 border border-[#0077B6]/30 rounded-2xl p-5">
-          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">New Scenario</p>
+        <div className="bg-white border border-[#0077B6]/30 rounded-2xl p-5">
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">New Scenario</p>
           <div className="flex flex-wrap gap-3">
             <input value={newForm.name} onChange={e => setNewForm({ ...newForm, name: e.target.value })}
               placeholder="Scenario name (e.g. Double volume, Price drop)" autoFocus
-              className="flex-1 min-w-48 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50" />
+              className="flex-1 min-w-48 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50" />
             <select value={newForm.base_period} onChange={e => setNewForm({ ...newForm, base_period: e.target.value })}
-              className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
+              className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
               {periods.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
             <input value={newForm.description} onChange={e => setNewForm({ ...newForm, description: e.target.value })}
               placeholder="Description (optional)"
-              className="flex-1 min-w-48 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none" />
+              className="flex-1 min-w-48 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none" />
             <button onClick={createScenario} className="px-5 py-2 bg-[#0077B6] rounded-lg text-xs font-black text-white hover:bg-[#0077B6]/80">Create</button>
-            <button onClick={() => setShowNew(false)}><X className="w-4 h-4 text-zinc-500" /></button>
+            <button onClick={() => setShowNew(false)}><X className="w-4 h-4 text-slate-500" /></button>
           </div>
         </div>
       )}
@@ -171,17 +171,17 @@ export default function ScenariosPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: scenario list */}
         <div className="space-y-2">
-          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Scenarios</p>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Scenarios</p>
           {loading ? (
-            <p className="text-zinc-700 text-xs animate-pulse">Loading…</p>
+            <p className="text-slate-700 text-xs animate-pulse">Loading…</p>
           ) : scenarios.length === 0 ? (
-            <p className="text-zinc-700 text-xs">No scenarios yet. Create one to start modeling.</p>
+            <p className="text-slate-700 text-xs">No scenarios yet. Create one to start modeling.</p>
           ) : scenarios.map(s => (
             <button key={s.id} onClick={() => setSelected(s.id)}
-              className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${selected === s.id ? 'bg-[#0077B6]/10 border-[#0077B6]/40 text-white' : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700'}`}>
+              className={`w-full text-left px-4 py-3 rounded-xl border transition-colors ${selected === s.id ? 'bg-[#0077B6]/10 border-[#0077B6]/40 text-white' : 'bg-white border-slate-200 text-slate-400 hover:border-slate-200'}`}>
               <p className="text-sm font-black">{s.name}</p>
-              <p className="text-[10px] text-zinc-600 mt-0.5">{s.base_period} · {s.created_by}</p>
-              {s.description && <p className="text-[10px] text-zinc-500 mt-1 leading-relaxed">{s.description}</p>}
+              <p className="text-[10px] text-slate-600 mt-0.5">{s.base_period} · {s.created_by}</p>
+              {s.description && <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">{s.description}</p>}
             </button>
           ))}
         </div>
@@ -189,12 +189,12 @@ export default function ScenariosPage() {
         {/* Right: results */}
         <div className="lg:col-span-2 space-y-4">
           {!selected ? (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
-              <FlaskConical className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
-              <p className="text-zinc-600 text-sm">Select or create a scenario to see what-if projections.</p>
+            <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
+              <FlaskConical className="w-8 h-8 text-slate-700 mx-auto mb-3" />
+              <p className="text-slate-600 text-sm">Select or create a scenario to see what-if projections.</p>
             </div>
           ) : computing ? (
-            <p className="text-zinc-600 text-xs font-black uppercase tracking-widest animate-pulse">Computing scenario…</p>
+            <p className="text-slate-600 text-xs font-black uppercase tracking-widest animate-pulse">Computing scenario…</p>
           ) : result ? (
             <>
               {/* KPI comparison cards */}
@@ -205,12 +205,12 @@ export default function ScenariosPage() {
                   { label: 'Gross Profit', base: result.base.gross_profit, scenario: result.scenario.gross_profit, delta: result.delta.gross_profit, unit: 'UGX' },
                   { label: 'Net Margin', base: result.base.net_margin_pct, scenario: result.scenario.net_margin_pct, delta: result.delta.net_margin_pct, unit: '%' },
                 ].map(card => (
-                  <div key={card.label} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                    <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{card.label}</p>
+                  <div key={card.label} className="bg-white border border-slate-200 rounded-xl p-4">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{card.label}</p>
                     <p className="text-lg font-black text-white mt-1">
                       {card.unit === 'UGX' ? formatMoney(card.scenario, { compact: true }) : `${card.scenario}%`}
                     </p>
-                    <p className="text-[10px] text-zinc-600 mt-0.5">
+                    <p className="text-[10px] text-slate-600 mt-0.5">
                       Base: {card.unit === 'UGX' ? formatMoney(card.base, { compact: true }) : `${card.base}%`}
                     </p>
                     <div className="mt-2">
@@ -221,9 +221,9 @@ export default function ScenariosPage() {
               </div>
 
               {/* Overrides */}
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+              <div className="bg-white border border-slate-200 rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-4">
-                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Assumptions ({result.overrides.length})</p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Assumptions ({result.overrides.length})</p>
                   <button onClick={() => setShowAddOverride(!showAddOverride)}
                     className="text-[10px] text-[#7EC8E3] font-black flex items-center gap-1 hover:text-white">
                     <Plus className="w-3 h-3" /> Add Assumption
@@ -231,19 +231,19 @@ export default function ScenariosPage() {
                 </div>
 
                 {showAddOverride && (
-                  <div className="mb-4 p-4 bg-zinc-800/50 rounded-xl flex flex-wrap gap-3 items-end">
+                  <div className="mb-4 p-4 bg-slate-100/50 rounded-xl flex flex-wrap gap-3 items-end">
                     <div>
-                      <p className="text-[10px] text-zinc-500 font-black uppercase mb-1">Type</p>
+                      <p className="text-[10px] text-slate-500 font-black uppercase mb-1">Type</p>
                       <select value={ovForm.override_type} onChange={e => setOvForm({ ...ovForm, override_type: e.target.value })}
-                        className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
+                        className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
                         {OVERRIDE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                       </select>
                     </div>
                     {selectedOvType.needsProduct && (
                       <div>
-                        <p className="text-[10px] text-zinc-500 font-black uppercase mb-1">Product</p>
+                        <p className="text-[10px] text-slate-500 font-black uppercase mb-1">Product</p>
                         <select value={ovForm.product_id} onChange={e => setOvForm({ ...ovForm, product_id: e.target.value })}
-                          className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
+                          className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
                           <option value="">Select…</option>
                           {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
                         </select>
@@ -251,41 +251,41 @@ export default function ScenariosPage() {
                     )}
                     {selectedOvType.needsCategory && (
                       <div>
-                        <p className="text-[10px] text-zinc-500 font-black uppercase mb-1">Category</p>
+                        <p className="text-[10px] text-slate-500 font-black uppercase mb-1">Category</p>
                         <input value={ovForm.category} onChange={e => setOvForm({ ...ovForm, category: e.target.value })}
                           placeholder="e.g. Salaries"
-                          className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none w-32" />
+                          className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none w-32" />
                       </div>
                     )}
                     <div>
-                      <p className="text-[10px] text-zinc-500 font-black uppercase mb-1">Value ({selectedOvType.unit})</p>
+                      <p className="text-[10px] text-slate-500 font-black uppercase mb-1">Value ({selectedOvType.unit})</p>
                       <input type="number" value={ovForm.override_value} onChange={e => setOvForm({ ...ovForm, override_value: e.target.value })}
                         placeholder="Enter value"
-                        className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none w-32" />
+                        className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none w-32" />
                     </div>
                     <button onClick={addOverride} className="px-4 py-2 bg-[#0077B6]/20 border border-[#0077B6]/30 rounded-lg text-xs font-black text-[#7EC8E3] hover:bg-[#0077B6]/30">Apply</button>
-                    <button onClick={() => setShowAddOverride(false)}><X className="w-4 h-4 text-zinc-500" /></button>
+                    <button onClick={() => setShowAddOverride(false)}><X className="w-4 h-4 text-slate-500" /></button>
                   </div>
                 )}
 
                 {result.overrides.length === 0 ? (
-                  <p className="text-zinc-700 text-xs">No assumptions yet. Add assumptions to see how they change the numbers.</p>
+                  <p className="text-slate-700 text-xs">No assumptions yet. Add assumptions to see how they change the numbers.</p>
                 ) : (
                   <div className="space-y-2">
                     {result.overrides.map(ov => {
                       const ovType = OVERRIDE_TYPES.find(t => t.value === ov.override_type);
                       return (
-                        <div key={ov.id} className="flex items-center justify-between py-2 border-b border-zinc-800 last:border-0">
+                        <div key={ov.id} className="flex items-center justify-between py-2 border-b border-slate-200 last:border-0">
                           <div>
                             <p className="text-xs font-medium text-white">{ovType?.label ?? ov.override_type}</p>
-                            {ov.products && <p className="text-[10px] text-zinc-600">{ov.products.name} ({ov.products.sku})</p>}
-                            {ov.category && <p className="text-[10px] text-zinc-600">Category: {ov.category}</p>}
+                            {ov.products && <p className="text-[10px] text-slate-600">{ov.products.name} ({ov.products.sku})</p>}
+                            {ov.category && <p className="text-[10px] text-slate-600">Category: {ov.category}</p>}
                           </div>
                           <div className="flex items-center gap-3">
                             <p className="text-sm font-black text-white tabular-nums">
                               {ovType?.unit === 'UGX' ? formatMoney(ov.override_value, { compact: true }) : `${ov.override_value}${ovType?.unit ?? ''}`}
                             </p>
-                            <button onClick={() => removeOverride(ov.id)} className="text-zinc-700 hover:text-red-400 transition-colors">
+                            <button onClick={() => removeOverride(ov.id)} className="text-slate-700 hover:text-red-400 transition-colors">
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
@@ -298,25 +298,25 @@ export default function ScenariosPage() {
 
               {/* Product margins under scenario */}
               {result.products.filter(p => p.price_ugx > 0).length > 0 && (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-                  <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Product Margins under Scenario</p>
+                <div className="bg-white border border-slate-200 rounded-2xl p-5">
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-4">Product Margins under Scenario</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {result.products.filter(p => p.price_ugx > 0).map(p => (
                       <div key={p.id} className="space-y-2">
-                        <p className="text-[10px] font-black text-zinc-400 uppercase truncate">{p.name}</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase truncate">{p.name}</p>
                         <p className={`text-lg font-black ${p.margin_pct >= 40 ? 'text-emerald-400' : p.margin_pct >= 20 ? 'text-amber-400' : 'text-red-400'}`}>{p.margin_pct}%</p>
-                        <div className="w-full bg-zinc-800 rounded-full h-1.5">
+                        <div className="w-full bg-slate-100 rounded-full h-1.5">
                           <div className={`h-1.5 rounded-full ${p.margin_pct >= 40 ? 'bg-emerald-500' : p.margin_pct >= 20 ? 'bg-amber-500' : 'bg-red-500'}`}
                             style={{ width: `${Math.min(p.margin_pct, 100)}%` }} />
                         </div>
-                        <p className="text-[10px] text-zinc-600">{formatMoney(p.contribution_margin, { compact: true })} / unit</p>
+                        <p className="text-[10px] text-slate-600">{formatMoney(p.contribution_margin, { compact: true })} / unit</p>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              <p className="text-[10px] text-zinc-700">{result.source_tag}</p>
+              <p className="text-[10px] text-slate-700">{result.source_tag}</p>
             </>
           ) : null}
         </div>

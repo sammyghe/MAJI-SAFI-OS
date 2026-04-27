@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -62,10 +62,10 @@ function SectionTimer({ minutes, active }: { minutes: number; active: boolean })
   const s = absRemaining % 60;
 
   return (
-    <div className={`flex items-center gap-1.5 text-xs font-black tabular-nums ${over ? 'text-red-400' : active ? 'text-[#7EC8E3]' : 'text-zinc-600'}`}>
+    <div className={`flex items-center gap-1.5 text-xs font-black tabular-nums ${over ? 'text-red-400' : active ? 'text-[#7EC8E3]' : 'text-slate-600'}`}>
       <Timer className="w-3 h-3" />
       {over ? '+' : ''}{h > 0 ? `${pad(h)}:` : ''}{pad(m)}:{pad(s)}
-      <span className="text-[10px] font-normal text-zinc-600">/{minutes}:00</span>
+      <span className="text-[10px] font-normal text-slate-600">/{minutes}:00</span>
     </div>
   );
 }
@@ -176,7 +176,7 @@ export default function MeetingPage() {
   if (loading) {
     return (
       <div className="px-5 py-6">
-        <p className="text-zinc-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading…</p>
+        <p className="text-slate-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading…</p>
       </div>
     );
   }
@@ -189,25 +189,25 @@ export default function MeetingPage() {
             <Users2 className="w-6 h-6 text-[#0077B6]" />
             Level 10 Meeting
           </h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">
+          <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">
             90 minutes · Weekly · Structured rhythm
           </p>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center space-y-4">
-          <p className="text-zinc-400 text-sm">No active meeting. Start a new Level 10.</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center space-y-4">
+          <p className="text-slate-400 text-sm">No active meeting. Start a new Level 10.</p>
           <div className="text-left space-y-1.5">
             {SECTIONS.map((s, i) => (
-              <div key={s.id} className="flex items-center justify-between py-1.5 border-b border-zinc-800 last:border-0">
+              <div key={s.id} className="flex items-center justify-between py-1.5 border-b border-slate-200 last:border-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-black text-zinc-700 w-4">{i + 1}</span>
-                  <p className="text-xs text-zinc-300">{s.label}</p>
+                  <span className="text-[10px] font-black text-slate-700 w-4">{i + 1}</span>
+                  <p className="text-xs text-slate-300">{s.label}</p>
                 </div>
-                <span className="text-[10px] text-zinc-600">{s.minutes} min</span>
+                <span className="text-[10px] text-slate-600">{s.minutes} min</span>
               </div>
             ))}
             <div className="flex items-center justify-between py-1.5 font-black">
-              <p className="text-xs text-zinc-400">Total</p>
+              <p className="text-xs text-slate-400">Total</p>
               <span className="text-xs text-[#7EC8E3]">90 min</span>
             </div>
           </div>
@@ -222,12 +222,12 @@ export default function MeetingPage() {
 
         {pastMeetings.length > 0 && (
           <div className="space-y-2">
-            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Past Meetings</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Past Meetings</p>
             {pastMeetings.slice(0, 5).map((m) => (
-              <div key={m.id} className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 flex items-center justify-between">
+              <div key={m.id} className="bg-white border border-slate-200 rounded-xl px-4 py-3 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-white">{m.title}</p>
-                  <p className="text-[10px] text-zinc-500">
+                  <p className="text-[10px] text-slate-500">
                     {new Date(m.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric' })}
                     {m.facilitator && ` · ${m.facilitator}`}
                   </p>
@@ -256,7 +256,7 @@ export default function MeetingPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-black text-white uppercase tracking-tight">{activeMeeting.title}</h1>
-          <p className="text-zinc-500 text-[10px] uppercase tracking-widest">
+          <p className="text-slate-500 text-[10px] uppercase tracking-widest">
             In progress · Facilitator: {activeMeeting.facilitator}
           </p>
         </div>
@@ -288,33 +288,33 @@ export default function MeetingPage() {
             <div
               key={section.id}
               className={`border rounded-2xl overflow-hidden transition-all ${
-                isActive ? 'border-[#0077B6]/30 bg-[#0077B6]/5' : isDone ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-zinc-800 bg-zinc-900/50'
+                isActive ? 'border-[#0077B6]/30 bg-[#0077B6]/5' : isDone ? 'border-emerald-500/20 bg-emerald-500/5' : 'border-slate-200 bg-white/50'
               }`}
             >
               <button
                 className="w-full flex items-center gap-3 px-4 py-3 text-left"
                 onClick={() => setExpandedSection(isExpanded ? -1 : i)}
               >
-                <span className={`text-[10px] font-black w-4 flex-shrink-0 ${isActive ? 'text-[#0077B6]' : isDone ? 'text-emerald-400' : 'text-zinc-600'}`}>
+                <span className={`text-[10px] font-black w-4 flex-shrink-0 ${isActive ? 'text-[#0077B6]' : isDone ? 'text-emerald-400' : 'text-slate-600'}`}>
                   {isDone ? '✓' : i + 1}
                 </span>
                 <div className="flex-1">
-                  <p className={`text-xs font-black uppercase tracking-widest ${isActive ? 'text-white' : isDone ? 'text-zinc-400' : 'text-zinc-500'}`}>
+                  <p className={`text-xs font-black uppercase tracking-widest ${isActive ? 'text-white' : isDone ? 'text-slate-400' : 'text-slate-500'}`}>
                     {section.label}
                   </p>
                   {isExpanded && (
-                    <p className="text-[10px] text-zinc-500 mt-0.5">{section.desc}</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">{section.desc}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   {isActive && <SectionTimer minutes={section.minutes} active={true} />}
-                  {!isActive && <span className="text-[10px] text-zinc-700">{section.minutes}m</span>}
-                  {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-zinc-500" /> : <ChevronRight className="w-3.5 h-3.5 text-zinc-500" />}
+                  {!isActive && <span className="text-[10px] text-slate-700">{section.minutes}m</span>}
+                  {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-slate-500" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-500" />}
                 </div>
               </button>
 
               {isExpanded && (
-                <div className="px-4 pb-4 border-t border-zinc-800/40 pt-3 space-y-3">
+                <div className="px-4 pb-4 border-t border-slate-200/40 pt-3 space-y-3">
                   {/* Scorecard section */}
                   {section.id === 'scorecard' && (
                     <Scorecard compact showHeader={false} />
@@ -328,14 +328,14 @@ export default function MeetingPage() {
                           value={personName}
                           onChange={(e) => setPersonName(e.target.value)}
                           placeholder="Your name"
-                          className="w-28 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
+                          className="w-28 bg-slate-100 border border-slate-200 rounded-lg px-2 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
                         />
                         <input
                           value={newEntry}
                           onChange={(e) => setNewEntry(e.target.value)}
                           onKeyDown={(e) => { if (e.key === 'Enter') addEntry(section.id === 'todos' ? 'todo' : section.id === 'headlines' ? 'headline' : 'status'); }}
                           placeholder={section.id === 'todos' ? 'Add to-do…' : section.id === 'headlines' ? 'Add headline…' : 'Share status…'}
-                          className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
+                          className="flex-1 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none"
                         />
                         <button
                           onClick={() => addEntry(section.id === 'todos' ? 'todo' : section.id === 'headlines' ? 'headline' : 'status')}
@@ -350,11 +350,11 @@ export default function MeetingPage() {
                         {(section.id === 'todos' ? todoEntries : section.id === 'headlines' ? headlineEntries : roundtableEntries).map((e) => (
                           <div key={e.id} className="flex items-start gap-2 py-1">
                             <button onClick={() => toggleEntryDone(e)} className="flex-shrink-0 mt-0.5">
-                              <CheckCircle2 className={`w-3.5 h-3.5 ${e.is_done ? 'text-emerald-400' : 'text-zinc-600'}`} />
+                              <CheckCircle2 className={`w-3.5 h-3.5 ${e.is_done ? 'text-emerald-400' : 'text-slate-600'}`} />
                             </button>
                             <div>
-                              <span className={`text-xs ${e.is_done ? 'line-through text-zinc-600' : 'text-zinc-300'}`}>{e.content}</span>
-                              <span className="text-[10px] text-zinc-600 ml-2">{e.person_name}</span>
+                              <span className={`text-xs ${e.is_done ? 'line-through text-slate-600' : 'text-slate-300'}`}>{e.content}</span>
+                              <span className="text-[10px] text-slate-600 ml-2">{e.person_name}</span>
                             </div>
                           </div>
                         ))}
@@ -366,7 +366,7 @@ export default function MeetingPage() {
                   {section.id === 'conclude' && (
                     <div className="space-y-4">
                       <div>
-                        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Rate this meeting (1–10)</p>
+                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Rate this meeting (1–10)</p>
                         <div className="flex gap-2">
                           {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
                             <button
@@ -377,7 +377,7 @@ export default function MeetingPage() {
                               className={`w-8 h-8 rounded-lg text-xs font-black transition-all ${
                                 n <= (hoverRating || rating)
                                   ? 'bg-amber-500/20 border border-amber-500/30 text-amber-400'
-                                  : 'bg-zinc-800 border border-zinc-700 text-zinc-500'
+                                  : 'bg-slate-100 border border-slate-200 text-slate-500'
                               }`}
                             >
                               {n}
@@ -400,7 +400,7 @@ export default function MeetingPage() {
                   {isActive && i < SECTIONS.length - 1 && section.id !== 'conclude' && (
                     <button
                       onClick={() => { setActiveSection(i + 1); setExpandedSection(i + 1); }}
-                      className="flex items-center gap-2 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-black text-zinc-300 uppercase tracking-widest hover:bg-zinc-700 transition-colors mt-2"
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-black text-slate-300 uppercase tracking-widest hover:bg-zinc-700 transition-colors mt-2"
                     >
                       Next: {SECTIONS[i + 1].label}
                       <ChevronRight className="w-3.5 h-3.5" />

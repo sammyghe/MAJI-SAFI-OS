@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/components/AuthProvider';
 import { showToast } from '@/components/ToastContainer';
+import { usePresence } from '@/hooks/usePresence';
 import { Users, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface TeamMember {
@@ -33,6 +34,7 @@ export default function DeptTeamPanel({ departmentSlug }: { departmentSlug: stri
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<string | null>(null);
+  const activeUserIds = usePresence();
 
   const canManage =
     user?.role === 'founder' ||
@@ -133,7 +135,12 @@ export default function DeptTeamPanel({ departmentSlug }: { departmentSlug: stri
                   <div key={member.id} className="px-6 py-5">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <p className="font-semibold text-on-surface text-sm">{member.name}</p>
+                        <div className="flex items-center gap-2">
+                          {activeUserIds.has(member.id) && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title="Online now" />
+                          )}
+                          <p className="font-semibold text-on-surface text-sm">{member.name}</p>
+                        </div>
                         <p className="text-[10px] text-outline/60 font-label">{member.role} · {member.access_level}</p>
                       </div>
                       <div className="flex items-center gap-2">

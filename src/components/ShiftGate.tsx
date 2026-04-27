@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -154,35 +154,35 @@ export default function ShiftGate({ onShiftActive }: ShiftGateProps) {
       {/* Handover acknowledgment modal */}
       {showHandoverModal && pendingHandover && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-amber-500/30 rounded-3xl p-6 max-w-sm w-full">
+          <div className="bg-white border border-amber-300 rounded-3xl p-6 max-w-sm w-full shadow-2xl">
             <div className="flex items-center gap-3 mb-4">
-              <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
-              <p className="text-amber-400 font-black text-sm uppercase tracking-widest">Shift Handover</p>
+              <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+              <p className="text-amber-600 font-black text-sm uppercase tracking-widest">Shift Handover</p>
             </div>
             <p className="text-xs text-slate-500 mb-5 font-label">Read before starting your shift</p>
 
             {pendingHandover.status_summary && (
               <div className="mb-3">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Status</p>
-                <p className="text-sm text-white">{pendingHandover.status_summary}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                <p className="text-sm text-slate-900">{pendingHandover.status_summary}</p>
               </div>
             )}
             {pendingHandover.what_running && (
               <div className="mb-3">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">What's Running</p>
-                <p className="text-sm text-white">{pendingHandover.what_running}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">What's Running</p>
+                <p className="text-sm text-slate-900">{pendingHandover.what_running}</p>
               </div>
             )}
             {pendingHandover.what_needs_attention && (
               <div className="mb-3">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Needs Attention</p>
-                <p className="text-sm text-amber-300">{pendingHandover.what_needs_attention}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Needs Attention</p>
+                <p className="text-sm text-amber-600">{pendingHandover.what_needs_attention}</p>
               </div>
             )}
             {pendingHandover.who_to_call && (
               <div className="mb-5">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Call if Problem</p>
-                <p className="text-sm text-white">{pendingHandover.who_to_call}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Call if Problem</p>
+                <p className="text-sm text-slate-900">{pendingHandover.who_to_call}</p>
               </div>
             )}
 
@@ -201,8 +201,8 @@ export default function ShiftGate({ onShiftActive }: ShiftGateProps) {
       {/* End shift handover form */}
       {showEndForm && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-end justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-700 rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto">
-            <p className="text-white font-black text-sm uppercase tracking-widest mb-1">End of Shift Handover</p>
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 w-full max-w-sm max-h-[90vh] overflow-y-auto shadow-2xl">
+            <p className="text-slate-900 font-black text-sm uppercase tracking-widest mb-1">End of Shift Handover</p>
             <p className="text-slate-500 text-xs mb-5">Fill this in for the next shift</p>
 
             {((['status_summary','what_running','what_needs_attention','who_to_call']) as (keyof typeof handoverForm)[]).map((key) => {
@@ -222,7 +222,7 @@ export default function ShiftGate({ onShiftActive }: ShiftGateProps) {
                       rows={2}
                       value={handoverForm[key]}
                       onChange={(e) => setHandoverForm({ ...handoverForm, [key]: e.target.value })}
-                      className="flex-1 bg-zinc-800 text-white text-sm rounded-xl border border-zinc-700 px-3 py-2 resize-none focus:outline-none focus:border-[#0077B6]"
+                      className="flex-1 bg-slate-50 text-slate-900 text-sm rounded-xl border border-slate-200 px-3 py-2 resize-none focus:outline-none focus:border-[#0077B6]"
                     />
                     <VoiceInputButton
                       currentValue={handoverForm[key]}
@@ -243,7 +243,7 @@ export default function ShiftGate({ onShiftActive }: ShiftGateProps) {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowEndForm(false)}
-                className="flex-1 py-3 bg-zinc-800 text-slate-400 font-bold text-sm rounded-2xl"
+                className="flex-1 py-3 bg-slate-100 text-slate-500 font-bold text-sm rounded-2xl"
               >
                 Cancel
               </button>
@@ -275,14 +275,14 @@ export default function ShiftGate({ onShiftActive }: ShiftGateProps) {
       )}
 
       {shift?.status === 'active' && (
-        <div className="mb-6 bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 flex items-center justify-between">
+        <div className="mb-6 bg-white border border-slate-200 rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm">
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Shift Active</p>
-            <p className="text-white font-black text-sm">{hoursOnShift}h {shift.actual_start ? Math.floor(((Date.now() - new Date(shift.actual_start).getTime()) % 3600000) / 60000) : 0}m</p>
+            <p className="text-slate-900 font-black text-sm">{hoursOnShift}h {shift.actual_start ? Math.floor(((Date.now() - new Date(shift.actual_start).getTime()) % 3600000) / 60000) : 0}m</p>
           </div>
           <button
             onClick={() => setShowEndForm(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-slate-300 font-bold text-xs uppercase tracking-widest rounded-xl transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-zinc-200 text-slate-600 font-bold text-xs uppercase tracking-widest rounded-xl transition-colors"
           >
             <Square size={12} />
             End Shift
@@ -291,11 +291,11 @@ export default function ShiftGate({ onShiftActive }: ShiftGateProps) {
       )}
 
       {shift?.status === 'ended' && (
-        <div className="mb-6 bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 flex items-center gap-3">
-          <CheckCircle className="w-4 h-4 text-emerald-400" />
+        <div className="mb-6 bg-white border border-slate-200 rounded-2xl px-4 py-3 flex items-center gap-3 shadow-sm">
+          <CheckCircle className="w-4 h-4 text-emerald-500" />
           <div>
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Shift Ended</p>
-            <p className="text-emerald-400 font-black text-sm">Great work today</p>
+            <p className="text-emerald-600 font-black text-sm">Great work today</p>
           </div>
         </div>
       )}

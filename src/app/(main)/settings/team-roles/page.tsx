@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -122,7 +122,7 @@ export default function TeamRolesPage() {
                 <select
                   value={currentRoleId}
                   onChange={(e) => setEdits((prev) => ({ ...prev, [m.id]: e.target.value }))}
-                  className="bg-zinc-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-brand-sky/40 min-w-40"
+                  className="bg-slate-100 border border-white/10 rounded-lg px-3 py-2 text-sm text-white font-bold focus:outline-none focus:border-brand-sky/40 min-w-40"
                 >
                   <option value="">— No role —</option>
                   {roles.map((r) => (

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -74,41 +74,41 @@ function AddRockModal({ quarter, onClose, onSave }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-md mx-4 space-y-4" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md mx-4 space-y-4" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-sm font-black text-white uppercase tracking-widest">New Rock</h3>
 
         <input
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           placeholder="Rock title *"
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50"
+          className="w-full bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50"
         />
         <textarea
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           placeholder="Description (optional)"
           rows={2}
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50 resize-none"
+          className="w-full bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50 resize-none"
         />
         <div className="grid grid-cols-2 gap-3">
           <input
             value={form.owner_name}
             onChange={(e) => setForm({ ...form, owner_name: e.target.value })}
             placeholder="Owner name *"
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50"
+            className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50"
           />
           <input
             value={form.owner_dept}
             onChange={(e) => setForm({ ...form, owner_dept: e.target.value })}
             placeholder="Department"
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50"
+            className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50"
           />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <select
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value as Rock['category'] })}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#0077B6]/50"
+            className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#0077B6]/50"
           >
             <option value="foundation">Foundation</option>
             <option value="execution">Execution</option>
@@ -118,13 +118,13 @@ function AddRockModal({ quarter, onClose, onSave }: {
             type="date"
             value={form.due_date}
             onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#0077B6]/50"
+            className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#0077B6]/50"
           />
         </div>
         <div className="flex gap-3 pt-1">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-black text-zinc-400 uppercase tracking-widest hover:bg-zinc-700 transition-colors"
+            className="flex-1 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-black text-slate-400 uppercase tracking-widest hover:bg-zinc-700 transition-colors"
           >
             Cancel
           </button>
@@ -168,22 +168,22 @@ function RockCard({ rock, onUpdate }: { rock: Rock; onUpdate: () => void }) {
       >
         <div className="flex-shrink-0">{STATUS_ICONS[rock.status]}</div>
         <div className="flex-1 min-w-0">
-          <p className={`text-xs font-black text-white ${rock.status === 'complete' ? 'line-through text-zinc-500' : ''}`}>
+          <p className={`text-xs font-black text-white ${rock.status === 'complete' ? 'line-through text-slate-500' : ''}`}>
             {rock.title}
           </p>
-          <p className="text-[10px] text-zinc-500 mt-0.5">
+          <p className="text-[10px] text-slate-500 mt-0.5">
             {rock.owner_name} · {rock.owner_dept}
             {rock.due_date && ` · Due ${new Date(rock.due_date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}`}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className={`text-xs font-black ${cfg.color}`}>{rock.progress_pct}%</span>
-          {expanded ? <ChevronUp className="w-3.5 h-3.5 text-zinc-500" /> : <ChevronDown className="w-3.5 h-3.5 text-zinc-500" />}
+          {expanded ? <ChevronUp className="w-3.5 h-3.5 text-slate-500" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-500" />}
         </div>
       </div>
 
       <div className="px-4 pb-2">
-        <div className="w-full bg-zinc-800/60 rounded-full h-1">
+        <div className="w-full bg-slate-100/60 rounded-full h-1">
           <div
             className={`h-1 rounded-full transition-all ${rock.status === 'complete' ? 'bg-[#0077B6]' : rock.status === 'on_track' ? 'bg-emerald-500' : rock.status === 'at_risk' ? 'bg-amber-500' : 'bg-red-500'}`}
             style={{ width: `${rock.progress_pct}%` }}
@@ -192,12 +192,12 @@ function RockCard({ rock, onUpdate }: { rock: Rock; onUpdate: () => void }) {
       </div>
 
       {expanded && (
-        <div className="px-4 pb-4 space-y-3 border-t border-zinc-800/40 pt-3">
+        <div className="px-4 pb-4 space-y-3 border-t border-slate-200/40 pt-3">
           {rock.description && (
-            <p className="text-xs text-zinc-400">{rock.description}</p>
+            <p className="text-xs text-slate-400">{rock.description}</p>
           )}
           <div>
-            <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">Progress</p>
+            <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-2">Progress</p>
             <div className="flex gap-2 flex-wrap">
               {[0, 10, 25, 50, 75, 90, 100].map((pct) => (
                 <button
@@ -207,7 +207,7 @@ function RockCard({ rock, onUpdate }: { rock: Rock; onUpdate: () => void }) {
                   className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                     rock.progress_pct === pct
                       ? `${cfg.bg} ${cfg.color} border ${cfg.border}`
-                      : 'bg-zinc-800 text-zinc-500 border border-zinc-700 hover:text-zinc-200'
+                      : 'bg-slate-100 text-slate-500 border border-slate-200 hover:text-zinc-200'
                   }`}
                 >
                   {pct}%
@@ -274,7 +274,7 @@ export default function RocksPage() {
             <Target className="w-6 h-6 text-[#0077B6]" />
             Quarterly Rocks
           </h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">
+          <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">
             {user?.name?.split(' ')[0]} · What matters this quarter
           </p>
         </div>
@@ -282,7 +282,7 @@ export default function RocksPage() {
           <select
             value={quarter}
             onChange={(e) => setQuarter(e.target.value)}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none"
+            className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none"
           >
             {prevQuarters.map((q) => (
               <option key={q} value={q}>{q}</option>
@@ -302,14 +302,14 @@ export default function RocksPage() {
 
       {/* Progress summary */}
       {total > 0 && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex items-center gap-4">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center gap-4">
           <TrendingUp className="w-5 h-5 text-[#7EC8E3] flex-shrink-0" />
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1.5">
               <p className="text-xs font-black text-white">{complete}/{total} Rocks Complete</p>
               <p className="text-xs font-black text-[#7EC8E3]">{Math.round((complete / total) * 100)}%</p>
             </div>
-            <div className="w-full bg-zinc-800 rounded-full h-1.5">
+            <div className="w-full bg-slate-100 rounded-full h-1.5">
               <div className="h-1.5 rounded-full bg-[#0077B6] transition-all" style={{ width: `${Math.round((complete / total) * 100)}%` }} />
             </div>
           </div>
@@ -317,12 +317,12 @@ export default function RocksPage() {
       )}
 
       {loading ? (
-        <p className="text-zinc-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading rocks…</p>
+        <p className="text-slate-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading rocks…</p>
       ) : total === 0 ? (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
-          <Target className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
-          <p className="text-zinc-500 text-sm font-bold">No rocks for {quarter} yet.</p>
-          <p className="text-zinc-600 text-xs mt-1">Add your quarterly priorities to get started.</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
+          <Target className="w-8 h-8 text-slate-700 mx-auto mb-3" />
+          <p className="text-slate-500 text-sm font-bold">No rocks for {quarter} yet.</p>
+          <p className="text-slate-600 text-xs mt-1">Add your quarterly priorities to get started.</p>
         </div>
       ) : (
         CATEGORIES.map((cat) => {
@@ -333,7 +333,7 @@ export default function RocksPage() {
             <div key={cat} className="space-y-2">
               <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${cfg.color} flex items-center gap-2`}>
                 {cfg.label}
-                <span className="text-zinc-600">({catRocks.length})</span>
+                <span className="text-slate-600">({catRocks.length})</span>
               </p>
               {catRocks.map((rock) => (
                 <RockCard key={rock.id} rock={rock} onUpdate={load} />

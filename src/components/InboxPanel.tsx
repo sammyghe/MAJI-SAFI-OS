@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/components/AuthProvider';
@@ -18,13 +18,13 @@ interface Activity {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  sale: 'text-emerald-400',
-  expense: 'text-amber-400',
-  batch: 'text-blue-400',
-  qc: 'text-purple-400',
-  issue: 'text-red-400',
-  rock: 'text-sky-400',
-  default: 'text-zinc-400',
+  sale: 'text-emerald-600',
+  expense: 'text-amber-600',
+  batch: 'text-blue-600',
+  qc: 'text-purple-600',
+  issue: 'text-red-600',
+  rock: 'text-sky-600',
+  default: 'text-slate-500',
 };
 
 function timeAgo(iso: string): string {
@@ -77,29 +77,29 @@ export default function InboxPanel({ compact = false }: { compact?: boolean }) {
 
   if (compact) {
     return (
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm transition-colors">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest flex items-center gap-1.5">
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
             <Inbox className="w-3 h-3" /> What happened
             {unread > 0 && <span className="bg-[#0077B6] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full">{unread}</span>}
           </p>
-          {since && <p className="text-[9px] text-zinc-700">since {new Date(since).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}</p>}
+          {since && <p className="text-[9px] text-slate-400">since {new Date(since).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}</p>}
         </div>
         {loading ? (
-          <p className="text-zinc-700 text-[10px] animate-pulse">Loading…</p>
+          <p className="text-slate-400 text-[10px] animate-pulse">Loading…</p>
         ) : activities.length === 0 ? (
-          <p className="text-zinc-700 text-[10px]">All clear since your last visit.</p>
+          <p className="text-slate-400 text-[10px]">All clear since your last visit.</p>
         ) : (
           <div className="space-y-1.5 max-h-40 overflow-y-auto">
             {activities.slice(0, 8).map(a => {
               const isUnread = !(a.read_by ?? []).includes(user.id ?? '');
               return (
                 <div key={a.id} onClick={() => isUnread && markRead(a.id)}
-                  className={`flex items-start gap-2 cursor-pointer rounded-lg px-2 py-1.5 transition-colors ${isUnread ? 'bg-zinc-800/60 hover:bg-zinc-800' : 'hover:bg-zinc-800/30'}`}>
+                  className={`flex items-start gap-2 cursor-pointer rounded-lg px-2 py-1.5 transition-colors ${isUnread ? 'bg-slate-50 hover:bg-slate-100' : 'hover:bg-slate-50'}`}>
                   {isUnread && <div className="w-1.5 h-1.5 rounded-full bg-[#0077B6] mt-1.5 shrink-0" />}
                   <div className="flex-1 min-w-0">
-                    <p className={`text-[10px] leading-relaxed ${isUnread ? 'text-white' : 'text-zinc-500'} truncate`}>{a.description}</p>
-                    <p className="text-[9px] text-zinc-700">{timeAgo(a.created_at)}</p>
+                    <p className={`text-[10px] leading-relaxed ${isUnread ? 'text-slate-900' : 'text-slate-400'} truncate`}>{a.description}</p>
+                    <p className="text-[9px] text-slate-400">{timeAgo(a.created_at)}</p>
                   </div>
                 </div>
               );
@@ -111,18 +111,18 @@ export default function InboxPanel({ compact = false }: { compact?: boolean }) {
   }
 
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-      <div className="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
+    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm transition-colors">
+      <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Inbox className="w-4 h-4 text-[#0077B6]" />
-          <p className="text-sm font-black text-white">Inbox</p>
+          <p className="text-sm font-black text-slate-900">Inbox</p>
           {unread > 0 && (
             <span className="bg-[#0077B6] text-white text-[10px] font-black px-2 py-0.5 rounded-full">{unread} new</span>
           )}
         </div>
         <div className="flex items-center gap-3">
           {since && (
-            <p className="text-[10px] text-zinc-600 flex items-center gap-1">
+            <p className="text-[10px] text-slate-500 flex items-center gap-1">
               <Clock className="w-3 h-3" /> Since {new Date(since).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })}
             </p>
           )}
@@ -135,11 +135,11 @@ export default function InboxPanel({ compact = false }: { compact?: boolean }) {
       </div>
 
       {loading ? (
-        <p className="px-5 py-8 text-zinc-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading inbox…</p>
+        <p className="px-5 py-8 text-slate-500 text-xs font-black uppercase tracking-widest animate-pulse">Loading inbox…</p>
       ) : activities.length === 0 ? (
         <div className="px-5 py-10 text-center">
-          <CheckCheck className="w-6 h-6 text-zinc-700 mx-auto mb-2" />
-          <p className="text-zinc-600 text-sm">All clear since your last visit.</p>
+          <CheckCheck className="w-6 h-6 text-zinc-200 mx-auto mb-2" />
+          <p className="text-slate-500 text-sm">All clear since your last visit.</p>
         </div>
       ) : (
         <div>
@@ -148,17 +148,17 @@ export default function InboxPanel({ compact = false }: { compact?: boolean }) {
             const color = TYPE_COLORS[a.activity_type] ?? TYPE_COLORS.default;
             return (
               <div key={a.id} onClick={() => isUnread && markRead(a.id)}
-                className={`flex items-start gap-3 px-5 py-4 border-b border-zinc-800/50 last:border-0 cursor-pointer transition-colors ${isUnread ? 'bg-zinc-800/40 hover:bg-zinc-800/60' : 'hover:bg-zinc-800/20'}`}>
+                className={`flex items-start gap-3 px-5 py-4 border-b border-zinc-100 last:border-0 cursor-pointer transition-colors ${isUnread ? 'bg-slate-50 hover:bg-slate-100' : 'hover:bg-slate-50/50'}`}>
                 {isUnread && <div className="w-2 h-2 rounded-full bg-[#0077B6] mt-1.5 shrink-0" />}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className={`text-[10px] font-black uppercase tracking-widest ${color}`}>{a.activity_type}</span>
-                    {a.department && <span className="text-[10px] text-zinc-600">{a.department}</span>}
+                    {a.department && <span className="text-[10px] text-slate-500">{a.department}</span>}
                   </div>
-                  <p className={`text-sm ${isUnread ? 'text-white font-medium' : 'text-zinc-400'}`}>{a.description}</p>
-                  {a.actor_name && <p className="text-[10px] text-zinc-600 mt-0.5">by {a.actor_name}</p>}
+                  <p className={`text-sm ${isUnread ? 'text-slate-900 font-medium' : 'text-slate-500'}`}>{a.description}</p>
+                  {a.actor_name && <p className="text-[10px] text-slate-400 mt-0.5">by {a.actor_name}</p>}
                 </div>
-                <p className="text-[10px] text-zinc-700 shrink-0 mt-0.5">{timeAgo(a.created_at)}</p>
+                <p className="text-[10px] text-slate-300 shrink-0 mt-0.5">{timeAgo(a.created_at)}</p>
               </div>
             );
           })}

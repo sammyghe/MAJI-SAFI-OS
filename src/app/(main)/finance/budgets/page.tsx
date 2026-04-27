@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -25,7 +25,7 @@ function getPct(budgeted: number, actual: number) {
 function PctBar({ pct }: { pct: number }) {
   const color = pct >= 100 ? 'bg-red-500' : pct >= 80 ? 'bg-amber-500' : 'bg-emerald-500';
   return (
-    <div className="w-full bg-zinc-800 rounded-full h-1.5">
+    <div className="w-full bg-slate-100 rounded-full h-1.5">
       <div className={`h-1.5 rounded-full transition-all ${color}`} style={{ width: `${Math.min(pct, 100)}%` }} />
     </div>
   );
@@ -108,15 +108,15 @@ export default function BudgetsPage() {
           <h1 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2">
             <PieChart className="w-6 h-6 text-[#0077B6]" /> Budgets
           </h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">Actual Budget pattern · Envelope ledger</p>
+          <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">Actual Budget pattern · Envelope ledger</p>
         </div>
         <div className="flex items-center gap-3">
-          <select value={period} onChange={e => setPeriod(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none">
+          <select value={period} onChange={e => setPeriod(e.target.value)} className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none">
             {periods.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
-          <div className="flex bg-zinc-800 border border-zinc-700 rounded-lg overflow-hidden text-[10px] font-black uppercase tracking-widest">
+          <div className="flex bg-slate-100 border border-slate-200 rounded-lg overflow-hidden text-[10px] font-black uppercase tracking-widest">
             {(['all', 'pre_unbs', 'ongoing'] as const).map(ph => (
-              <button key={ph} onClick={() => setPhase(ph)} className={`px-3 py-2 transition-colors ${phase === ph ? 'bg-[#0077B6]/30 text-[#7EC8E3]' : 'text-zinc-500 hover:text-zinc-300'}`}>
+              <button key={ph} onClick={() => setPhase(ph)} className={`px-3 py-2 transition-colors ${phase === ph ? 'bg-[#0077B6]/30 text-[#7EC8E3]' : 'text-slate-500 hover:text-slate-300'}`}>
                 {ph === 'all' ? 'All' : ph === 'pre_unbs' ? 'Pre-UNBS' : 'Ongoing'}
               </button>
             ))}
@@ -126,7 +126,7 @@ export default function BudgetsPage() {
 
       {/* Summary bar */}
       {totalBudgeted > 0 && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 mb-6">
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 mb-6">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-black text-white">{period} — Total Budget</p>
             <p className={`text-sm font-black tabular-nums ${totalPct >= 100 ? 'text-red-400' : totalPct >= 80 ? 'text-amber-400' : 'text-emerald-400'}`}>
@@ -134,7 +134,7 @@ export default function BudgetsPage() {
             </p>
           </div>
           <PctBar pct={totalPct} />
-          <div className="flex items-center justify-between mt-2 text-[10px] text-zinc-500">
+          <div className="flex items-center justify-between mt-2 text-[10px] text-slate-500">
             <span>Spent: UGX {totalActual.toLocaleString()}</span>
             <span>Budget: UGX {totalBudgeted.toLocaleString()}</span>
           </div>
@@ -143,17 +143,17 @@ export default function BudgetsPage() {
 
       {/* Budget table */}
       {loading ? (
-        <p className="text-zinc-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading…</p>
+        <p className="text-slate-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading…</p>
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-950/50">
-                <th className="text-left py-3 px-4 text-zinc-500 font-black uppercase tracking-widest">Account</th>
-                <th className="text-right py-3 px-4 text-zinc-500 font-black uppercase tracking-widest">Budgeted</th>
-                <th className="text-right py-3 px-4 text-zinc-500 font-black uppercase tracking-widest">Spent</th>
-                <th className="text-right py-3 px-4 text-zinc-500 font-black uppercase tracking-widest">Remaining</th>
-                <th className="py-3 px-4 text-zinc-500 font-black uppercase tracking-widest min-w-[120px]">% Used</th>
+              <tr className="border-b border-slate-200 bg-white/50">
+                <th className="text-left py-3 px-4 text-slate-500 font-black uppercase tracking-widest">Account</th>
+                <th className="text-right py-3 px-4 text-slate-500 font-black uppercase tracking-widest">Budgeted</th>
+                <th className="text-right py-3 px-4 text-slate-500 font-black uppercase tracking-widest">Spent</th>
+                <th className="text-right py-3 px-4 text-slate-500 font-black uppercase tracking-widest">Remaining</th>
+                <th className="py-3 px-4 text-slate-500 font-black uppercase tracking-widest min-w-[120px]">% Used</th>
                 <th className="py-3 px-4" />
               </tr>
             </thead>
@@ -168,16 +168,16 @@ export default function BudgetsPage() {
 
                 return (
                   <>
-                    <tr key={acct.id} className="border-b border-zinc-800/40 hover:bg-zinc-900/50 group">
+                    <tr key={acct.id} className="border-b border-slate-200/40 hover:bg-white/50 group">
                       <td className="py-3 px-4">
                         <p className="font-medium text-white">{acct.name}</p>
-                        <p className="text-zinc-600 font-mono">{acct.code}{acct.expense_phase ? ` · ${acct.expense_phase}` : ''}</p>
+                        <p className="text-slate-600 font-mono">{acct.code}{acct.expense_phase ? ` · ${acct.expense_phase}` : ''}</p>
                       </td>
                       <td className="py-3 px-4 text-right font-black tabular-nums text-white">
-                        {budgeted > 0 ? budgeted.toLocaleString() : <span className="text-zinc-700">—</span>}
+                        {budgeted > 0 ? budgeted.toLocaleString() : <span className="text-slate-700">—</span>}
                       </td>
-                      <td className="py-3 px-4 text-right tabular-nums text-zinc-300">
-                        {actual > 0 ? actual.toLocaleString() : <span className="text-zinc-700">—</span>}
+                      <td className="py-3 px-4 text-right tabular-nums text-slate-300">
+                        {actual > 0 ? actual.toLocaleString() : <span className="text-slate-700">—</span>}
                       </td>
                       <td className={`py-3 px-4 text-right font-black tabular-nums ${remaining < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                         {budgeted > 0 ? remaining.toLocaleString() : '—'}
@@ -188,7 +188,7 @@ export default function BudgetsPage() {
                             <PctBar pct={pct} />
                             <span className={`text-[10px] font-black ${pct >= 100 ? 'text-red-400' : pct >= 80 ? 'text-amber-400' : 'text-emerald-400'}`}>{pct}%</span>
                           </div>
-                        ) : <span className="text-zinc-700">—</span>}
+                        ) : <span className="text-slate-700">—</span>}
                       </td>
                       <td className="py-3 px-4">
                         <button onClick={() => { setAddingFor(isAdding ? null : acct.id); setAddForm({ budgeted_amount_ugx: String(budgeted || ''), notes: '' }); }}
@@ -198,16 +198,16 @@ export default function BudgetsPage() {
                       </td>
                     </tr>
                     {isAdding && (
-                      <tr key={`${acct.id}-edit`} className="border-b border-zinc-800">
+                      <tr key={`${acct.id}-edit`} className="border-b border-slate-200">
                         <td colSpan={6} className="px-4 py-3 bg-[#0077B6]/5">
                           <div className="flex items-center gap-3 flex-wrap">
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-zinc-500 font-black uppercase tracking-widest">UGX</span>
-                              <input value={addForm.budgeted_amount_ugx} onChange={e => setAddForm({...addForm, budgeted_amount_ugx: e.target.value})} type="number" placeholder="Budget amount" className="w-36 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#0077B6]/50" autoFocus />
+                              <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">UGX</span>
+                              <input value={addForm.budgeted_amount_ugx} onChange={e => setAddForm({...addForm, budgeted_amount_ugx: e.target.value})} type="number" placeholder="Budget amount" className="w-36 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#0077B6]/50" autoFocus />
                             </div>
-                            <input value={addForm.notes} onChange={e => setAddForm({...addForm, notes: e.target.value})} placeholder="Notes (optional)" className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none" />
+                            <input value={addForm.notes} onChange={e => setAddForm({...addForm, notes: e.target.value})} placeholder="Notes (optional)" className="flex-1 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none" />
                             <button onClick={() => saveBudget(acct.id)} disabled={saving} className="px-4 py-2 bg-[#0077B6]/20 border border-[#0077B6]/30 rounded-lg text-xs font-black text-[#7EC8E3] hover:bg-[#0077B6]/30 disabled:opacity-40">{saving ? '…' : 'Save'}</button>
-                            <button onClick={() => setAddingFor(null)}><X className="w-4 h-4 text-zinc-500" /></button>
+                            <button onClick={() => setAddingFor(null)}><X className="w-4 h-4 text-slate-500" /></button>
                           </div>
                         </td>
                       </tr>
@@ -216,7 +216,7 @@ export default function BudgetsPage() {
                 );
               })}
               {filtered.length === 0 && (
-                <tr><td colSpan={6} className="py-8 text-center text-zinc-700 text-xs">No expense accounts found. Add accounts first in Chart of Accounts.</td></tr>
+                <tr><td colSpan={6} className="py-8 text-center text-slate-700 text-xs">No expense accounts found. Add accounts first in Chart of Accounts.</td></tr>
               )}
             </tbody>
           </table>

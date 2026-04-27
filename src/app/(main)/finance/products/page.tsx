@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -79,26 +79,26 @@ function AddProductModal({ onClose, onSave }: { onClose: () => void; onSave: () 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-md mx-4 space-y-4" onClick={e => e.stopPropagation()}>
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md mx-4 space-y-4" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-black text-white uppercase tracking-widest">Add Product</h3>
-          <button onClick={onClose}><X className="w-4 h-4 text-zinc-500" /></button>
+          <button onClick={onClose}><X className="w-4 h-4 text-slate-500" /></button>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} placeholder="SKU (e.g. 20L-RF) *" className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50" />
-          <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Product name *" className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50" />
+          <input value={form.sku} onChange={e => setForm({...form, sku: e.target.value})} placeholder="SKU (e.g. 20L-RF) *" className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50" />
+          <input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="Product name *" className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50" />
         </div>
-        <input value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Description (optional)" className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50" />
+        <input value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Description (optional)" className="w-full bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50" />
         <div className="grid grid-cols-3 gap-3">
-          <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none">
+          <select value={form.category} onChange={e => setForm({...form, category: e.target.value})} className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none">
             <option value="">Category</option>
             {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <input value={form.unit} onChange={e => setForm({...form, unit: e.target.value})} placeholder="Unit (20L, 5L…)" className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none" />
-          <input value={form.unit_type} onChange={e => setForm({...form, unit_type: e.target.value})} placeholder="Unit type" className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none" />
+          <input value={form.unit} onChange={e => setForm({...form, unit: e.target.value})} placeholder="Unit (20L, 5L…)" className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none" />
+          <input value={form.unit_type} onChange={e => setForm({...form, unit_type: e.target.value})} placeholder="Unit type" className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none" />
         </div>
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-black text-zinc-400 uppercase tracking-widest hover:bg-zinc-700">Cancel</button>
+          <button onClick={onClose} className="flex-1 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-black text-slate-400 uppercase tracking-widest hover:bg-zinc-700">Cancel</button>
           <button onClick={save} disabled={saving || !form.sku || !form.name} className="flex-1 py-2.5 bg-[#0077B6]/20 border border-[#0077B6]/30 rounded-xl text-xs font-black text-[#7EC8E3] uppercase tracking-widest hover:bg-[#0077B6]/30 disabled:opacity-40 disabled:cursor-not-allowed">
             {saving ? 'Saving…' : 'Add Product'}
           </button>
@@ -141,8 +141,8 @@ function PricingCell({ productId, tier, pricings, onRefresh }: {
   );
 
   return (
-    <button onClick={() => { setVal(String(active?.price_ugx ?? '')); setEditing(true); }} className="text-xs text-zinc-300 hover:text-white tabular-nums w-full text-left">
-      {active ? active.price_ugx.toLocaleString() : <span className="text-zinc-700">—</span>}
+    <button onClick={() => { setVal(String(active?.price_ugx ?? '')); setEditing(true); }} className="text-xs text-slate-300 hover:text-white tabular-nums w-full text-left">
+      {active ? active.price_ugx.toLocaleString() : <span className="text-slate-700">—</span>}
     </button>
   );
 }
@@ -178,8 +178,8 @@ function UnitEconCell({ productId, component, econRows, onRefresh }: {
   );
 
   return (
-    <button onClick={() => { setVal(String(active?.cost_ugx ?? '')); setEditing(true); }} className="text-xs text-zinc-300 hover:text-white tabular-nums w-full text-left">
-      {active ? active.cost_ugx.toLocaleString() : <span className="text-zinc-700">—</span>}
+    <button onClick={() => { setVal(String(active?.cost_ugx ?? '')); setEditing(true); }} className="text-xs text-slate-300 hover:text-white tabular-nums w-full text-left">
+      {active ? active.cost_ugx.toLocaleString() : <span className="text-slate-700">—</span>}
     </button>
   );
 }
@@ -245,7 +245,7 @@ export default function ProductsPage() {
           <h1 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2">
             <Package className="w-6 h-6 text-[#0077B6]" /> Products & Pricing
           </h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">No hardcoded prices — all UI-entered</p>
+          <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">No hardcoded prices — all UI-entered</p>
         </div>
         {tab === 'Products' && (
           <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 px-4 py-2 bg-[#0077B6]/20 border border-[#0077B6]/30 rounded-xl text-xs font-black text-[#7EC8E3] uppercase tracking-widest hover:bg-[#0077B6]/30">
@@ -255,50 +255,50 @@ export default function ProductsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-zinc-900 border border-zinc-800 rounded-xl p-1">
+      <div className="flex gap-1 mb-6 bg-white border border-slate-200 rounded-xl p-1">
         {TABS.map(t => (
-          <button key={t} onClick={() => setTab(t)} className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${tab === t ? 'bg-[#0077B6]/20 text-[#7EC8E3] border border-[#0077B6]/30' : 'text-zinc-500 hover:text-zinc-300'}`}>{t}</button>
+          <button key={t} onClick={() => setTab(t)} className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${tab === t ? 'bg-[#0077B6]/20 text-[#7EC8E3] border border-[#0077B6]/30' : 'text-slate-500 hover:text-slate-300'}`}>{t}</button>
         ))}
       </div>
 
       {loading ? (
-        <p className="text-zinc-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading…</p>
+        <p className="text-slate-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading…</p>
       ) : (
         <>
           {/* PRODUCTS TAB */}
           {tab === 'Products' && (
             <div className="space-y-3">
               {products.length === 0 ? (
-                <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 text-center">
-                  <Package className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
-                  <p className="text-zinc-500 text-sm font-bold">No products yet.</p>
-                  <p className="text-zinc-600 text-xs mt-1">Click "Add Product" to create your first product SKU.</p>
+                <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
+                  <Package className="w-8 h-8 text-slate-700 mx-auto mb-3" />
+                  <p className="text-slate-500 text-sm font-bold">No products yet.</p>
+                  <p className="text-slate-600 text-xs mt-1">Click "Add Product" to create your first product SKU.</p>
                 </div>
               ) : products.map(p => {
                 const margin = getMargin(p.id);
                 return (
-                  <div key={p.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 flex items-center gap-4">
+                  <div key={p.id} className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black text-zinc-600 bg-zinc-800 px-2 py-0.5 rounded">{p.sku}</span>
+                        <span className="text-[10px] font-black text-slate-600 bg-slate-100 px-2 py-0.5 rounded">{p.sku}</span>
                         <p className="text-sm font-black text-white">{p.name}</p>
-                        {!p.active && <span className="text-[10px] text-zinc-600 font-black">INACTIVE</span>}
+                        {!p.active && <span className="text-[10px] text-slate-600 font-black">INACTIVE</span>}
                       </div>
-                      <p className="text-[10px] text-zinc-500 mt-0.5">{p.unit}{p.unit_type ? ` · ${p.unit_type}` : ''}{p.category ? ` · ${p.category}` : ''}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{p.unit}{p.unit_type ? ` · ${p.unit_type}` : ''}{p.category ? ` · ${p.category}` : ''}</p>
                     </div>
                     {margin && (
                       <div className="text-right">
                         <p className={`text-sm font-black tabular-nums ${margin.margin > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                           {fmtUGX(margin.margin)}
                         </p>
-                        <p className="text-[10px] text-zinc-600">contribution margin @ T2</p>
+                        <p className="text-[10px] text-slate-600">contribution margin @ T2</p>
                         {margin.price > 0 && (
-                          <p className="text-[10px] text-zinc-500">{Math.round((margin.margin / margin.price) * 100)}% margin</p>
+                          <p className="text-[10px] text-slate-500">{Math.round((margin.margin / margin.price) * 100)}% margin</p>
                         )}
                       </div>
                     )}
                     <button onClick={() => supabase.from('products').update({ active: !p.active }).eq('id', p.id).then(() => load())}
-                      className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-lg border transition-colors ${p.active ? 'border-zinc-700 text-zinc-500 hover:text-red-400 hover:border-red-500/30' : 'border-emerald-500/30 text-emerald-400'}`}>
+                      className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-lg border transition-colors ${p.active ? 'border-slate-200 text-slate-500 hover:text-red-400 hover:border-red-500/30' : 'border-emerald-500/30 text-emerald-400'}`}>
                       {p.active ? 'Deactivate' : 'Activate'}
                     </button>
                   </div>
@@ -312,17 +312,17 @@ export default function ProductsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-zinc-800">
-                    <th className="text-left py-3 pr-4 text-zinc-500 font-black uppercase tracking-widest">Product</th>
-                    {TIERS.map(t => <th key={t} className="text-right py-3 px-3 text-zinc-500 font-black uppercase tracking-widest min-w-[100px]">{t}</th>)}
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-3 pr-4 text-slate-500 font-black uppercase tracking-widest">Product</th>
+                    {TIERS.map(t => <th key={t} className="text-right py-3 px-3 text-slate-500 font-black uppercase tracking-widest min-w-[100px]">{t}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   {products.filter(p => p.active).map(p => (
-                    <tr key={p.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50">
+                    <tr key={p.id} className="border-b border-slate-200/50 hover:bg-white/50">
                       <td className="py-3 pr-4">
                         <p className="font-bold text-white">{p.name}</p>
-                        <p className="text-zinc-600">{p.sku}</p>
+                        <p className="text-slate-600">{p.sku}</p>
                       </td>
                       {TIERS.map(t => (
                         <td key={t} className="py-3 px-3 text-right">
@@ -333,7 +333,7 @@ export default function ProductsPage() {
                   ))}
                 </tbody>
               </table>
-              <p className="text-[10px] text-zinc-600 mt-4">Click any cell to edit. Changes are time-bounded — old price is preserved in history.</p>
+              <p className="text-[10px] text-slate-600 mt-4">Click any cell to edit. Changes are time-bounded — old price is preserved in history.</p>
             </div>
           )}
 
@@ -342,9 +342,9 @@ export default function ProductsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b border-zinc-800">
-                    <th className="text-left py-3 pr-4 text-zinc-500 font-black uppercase tracking-widest">Product</th>
-                    {COST_COMPONENTS.map(c => <th key={c} className="text-right py-3 px-2 text-zinc-500 font-black uppercase tracking-widest min-w-[80px]">{c}</th>)}
+                  <tr className="border-b border-slate-200">
+                    <th className="text-left py-3 pr-4 text-slate-500 font-black uppercase tracking-widest">Product</th>
+                    {COST_COMPONENTS.map(c => <th key={c} className="text-right py-3 px-2 text-slate-500 font-black uppercase tracking-widest min-w-[80px]">{c}</th>)}
                     <th className="text-right py-3 px-3 text-amber-500 font-black uppercase tracking-widest">Total Cost</th>
                   </tr>
                 </thead>
@@ -354,10 +354,10 @@ export default function ProductsPage() {
                       .filter(e => e.product_id === p.id && e.effective_from <= today && (!e.effective_to || e.effective_to >= today))
                       .reduce((a, e) => a + e.cost_ugx, 0);
                     return (
-                      <tr key={p.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50">
+                      <tr key={p.id} className="border-b border-slate-200/50 hover:bg-white/50">
                         <td className="py-3 pr-4">
                           <p className="font-bold text-white">{p.name}</p>
-                          <p className="text-zinc-600">{p.sku}</p>
+                          <p className="text-slate-600">{p.sku}</p>
                         </td>
                         {COST_COMPONENTS.map(c => (
                           <td key={c} className="py-3 px-2 text-right">
@@ -372,7 +372,7 @@ export default function ProductsPage() {
                   })}
                 </tbody>
               </table>
-              <p className="text-[10px] text-zinc-600 mt-4">Click any cell to update cost. All values in UGX. Changes are time-bounded.</p>
+              <p className="text-[10px] text-slate-600 mt-4">Click any cell to update cost. All values in UGX. Changes are time-bounded.</p>
             </div>
           )}
 
@@ -383,34 +383,34 @@ export default function ProductsPage() {
                 const pt = targets.filter(t => t.product_id === p.id);
                 const isAdding = addingTarget === p.id;
                 return (
-                  <div key={p.id} className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-                    <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800">
-                      <p className="text-xs font-black text-white">{p.name} <span className="text-zinc-600">{p.sku}</span></p>
+                  <div key={p.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+                    <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200">
+                      <p className="text-xs font-black text-white">{p.name} <span className="text-slate-600">{p.sku}</span></p>
                       <button onClick={() => setAddingTarget(isAdding ? null : p.id)} className="flex items-center gap-1 text-[10px] font-black text-[#7EC8E3] uppercase tracking-widest hover:text-white">
                         <Plus className="w-3 h-3" /> Add Target
                       </button>
                     </div>
                     {isAdding && (
-                      <div className="px-5 py-3 border-b border-zinc-800 bg-zinc-800/30 flex gap-3 flex-wrap items-end">
-                        <select value={targetForm.target_type} onChange={e => setTargetForm({...targetForm, target_type: e.target.value})} className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
+                      <div className="px-5 py-3 border-b border-slate-200 bg-slate-100/30 flex gap-3 flex-wrap items-end">
+                        <select value={targetForm.target_type} onChange={e => setTargetForm({...targetForm, target_type: e.target.value})} className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white focus:outline-none">
                           {TARGET_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
                         </select>
-                        <input value={targetForm.target_value} onChange={e => setTargetForm({...targetForm, target_value: e.target.value})} type="number" placeholder="Value" className="w-28 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none" />
-                        <input value={targetForm.period} onChange={e => setTargetForm({...targetForm, period: e.target.value})} placeholder="Period (2026-05 or ongoing)" className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none" />
+                        <input value={targetForm.target_value} onChange={e => setTargetForm({...targetForm, target_value: e.target.value})} type="number" placeholder="Value" className="w-28 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none" />
+                        <input value={targetForm.period} onChange={e => setTargetForm({...targetForm, period: e.target.value})} placeholder="Period (2026-05 or ongoing)" className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none" />
                         <button onClick={() => addTarget(p.id)} className="px-4 py-2 bg-[#0077B6]/20 border border-[#0077B6]/30 rounded-lg text-xs font-black text-[#7EC8E3] hover:bg-[#0077B6]/30">Save</button>
-                        <button onClick={() => setAddingTarget(null)} className="text-xs text-zinc-500 hover:text-zinc-300">Cancel</button>
+                        <button onClick={() => setAddingTarget(null)} className="text-xs text-slate-500 hover:text-slate-300">Cancel</button>
                       </div>
                     )}
                     {pt.length === 0 && !isAdding && (
-                      <p className="px-5 py-3 text-[10px] text-zinc-700">No targets set</p>
+                      <p className="px-5 py-3 text-[10px] text-slate-700">No targets set</p>
                     )}
                     {pt.map(t => (
-                      <div key={t.id} className="flex items-center justify-between px-5 py-2.5 border-b border-zinc-800/50 last:border-0">
-                        <p className="text-xs text-zinc-300">{t.target_type.replace(/_/g, ' ')}</p>
+                      <div key={t.id} className="flex items-center justify-between px-5 py-2.5 border-b border-slate-200/50 last:border-0">
+                        <p className="text-xs text-slate-300">{t.target_type.replace(/_/g, ' ')}</p>
                         <div className="flex items-center gap-4">
-                          <span className="text-[10px] text-zinc-600">{t.period}</span>
+                          <span className="text-[10px] text-slate-600">{t.period}</span>
                           <span className="text-sm font-black text-white tabular-nums">{t.target_value.toLocaleString()}</span>
-                          <button onClick={() => supabase.from('product_targets').delete().eq('id', t.id).then(() => load())} className="text-zinc-700 hover:text-red-400">
+                          <button onClick={() => supabase.from('product_targets').delete().eq('id', t.id).then(() => load())} className="text-slate-700 hover:text-red-400">
                             <X className="w-3.5 h-3.5" />
                           </button>
                         </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -31,7 +31,7 @@ interface IssueSummary {
 }
 
 function TrendIcon({ value, target }: { value: number | null; target: number }) {
-  if (value === null) return <Minus className="w-3.5 h-3.5 text-zinc-600" />;
+  if (value === null) return <Minus className="w-3.5 h-3.5 text-slate-600" />;
   if (value >= target) return <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />;
   if (value >= target * 0.8) return <Minus className="w-3.5 h-3.5 text-amber-400" />;
   return <TrendingDown className="w-3.5 h-3.5 text-red-400" />;
@@ -42,15 +42,15 @@ function StatCard({ label, value, subtitle, trend, target }: {
   trend?: number | null; target?: number;
 }) {
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-      <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-3">{label}</p>
+    <div className="bg-white border border-slate-200 rounded-2xl p-5">
+      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">{label}</p>
       <div className="flex items-end justify-between gap-2">
         <p className="text-2xl font-black text-white tabular-nums">{value}</p>
         {trend !== undefined && target !== undefined && (
           <TrendIcon value={trend ?? null} target={target} />
         )}
       </div>
-      {subtitle && <p className="text-[10px] text-zinc-600 mt-1">{subtitle}</p>}
+      {subtitle && <p className="text-[10px] text-slate-600 mt-1">{subtitle}</p>}
     </div>
   );
 }
@@ -122,18 +122,18 @@ export default function BiweeklyPage() {
           <BarChart2 className="w-6 h-6 text-[#0077B6]" />
           Biweekly Review
         </h1>
-        <p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">
+        <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">
           {user?.name?.split(' ')[0]} · Last 14 days · {new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
         </p>
       </div>
 
       {loading ? (
-        <p className="text-zinc-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading review…</p>
+        <p className="text-slate-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading review…</p>
       ) : (
         <>
           {/* Production */}
           <div>
-            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3">Production — 14 days</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">Production — 14 days</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <StatCard
                 label="Total Jars"
@@ -159,7 +159,7 @@ export default function BiweeklyPage() {
 
           {/* Quality */}
           <div>
-            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3">Quality — 14 days</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">Quality — 14 days</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <StatCard
                 label="QC Pass Rate"
@@ -183,7 +183,7 @@ export default function BiweeklyPage() {
 
           {/* Sales */}
           <div>
-            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3">Sales — 14 days</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">Sales — 14 days</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <StatCard
                 label="Revenue (UGX)"
@@ -210,18 +210,18 @@ export default function BiweeklyPage() {
           {/* Issues */}
           {issueStats && (issueStats.identified + issueStats.discussing + issueStats.solving + issueStats.resolved) > 0 && (
             <div>
-              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3">Issues — All Time</p>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">Issues — All Time</p>
+              <div className="bg-white border border-slate-200 rounded-2xl p-5">
                 <div className="grid grid-cols-4 gap-4 text-center">
                   {[
-                    { label: 'Identified', value: issueStats.identified, color: 'text-zinc-400' },
+                    { label: 'Identified', value: issueStats.identified, color: 'text-slate-400' },
                     { label: 'Discussing', value: issueStats.discussing, color: 'text-amber-400' },
                     { label: 'Solving', value: issueStats.solving, color: 'text-[#7EC8E3]' },
                     { label: 'Resolved', value: issueStats.resolved, color: 'text-emerald-400' },
                   ].map((s) => (
                     <div key={s.label}>
                       <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
-                      <p className="text-[10px] text-zinc-600 uppercase tracking-widest mt-1">{s.label}</p>
+                      <p className="text-[10px] text-slate-600 uppercase tracking-widest mt-1">{s.label}</p>
                     </div>
                   ))}
                 </div>
@@ -231,7 +231,7 @@ export default function BiweeklyPage() {
 
           {/* Scorecard */}
           <div>
-            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-3">Today's Scorecard</p>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">Today's Scorecard</p>
             <Scorecard showHeader={false} />
           </div>
         </>

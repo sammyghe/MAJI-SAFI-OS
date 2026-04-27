@@ -5,5 +5,5 @@ import dynamic from 'next/dynamic';
 const GalaxyCanvas = dynamic(() => import('@/components/GalaxyCanvas'), { ssr: false });
 
 export default function GalaxyPage() {
-  return <GalaxyCanvas />;
+  return <div className="dark"><GalaxyCanvas /></div>;
 }

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -102,7 +102,7 @@ export default function AdminShiftsPage() {
       </div>
 
       {/* Create form */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-8">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-8">
         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">New Shift Definition</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
@@ -110,7 +110,7 @@ export default function AdminShiftsPage() {
             <select
               value={form.department_slug}
               onChange={(e) => setForm({ ...form, department_slug: e.target.value })}
-              className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm rounded-xl px-3 py-2"
+              className="w-full bg-slate-100 border border-slate-200 text-white text-sm rounded-xl px-3 py-2"
             >
               {DEPTS.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
@@ -121,7 +121,7 @@ export default function AdminShiftsPage() {
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="e.g. Morning Shift"
-              className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm rounded-xl px-3 py-2"
+              className="w-full bg-slate-100 border border-slate-200 text-white text-sm rounded-xl px-3 py-2"
             />
           </div>
           <div>
@@ -130,7 +130,7 @@ export default function AdminShiftsPage() {
               type="time"
               value={form.start_time}
               onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-              className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm rounded-xl px-3 py-2"
+              className="w-full bg-slate-100 border border-slate-200 text-white text-sm rounded-xl px-3 py-2"
             />
           </div>
           <div>
@@ -139,7 +139,7 @@ export default function AdminShiftsPage() {
               type="time"
               value={form.end_time}
               onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-              className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm rounded-xl px-3 py-2"
+              className="w-full bg-slate-100 border border-slate-200 text-white text-sm rounded-xl px-3 py-2"
             />
           </div>
         </div>
@@ -159,7 +159,7 @@ export default function AdminShiftsPage() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase transition-colors ${
                   form.days_of_week.includes(d)
                     ? 'bg-[#0077B6] text-white'
-                    : 'bg-zinc-800 text-slate-500 hover:text-slate-300'
+                    : 'bg-slate-100 text-slate-500 hover:text-slate-300'
                 }`}
               >
                 {d}
@@ -186,7 +186,7 @@ export default function AdminShiftsPage() {
         ) : (
           <div className="space-y-3">
             {defs.map((def) => (
-              <div key={def.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center justify-between gap-4">
+              <div key={def.id} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <Clock className="w-4 h-4 text-slate-400 flex-shrink-0" />
                   <div>
@@ -197,7 +197,7 @@ export default function AdminShiftsPage() {
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => toggleActive(def.id, def.active)}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold ${def.active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-800 text-slate-500'}`}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold ${def.active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-100 text-slate-500'}`}
                   >
                     {def.active ? 'Active' : 'Inactive'}
                   </button>
@@ -221,7 +221,7 @@ export default function AdminShiftsPage() {
         ) : (
           <div className="space-y-2">
             {instances.map((s) => (
-              <div key={s.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center justify-between">
+              <div key={s.id} className="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-bold text-white">{s.team_members?.name ?? 'Unknown'}</p>
                   <p className="text-xs text-slate-500">{s.team_members?.role_slug ?? ''}</p>

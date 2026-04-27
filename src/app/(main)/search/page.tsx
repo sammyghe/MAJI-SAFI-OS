@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -72,43 +72,43 @@ export default function SearchPage() {
           <Search className="w-6 h-6 text-[#0077B6]" /> Universal Search
         </h1>
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search products, accounts, issues, rocks, team, distributors…"
-            className="w-full bg-zinc-900 border border-zinc-700 rounded-2xl pl-11 pr-4 py-4 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-[#0077B6]/50 focus:ring-1 focus:ring-[#0077B6]/30"
+            className="w-full bg-white border border-slate-200 rounded-2xl pl-11 pr-4 py-4 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-[#0077B6]/50 focus:ring-1 focus:ring-[#0077B6]/30"
           />
           {loading && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-zinc-600 border-t-[#0077B6] rounded-full animate-spin" />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-slate-200 border-t-[#0077B6] rounded-full animate-spin" />
           )}
         </div>
       </div>
 
       {query.length >= 2 && results.length === 0 && !loading && (
-        <p className="text-zinc-600 text-sm text-center py-8">No results for "{query}"</p>
+        <p className="text-slate-600 text-sm text-center py-8">No results for "{query}"</p>
       )}
 
       {Object.entries(grouped).map(([type, items]) => {
         const Icon = TYPE_ICONS[type] ?? Package;
-        const color = TYPE_COLORS[type] ?? 'text-zinc-400 bg-zinc-800';
+        const color = TYPE_COLORS[type] ?? 'text-slate-400 bg-slate-100';
         return (
           <div key={type} className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${color}`}>
                 {type}
               </span>
-              <span className="text-[10px] text-zinc-700">{items.length} result{items.length > 1 ? 's' : ''}</span>
+              <span className="text-[10px] text-slate-700">{items.length} result{items.length > 1 ? 's' : ''}</span>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
               {items.map((r, i) => (
                 <Link key={r.id} href={r.href}
-                  className={`flex items-center gap-3 px-4 py-3.5 hover:bg-zinc-800/50 transition-colors ${i < items.length - 1 ? 'border-b border-zinc-800/50' : ''}`}>
-                  <Icon className="w-4 h-4 text-zinc-600 shrink-0" />
+                  className={`flex items-center gap-3 px-4 py-3.5 hover:bg-slate-100/50 transition-colors ${i < items.length - 1 ? 'border-b border-slate-200/50' : ''}`}>
+                  <Icon className="w-4 h-4 text-slate-600 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-white truncate">{r.title}</p>
-                    {r.subtitle && <p className="text-[10px] text-zinc-500 mt-0.5">{r.subtitle}</p>}
+                    {r.subtitle && <p className="text-[10px] text-slate-500 mt-0.5">{r.subtitle}</p>}
                   </div>
                 </Link>
               ))}
@@ -119,11 +119,11 @@ export default function SearchPage() {
 
       {query.length < 2 && (
         <div className="text-center py-12">
-          <Search className="w-10 h-10 text-zinc-800 mx-auto mb-3" />
-          <p className="text-zinc-700 text-sm">Type at least 2 characters to search across the OS.</p>
+          <Search className="w-10 h-10 text-slate-800 mx-auto mb-3" />
+          <p className="text-slate-700 text-sm">Type at least 2 characters to search across the OS.</p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             {['Products', 'Accounts', 'Issues', 'Rocks', 'Team', 'Distributors'].map(t => (
-              <span key={t} className="text-[10px] text-zinc-600 bg-zinc-900 border border-zinc-800 px-3 py-1 rounded-full">{t}</span>
+              <span key={t} className="text-[10px] text-slate-600 bg-white border border-slate-200 px-3 py-1 rounded-full">{t}</span>
             ))}
           </div>
         </div>

@@ -19,8 +19,8 @@ export default function HomeRouter() {
   }, [user, loading, router]);
 
   return (
-    <div className="h-screen bg-[#10141a] flex items-center justify-center">
-      <span className="text-xs text-slate-500 animate-pulse">Loading your office…</span>
+    <div className="h-screen bg-white dark:bg-[#10141a] flex items-center justify-center transition-colors">
+      <span className="text-xs text-zinc-400 dark:text-slate-500 animate-pulse">Loading your office…</span>
     </div>
   );
 }

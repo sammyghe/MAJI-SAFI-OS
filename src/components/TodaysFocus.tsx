@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -19,9 +19,9 @@ interface TodaysFocusProps {
 }
 
 const URGENCY_CONFIG = {
-  critical: { dot: 'bg-red-400', text: 'text-red-400', border: 'border-red-500/20', bg: 'bg-red-500/5' },
-  high:     { dot: 'bg-amber-400', text: 'text-amber-400', border: 'border-amber-500/20', bg: 'bg-amber-500/5' },
-  medium:   { dot: 'bg-[#0077B6]', text: 'text-[#7EC8E3]', border: 'border-[#0077B6]/20', bg: 'bg-[#0077B6]/5' },
+  critical: { dot: 'bg-red-500', text: 'text-red-600', border: 'border-red-200', bg: 'bg-red-50' },
+  high:     { dot: 'bg-amber-500', text: 'text-amber-600', border: 'border-amber-200', bg: 'bg-amber-50' },
+  medium:   { dot: 'bg-[#0077B6]', text: 'text-[#0077B6]', border: 'border-[#0077B6]/20', bg: 'bg-[#0077B6]/5' },
 };
 
 export default function TodaysFocus({ department, compact = false }: TodaysFocusProps) {
@@ -115,27 +115,27 @@ export default function TodaysFocus({ department, compact = false }: TodaysFocus
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-1.5">
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] flex items-center gap-1.5">
           <Zap className="w-3 h-3" />
           Today's Focus
         </p>
         <div className="flex items-center gap-3">
-          <Link href="/rhythm/issues" className="text-[10px] text-zinc-600 hover:text-zinc-400 flex items-center gap-0.5 transition-colors">
+          <Link href="/rhythm/issues" className="text-[10px] text-slate-600 hover:text-slate-400 flex items-center gap-0.5 transition-colors">
             Issues <ChevronRight className="w-2.5 h-2.5" />
           </Link>
-          <Link href="/rhythm/rocks" className="text-[10px] text-zinc-600 hover:text-zinc-400 flex items-center gap-0.5 transition-colors">
+          <Link href="/rhythm/rocks" className="text-[10px] text-slate-600 hover:text-slate-400 flex items-center gap-0.5 transition-colors">
             Rocks <ChevronRight className="w-2.5 h-2.5" />
           </Link>
-          <Link href="/rhythm/meeting" className="text-[10px] text-zinc-600 hover:text-zinc-400 flex items-center gap-0.5 transition-colors">
+          <Link href="/rhythm/meeting" className="text-[10px] text-slate-600 hover:text-slate-400 flex items-center gap-0.5 transition-colors">
             Meeting <ChevronRight className="w-2.5 h-2.5" />
           </Link>
         </div>
       </div>
 
       {items.length === 0 ? (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
-          <p className="text-xs text-zinc-400">No critical issues or at-risk rocks — you're clear.</p>
+        <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 flex items-center gap-2 shadow-sm transition-colors">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+          <p className="text-xs text-slate-500">No critical issues or at-risk rocks — you're clear.</p>
         </div>
       ) : (
         <div className="space-y-1.5">
@@ -150,10 +150,10 @@ export default function TodaysFocus({ department, compact = false }: TodaysFocus
               >
                 <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-white truncate">{item.label}</p>
+                  <p className="text-xs font-bold text-slate-900 truncate">{item.label}</p>
                   <p className={`text-[10px] font-black uppercase tracking-widest ${cfg.text}`}>{item.sub}</p>
                 </div>
-                <ChevronRight className="w-3.5 h-3.5 text-zinc-600 flex-shrink-0" />
+                <ChevronRight className="w-3.5 h-3.5 text-slate-600 flex-shrink-0" />
               </Link>
             );
           })}

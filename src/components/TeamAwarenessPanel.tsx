@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -124,13 +124,13 @@ export default function TeamAwarenessPanel() {
   };
 
   if (loading) return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 mb-6 animate-pulse h-24" />
+    <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-6 animate-pulse h-24" />
   );
 
   return (
     <div className="space-y-4 mb-6">
       {/* Who's on shift */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-4 h-4 text-slate-400" />
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
@@ -157,7 +157,7 @@ export default function TeamAwarenessPanel() {
                       <p className="text-sm font-bold text-white truncate">{w.name}</p>
                       <p className="text-xs text-slate-500 flex-shrink-0 ml-2">{w.hoursIn}h in</p>
                     </div>
-                    <div className="mt-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                    <div className="mt-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all"
                         style={{ width: `${pct}%`, background: color }}
@@ -174,7 +174,7 @@ export default function TeamAwarenessPanel() {
 
       {/* Needs help */}
       {needsHelp.length > 0 && (
-        <div className="bg-zinc-900 border border-amber-500/20 rounded-2xl p-5">
+        <div className="bg-white border border-amber-500/20 rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="w-4 h-4 text-amber-400" />
             <p className="text-[10px] font-bold text-amber-400 uppercase tracking-[0.2em]">

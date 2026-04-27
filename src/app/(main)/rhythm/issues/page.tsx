@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -22,9 +22,9 @@ const STAGE_CONFIG = {
   identified: {
     label: 'Identified',
     subtitle: 'I — Identify the issue',
-    border: 'border-zinc-700',
-    bg: 'bg-zinc-900',
-    header: 'bg-zinc-800/50',
+    border: 'border-slate-200',
+    bg: 'bg-white',
+    header: 'bg-slate-100/50',
     dot: 'bg-zinc-500',
   },
   discussing: {
@@ -46,8 +46,8 @@ const STAGE_CONFIG = {
 };
 
 const PRIORITY_CONFIG = {
-  low:      { label: 'Low',      color: 'text-zinc-500',   bg: 'bg-zinc-800' },
-  medium:   { label: 'Medium',   color: 'text-zinc-300',   bg: 'bg-zinc-700' },
+  low:      { label: 'Low',      color: 'text-slate-500',   bg: 'bg-slate-100' },
+  medium:   { label: 'Medium',   color: 'text-slate-300',   bg: 'bg-zinc-700' },
   high:     { label: 'High',     color: 'text-amber-400',  bg: 'bg-amber-500/10' },
   critical: { label: 'Critical', color: 'text-red-400',    bg: 'bg-red-500/10' },
 };
@@ -81,33 +81,33 @@ function AddIssueModal({ onClose, onSave, userName }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-md mx-4 space-y-4" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md mx-4 space-y-4" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-sm font-black text-white uppercase tracking-widest">Identify Issue</h3>
 
         <input
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
           placeholder="Issue title *"
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50"
+          className="w-full bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50"
         />
         <textarea
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           placeholder="Describe the issue (optional)"
           rows={3}
-          className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50 resize-none"
+          className="w-full bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50 resize-none"
         />
         <div className="grid grid-cols-2 gap-3">
           <input
             value={form.owner_dept}
             onChange={(e) => setForm({ ...form, owner_dept: e.target.value })}
             placeholder="Department (optional)"
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50"
+            className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50"
           />
           <select
             value={form.priority}
             onChange={(e) => setForm({ ...form, priority: e.target.value as Issue['priority'] })}
-            className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#0077B6]/50"
+            className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-[#0077B6]/50"
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -116,7 +116,7 @@ function AddIssueModal({ onClose, onSave, userName }: {
           </select>
         </div>
         <div className="flex gap-3 pt-1">
-          <button onClick={onClose} className="flex-1 py-2.5 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-black text-zinc-400 uppercase tracking-widest hover:bg-zinc-700 transition-colors">
+          <button onClick={onClose} className="flex-1 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs font-black text-slate-400 uppercase tracking-widest hover:bg-zinc-700 transition-colors">
             Cancel
           </button>
           <button
@@ -160,12 +160,12 @@ function IssueCard({ issue, onUpdate }: { issue: Issue; onUpdate: () => void }) 
   const daysAgo = Math.floor((Date.now() - new Date(issue.created_at).getTime()) / 86400000);
 
   return (
-    <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl overflow-hidden">
+    <div className="bg-white/60 border border-slate-200 rounded-xl overflow-hidden">
       <div className="px-4 py-3 cursor-pointer flex items-start gap-3" onClick={() => setExpanded(!expanded)}>
-        <AlertCircle className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0 mt-0.5" />
+        <AlertCircle className="w-3.5 h-3.5 text-slate-500 flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <p className="text-xs font-bold text-white">{issue.title}</p>
-          <p className="text-[10px] text-zinc-500 mt-0.5">
+          <p className="text-[10px] text-slate-500 mt-0.5">
             {issue.raised_by} · {daysAgo === 0 ? 'Today' : `${daysAgo}d ago`}
             {issue.owner_dept && ` · ${issue.owner_dept}`}
           </p>
@@ -174,14 +174,14 @@ function IssueCard({ issue, onUpdate }: { issue: Issue; onUpdate: () => void }) 
           <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded ${pcfg.color} ${pcfg.bg}`}>
             {pcfg.label}
           </span>
-          <ChevronDown className={`w-3.5 h-3.5 text-zinc-500 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${expanded ? 'rotate-180' : ''}`} />
         </div>
       </div>
 
       {expanded && (
-        <div className="px-4 pb-4 border-t border-zinc-800/50 pt-3 space-y-3">
+        <div className="px-4 pb-4 border-t border-slate-200/50 pt-3 space-y-3">
           {issue.description && (
-            <p className="text-xs text-zinc-400">{issue.description}</p>
+            <p className="text-xs text-slate-400">{issue.description}</p>
           )}
 
           {issue.stage === 'solving' && (
@@ -190,7 +190,7 @@ function IssueCard({ issue, onUpdate }: { issue: Issue; onUpdate: () => void }) 
               onChange={(e) => setResolution(e.target.value)}
               placeholder="Document the solution / next action…"
               rows={2}
-              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50 resize-none"
+              className="w-full bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#0077B6]/50 resize-none"
             />
           )}
 
@@ -214,7 +214,7 @@ function ResolvedSection({ issues, onUpdate }: { issues: Issue[]; onUpdate: () =
   const [open, setOpen] = useState(false);
   if (issues.length === 0) return null;
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-5 py-4"
@@ -225,17 +225,17 @@ function ResolvedSection({ issues, onUpdate }: { issues: Issue[]; onUpdate: () =
             Resolved ({issues.length})
           </span>
         </div>
-        <ChevronDown className={`w-4 h-4 text-zinc-500 transition-transform ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
         <div className="px-4 pb-4 space-y-2">
           {issues.map((issue) => (
-            <div key={issue.id} className="flex items-start gap-3 py-2 border-b border-zinc-800 last:border-0">
+            <div key={issue.id} className="flex items-start gap-3 py-2 border-b border-slate-200 last:border-0">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs text-zinc-400 line-through">{issue.title}</p>
+                <p className="text-xs text-slate-400 line-through">{issue.title}</p>
                 {issue.resolution && (
-                  <p className="text-[10px] text-zinc-600 mt-0.5">→ {issue.resolution}</p>
+                  <p className="text-[10px] text-slate-600 mt-0.5">→ {issue.resolution}</p>
                 )}
               </div>
             </div>
@@ -292,7 +292,7 @@ export default function IssuesPage() {
             <AlertCircle className="w-6 h-6 text-amber-400" />
             Issues — IDS
           </h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">
+          <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">
             {user?.name?.split(' ')[0]} · Identify · Discuss · Solve
           </p>
         </div>
@@ -306,7 +306,7 @@ export default function IssuesPage() {
       </div>
 
       {loading ? (
-        <p className="text-zinc-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading issues…</p>
+        <p className="text-slate-600 text-xs font-black uppercase tracking-widest animate-pulse">Loading issues…</p>
       ) : (
         <>
           {/* IDS Kanban */}
@@ -320,13 +320,13 @@ export default function IssuesPage() {
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
                       <p className="text-xs font-black text-white uppercase tracking-widest">{cfg.label}</p>
-                      <span className="text-[10px] text-zinc-500 ml-auto">{stageIssues.length}</span>
+                      <span className="text-[10px] text-slate-500 ml-auto">{stageIssues.length}</span>
                     </div>
-                    <p className="text-[10px] text-zinc-600 mt-0.5">{cfg.subtitle}</p>
+                    <p className="text-[10px] text-slate-600 mt-0.5">{cfg.subtitle}</p>
                   </div>
                   <div className="p-3 space-y-2 min-h-[100px]">
                     {stageIssues.length === 0 ? (
-                      <p className="text-[10px] text-zinc-700 text-center py-4">No issues</p>
+                      <p className="text-[10px] text-slate-700 text-center py-4">No issues</p>
                     ) : (
                       stageIssues.map((issue) => (
                         <IssueCard key={issue.id} issue={issue} onUpdate={load} />

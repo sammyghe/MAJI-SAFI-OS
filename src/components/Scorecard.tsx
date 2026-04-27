@@ -1,6 +1,8 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import CountUp from 'react-countup';
 
 interface KPIRow {
   slug: string;
@@ -23,10 +25,10 @@ interface ScorecardProps {
 }
 
 const STATUS_CONFIG = {
-  on_track: { label: 'On Track', dot: 'bg-emerald-400', text: 'text-emerald-400', bar: 'bg-emerald-500' },
-  at_risk:  { label: 'At Risk',  dot: 'bg-amber-400',   text: 'text-amber-400',   bar: 'bg-amber-500' },
-  off_track:{ label: 'Off Track',dot: 'bg-red-400',     text: 'text-red-400',     bar: 'bg-red-500' },
-  no_data:  { label: 'No Data',  dot: 'bg-zinc-600',    text: 'text-zinc-500',    bar: 'bg-zinc-700' },
+  on_track: { label: 'On Track', dot: 'bg-emerald-500', text: 'text-emerald-600', bar: 'bg-emerald-500' },
+  at_risk:  { label: 'At Risk',  dot: 'bg-amber-500',   text: 'text-amber-600',   bar: 'bg-amber-500' },
+  off_track:{ label: 'Off Track',dot: 'bg-red-500',     text: 'text-red-600',     bar: 'bg-red-500' },
+  no_data:  { label: 'No Data',  dot: 'bg-zinc-400',   text: 'text-slate-500',   bar: 'bg-zinc-400' },
 };
 
 const DEPT_LABELS: Record<string, string> = {
@@ -54,6 +56,38 @@ function formatValue(value: number | null, format: string): string {
   return value.toLocaleString();
 }
 
+function AnimatedNumber({ value, format }: { value: number | null, format: string }) {
+  if (value === null) return <span>—</span>;
+  
+  const isCurrency = format === 'currency';
+  const isPercent = format === 'percent';
+  const isDays = format === 'days';
+
+  let displayValue = value;
+  let suffix = '';
+  const prefix = '';
+  
+  if (isCurrency) {
+    if (value >= 1_000_000) { displayValue = value / 1_000_000; suffix = 'M'; }
+    else if (value >= 1_000) { displayValue = value / 1_000; suffix = 'K'; }
+  } else if (isPercent) {
+    suffix = '%';
+  } else if (isDays) {
+    suffix = 'd';
+  }
+
+  return (
+    <CountUp
+      end={displayValue}
+      duration={1}
+      separator=","
+      decimals={isCurrency && displayValue < 1000 && displayValue % 1 !== 0 ? 1 : 0}
+      prefix={prefix}
+      suffix={suffix}
+    />
+  );
+}
+
 function ProgressBar({ actual, target, status, higherIsBetter }: {
   actual: number | null; target: number | null;
   status: KPIRow['status']; higherIsBetter: boolean;
@@ -64,7 +98,7 @@ function ProgressBar({ actual, target, status, higherIsBetter }: {
     : Math.min(100, Math.round(((target - actual + 1) / (target + 1)) * 100));
   const cfg = STATUS_CONFIG[status];
   return (
-    <div className="w-full bg-zinc-800 rounded-full h-1 mt-1.5">
+    <div className="w-full bg-slate-100 rounded-full h-1 mt-1.5">
       <div className={`h-1 rounded-full transition-all ${cfg.bar}`} style={{ width: `${pct}%` }} />
     </div>
   );
@@ -107,8 +141,8 @@ export default function Scorecard({ departments, period = 'today', showHeader = 
 
   if (loading) {
     return (
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-        <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest animate-pulse">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest animate-pulse">
           Loading scorecard…
         </p>
       </div>
@@ -120,8 +154,8 @@ export default function Scorecard({ departments, period = 'today', showHeader = 
       {showHeader && (
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-xs font-black text-white uppercase tracking-widest">Scorecard</h3>
-            <p className="text-[10px] text-zinc-500 mt-0.5">{date}</p>
+            <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest">Scorecard</h3>
+            <p className="text-[10px] text-slate-500 mt-0.5">{date}</p>
           </div>
           <div className="flex items-center gap-3 text-[10px] font-black uppercase">
             {onTrackCount > 0 && (
@@ -147,13 +181,19 @@ export default function Scorecard({ departments, period = 'today', showHeader = 
         const kpis = byDept[dept];
         if (!kpis || kpis.length === 0) return null;
         return (
-          <div key={dept} className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
-            <div className="px-4 py-2.5 border-b border-zinc-800 bg-zinc-950/50">
-              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">
+          <motion.div 
+            key={dept} 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm"
+          >
+            <div className="px-4 py-2.5 border-b border-zinc-100 bg-slate-50">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
                 {DEPT_LABELS[dept] ?? dept}
               </p>
             </div>
-            <div className={`divide-y divide-zinc-800 ${compact ? '' : ''}`}>
+            <div className={`divide-y divide-zinc-100 ${compact ? '' : ''}`}>
               {kpis.map((kpi) => {
                 const cfg = STATUS_CONFIG[kpi.status];
                 const pct = kpi.actual_value !== null && kpi.target_value && kpi.target_value > 0
@@ -161,20 +201,26 @@ export default function Scorecard({ departments, period = 'today', showHeader = 
                   : null;
 
                 return (
-                  <div key={kpi.slug} className="px-4 py-3">
+                  <motion.div 
+                    key={kpi.slug} 
+                    initial={{ opacity: 0, x: -5 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.2, delay: 0.05 }}
+                    className="px-4 py-3 hover:bg-slate-50 transition-colors"
+                  >
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${cfg.dot}`} />
-                        <p className="text-xs text-zinc-300 font-medium truncate">{kpi.name}</p>
+                        <p className="text-xs text-slate-600 font-medium truncate">{kpi.name}</p>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
                         {kpi.target_value !== null && (
-                          <span className="text-[10px] text-zinc-600">
+                          <span className="text-[10px] text-slate-400">
                             /{formatValue(kpi.target_value, kpi.display_format)}
                           </span>
                         )}
                         <span className={`text-sm font-black tabular-nums ${cfg.text}`}>
-                          {formatValue(kpi.actual_value, kpi.display_format)}
+                          <AnimatedNumber value={kpi.actual_value} format={kpi.display_format} />
                         </span>
                       </div>
                     </div>
@@ -186,17 +232,17 @@ export default function Scorecard({ departments, period = 'today', showHeader = 
                         higherIsBetter={kpi.higher_is_better}
                       />
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
-          </div>
+          </motion.div>
         );
       })}
 
       {deptKeys.length === 0 && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 text-center">
-          <p className="text-zinc-600 text-xs font-bold">No scorecard data yet — run compute first.</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 text-center shadow-sm">
+          <p className="text-slate-500 text-xs font-bold">No scorecard data yet — run compute first.</p>
         </div>
       )}
     </div>

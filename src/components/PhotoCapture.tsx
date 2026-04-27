@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useRef, useState } from 'react';
 import { Camera, X, Loader2 } from 'lucide-react';
@@ -42,7 +42,7 @@ export default function PhotoCapture({ userId, onUploaded, maxPhotos = 3 }: Phot
     <div className="flex items-center gap-2 flex-wrap">
       {urls.map((url, i) => (
         <div key={i} className="relative flex-shrink-0">
-          <img src={url} alt="" className="w-12 h-12 rounded object-cover border border-zinc-700" />
+          <img src={url} alt="" className="w-12 h-12 rounded object-cover border border-slate-200" />
           <button
             type="button"
             onClick={() => remove(url)}

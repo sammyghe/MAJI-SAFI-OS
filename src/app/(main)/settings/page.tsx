@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -221,14 +221,14 @@ export default function SettingsPage() {
             </button>
           </div>
           
-          <div className="bg-brand-navy/5 dark:bg-brand-navy/20 rounded-xl px-4 py-4 border border-zinc-200 dark:border-white/5 flex items-center justify-between">
+          <div className="bg-brand-navy/5 rounded-xl px-4 py-4 border border-slate-200 flex items-center justify-between">
             <div>
-              <p className="text-[10px] text-zinc-500 dark:text-brand-steel font-bold uppercase tracking-widest mb-1">Appearance</p>
-              <p className="text-xs text-zinc-600 dark:text-white/70">Toggle Light / Dark mode</p>
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">Appearance</p>
+              <p className="text-xs text-slate-600">Toggle Light / Dark mode</p>
             </div>
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 rounded-lg bg-zinc-200 dark:bg-brand-sky/20 text-zinc-600 dark:text-brand-sky hover:bg-zinc-300 dark:hover:bg-brand-sky/30 transition-colors"
+              className="p-2 rounded-lg bg-zinc-200 text-slate-600 hover:bg-zinc-300 transition-colors"
             >
               {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </button>

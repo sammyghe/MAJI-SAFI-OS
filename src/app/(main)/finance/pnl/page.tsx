@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/components/AuthProvider';
@@ -18,10 +18,10 @@ function Row({ label, value, sub, indent = 0, bold = false, color = 'text-white'
   label: string; value: number | null; sub?: string; indent?: number; bold?: boolean; color?: string;
 }) {
   return (
-    <div className={`flex items-center justify-between py-3 border-b border-zinc-800/50 last:border-0`} style={{ paddingLeft: `${16 + indent * 24}px` }}>
+    <div className={`flex items-center justify-between py-3 border-b border-slate-200/50 last:border-0`} style={{ paddingLeft: `${16 + indent * 24}px` }}>
       <div>
-        <p className={`text-sm ${bold ? 'font-black text-white' : 'font-medium text-zinc-300'}`}>{label}</p>
-        {sub && <p className="text-[10px] text-zinc-600">{sub}</p>}
+        <p className={`text-sm ${bold ? 'font-black text-white' : 'font-medium text-slate-300'}`}>{label}</p>
+        {sub && <p className="text-[10px] text-slate-600">{sub}</p>}
       </div>
       <p className={`text-sm font-black tabular-nums ${color} ${bold ? 'text-lg' : ''}`}>
         {value !== null ? formatMoney(value, { compact: true }) : '—'}
@@ -72,26 +72,26 @@ export default function PnLPage() {
           <h1 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2">
             <BarChart2 className="w-6 h-6 text-[#0077B6]" /> P&L Statement
           </h1>
-          <p className="text-zinc-500 text-xs uppercase tracking-widest mt-1">Cash basis · Every number sourced</p>
+          <p className="text-slate-500 text-xs uppercase tracking-widest mt-1">Cash basis · Every number sourced</p>
         </div>
         <div className="flex items-center gap-3">
-          <select value={period} onChange={e => setPeriod(e.target.value)} className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none">
+          <select value={period} onChange={e => setPeriod(e.target.value)} className="bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-xs text-white font-bold focus:outline-none">
             {periods.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
-          <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 border border-zinc-700 rounded-xl text-xs font-black text-zinc-400 hover:text-white">
+          <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-black text-slate-400 hover:text-white">
             <Download className="w-3.5 h-3.5" /> CSV
           </button>
         </div>
       </div>
 
       {loading ? (
-        <p className="text-zinc-600 text-xs font-black uppercase tracking-widest animate-pulse">Computing P&L…</p>
+        <p className="text-slate-600 text-xs font-black uppercase tracking-widest animate-pulse">Computing P&L…</p>
       ) : !pnl ? (
-        <p className="text-zinc-600 text-sm">No data for {period}.</p>
+        <p className="text-slate-600 text-sm">No data for {period}.</p>
       ) : (
         <div className="space-y-4">
           {/* Revenue */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
             <div className="px-4 py-2.5 bg-emerald-500/5 border-b border-emerald-500/10">
               <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em]">Revenue</p>
             </div>
@@ -100,7 +100,7 @@ export default function PnLPage() {
 
           {/* OpEx */}
           {Object.keys(pnl.opex.by_category).length > 0 && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
               <div className="px-4 py-2.5 bg-amber-500/5 border-b border-amber-500/10">
                 <p className="text-[10px] font-black text-amber-400 uppercase tracking-[0.2em]">Operating Expenses</p>
               </div>
@@ -112,29 +112,29 @@ export default function PnLPage() {
           )}
 
           {/* Net */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
             <Row label="Gross Profit" value={pnl.gross_profit} bold color={pnl.gross_profit >= 0 ? 'text-emerald-400' : 'text-red-400'} />
-            <div className="px-4 py-3 flex items-center justify-between border-t border-zinc-800">
-              <p className="text-sm text-zinc-500">Net Margin</p>
+            <div className="px-4 py-3 flex items-center justify-between border-t border-slate-200">
+              <p className="text-sm text-slate-500">Net Margin</p>
               <p className={`text-2xl font-black ${pnl.net_margin_pct >= 20 ? 'text-emerald-400' : pnl.net_margin_pct >= 0 ? 'text-amber-400' : 'text-red-400'}`}>{pnl.net_margin_pct}%</p>
             </div>
           </div>
 
           {/* Product breakdown */}
           {pnl.products.filter(p => p.price_ugx > 0).length > 0 && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
               <div className="px-4 py-2.5 bg-[#0077B6]/5 border-b border-[#0077B6]/10">
                 <p className="text-[10px] font-black text-[#7EC8E3] uppercase tracking-[0.2em]">Contribution Margin by Product (from unit economics)</p>
               </div>
               {pnl.products.filter(p => p.price_ugx > 0).map(p => (
-                <div key={p.id} className="flex items-center justify-between px-4 py-3 border-b border-zinc-800/50 last:border-0">
+                <div key={p.id} className="flex items-center justify-between px-4 py-3 border-b border-slate-200/50 last:border-0">
                   <div>
                     <p className="text-sm font-medium text-white">{p.name}</p>
-                    <p className="text-[10px] text-zinc-600">{p.sku} · Price {formatMoney(p.price_ugx, {compact:true})} · COGS {formatMoney(p.cogs_ugx, {compact:true})}</p>
+                    <p className="text-[10px] text-slate-600">{p.sku} · Price {formatMoney(p.price_ugx, {compact:true})} · COGS {formatMoney(p.cogs_ugx, {compact:true})}</p>
                   </div>
                   <div className="text-right">
                     <p className={`text-sm font-black tabular-nums ${p.margin_pct >= 30 ? 'text-emerald-400' : 'text-amber-400'}`}>{p.margin_pct}%</p>
-                    <p className="text-[10px] text-zinc-600">{formatMoney(p.contribution_margin, {compact:true})} / unit</p>
+                    <p className="text-[10px] text-slate-600">{formatMoney(p.contribution_margin, {compact:true})} / unit</p>
                   </div>
                 </div>
               ))}

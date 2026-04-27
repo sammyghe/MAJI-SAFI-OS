@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -120,7 +120,7 @@ export default function AdminActionRulesPage() {
       </div>
 
       {/* How it works */}
-      <div className="bg-zinc-900 border border-[#0077B6]/20 rounded-2xl p-5 mb-8">
+      <div className="bg-white border border-[#0077B6]/20 rounded-2xl p-5 mb-8">
         <p className="text-[10px] font-bold text-[#0077B6] uppercase tracking-[0.2em] mb-2">How Rules Work</p>
         <p className="text-xs text-slate-400 leading-relaxed">
           Rules are evaluated in priority order (lower = higher priority). The first rule whose conditions match the current context wins.
@@ -132,20 +132,20 @@ export default function AdminActionRulesPage() {
       </div>
 
       {/* Create form */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-8">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 mb-8">
         <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-4">New Rule</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-xs text-slate-500 mb-1">Department</label>
             <select value={form.department_slug} onChange={(e) => setForm({ ...form, department_slug: e.target.value })}
-              className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm rounded-xl px-3 py-2">
+              className="w-full bg-slate-100 border border-slate-200 text-white text-sm rounded-xl px-3 py-2">
               {DEPTS.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Role</label>
             <select value={form.role_slug} onChange={(e) => setForm({ ...form, role_slug: e.target.value })}
-              className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm rounded-xl px-3 py-2">
+              className="w-full bg-slate-100 border border-slate-200 text-white text-sm rounded-xl px-3 py-2">
               {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
           </div>
@@ -153,29 +153,29 @@ export default function AdminActionRulesPage() {
             <label className="block text-xs text-slate-500 mb-1">Rule Name</label>
             <input value={form.rule_name} onChange={(e) => setForm({ ...form, rule_name: e.target.value })}
               placeholder="e.g. pre-shift-checks"
-              className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm rounded-xl px-3 py-2" />
+              className="w-full bg-slate-100 border border-slate-200 text-white text-sm rounded-xl px-3 py-2" />
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Priority (lower = higher)</label>
             <input type="number" value={form.priority} onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) || 100 })}
-              className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm rounded-xl px-3 py-2" />
+              className="w-full bg-slate-100 border border-slate-200 text-white text-sm rounded-xl px-3 py-2" />
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Button Label</label>
             <input value={form.action_label} onChange={(e) => setForm({ ...form, action_label: e.target.value })}
               placeholder="e.g. Start Pre-Checks"
-              className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm rounded-xl px-3 py-2" />
+              className="w-full bg-slate-100 border border-slate-200 text-white text-sm rounded-xl px-3 py-2" />
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Button URL</label>
             <input value={form.action_url} onChange={(e) => setForm({ ...form, action_url: e.target.value })}
               placeholder="/production"
-              className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm rounded-xl px-3 py-2" />
+              className="w-full bg-slate-100 border border-slate-200 text-white text-sm rounded-xl px-3 py-2" />
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">Icon (lucide name)</label>
             <select value={form.action_icon} onChange={(e) => setForm({ ...form, action_icon: e.target.value })}
-              className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm rounded-xl px-3 py-2">
+              className="w-full bg-slate-100 border border-slate-200 text-white text-sm rounded-xl px-3 py-2">
               {ICONS.map((ic) => <option key={ic} value={ic}>{ic}</option>)}
             </select>
           </div>
@@ -187,7 +187,7 @@ export default function AdminActionRulesPage() {
             rows={5}
             value={form.conditions}
             onChange={(e) => { setForm({ ...form, conditions: e.target.value }); setConditionError(''); }}
-            className="w-full bg-zinc-800 border border-zinc-700 text-white text-xs font-mono rounded-xl px-3 py-2 focus:outline-none focus:border-[#0077B6] resize-none"
+            className="w-full bg-slate-100 border border-slate-200 text-white text-xs font-mono rounded-xl px-3 py-2 focus:outline-none focus:border-[#0077B6] resize-none"
           />
           {conditionError && <p className="text-red-400 text-xs mt-1">{conditionError}</p>}
         </div>
@@ -208,7 +208,7 @@ export default function AdminActionRulesPage() {
         ) : (
           <div className="space-y-3">
             {rules.map((rule) => (
-              <div key={rule.id} className={`bg-zinc-900 border rounded-xl p-4 ${rule.active ? 'border-zinc-800' : 'border-zinc-800 opacity-50'}`}>
+              <div key={rule.id} className={`bg-white border rounded-xl p-4 ${rule.active ? 'border-slate-200' : 'border-slate-200 opacity-50'}`}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <Zap className="w-4 h-4 text-[#0077B6] flex-shrink-0" />
@@ -227,7 +227,7 @@ export default function AdminActionRulesPage() {
                       <ChevronDown size={14} />
                     </button>
                     <button onClick={() => toggleActive(rule.id, rule.active)}
-                      className={`px-2 py-1 rounded text-xs font-bold ${rule.active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-800 text-slate-500'}`}>
+                      className={`px-2 py-1 rounded text-xs font-bold ${rule.active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-100 text-slate-500'}`}>
                       {rule.active ? 'On' : 'Off'}
                     </button>
                     <button onClick={() => deleteRule(rule.id)} className="p-1.5 text-slate-600 hover:text-red-400">

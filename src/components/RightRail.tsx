@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useRef } from 'react';
 import { useAuth } from '@/components/AuthProvider';
@@ -71,37 +71,37 @@ export default function RightRail({ entityType, entityId, label }: RightRailProp
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden">
+    <div className="flex flex-col h-full bg-white border border-slate-200 rounded-2xl overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-zinc-800 flex items-center gap-2 shrink-0">
-        <MessageSquare className="w-3.5 h-3.5 text-zinc-600" />
-        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+      <div className="px-4 py-3 border-b border-slate-200 flex items-center gap-2 shrink-0">
+        <MessageSquare className="w-3.5 h-3.5 text-slate-600" />
+        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
           {label ?? `${entityType} thread`}
         </p>
         {comments.length > 0 && (
-          <span className="ml-auto text-[10px] text-zinc-700">{comments.length}</span>
+          <span className="ml-auto text-[10px] text-slate-700">{comments.length}</span>
         )}
       </div>
 
       {/* Comments */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
         {comments.length === 0 ? (
-          <p className="text-zinc-700 text-[11px] text-center py-4">No comments yet. Be the first.</p>
+          <p className="text-slate-700 text-[11px] text-center py-4">No comments yet. Be the first.</p>
         ) : comments.map(c => (
           <div key={c.id} className="space-y-0.5">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-white">{c.author_name}</span>
-              {c.author_role && <span className="text-[9px] text-zinc-600 uppercase">{c.author_role}</span>}
-              <span className="text-[9px] text-zinc-700 ml-auto">{timeAgo(c.created_at)}</span>
+              {c.author_role && <span className="text-[9px] text-slate-600 uppercase">{c.author_role}</span>}
+              <span className="text-[9px] text-slate-700 ml-auto">{timeAgo(c.created_at)}</span>
             </div>
-            <p className="text-[11px] text-zinc-300 leading-relaxed whitespace-pre-wrap">{c.body}</p>
+            <p className="text-[11px] text-slate-300 leading-relaxed whitespace-pre-wrap">{c.body}</p>
           </div>
         ))}
         <div ref={bottomRef} />
       </div>
 
       {/* Input */}
-      <div className="px-3 py-3 border-t border-zinc-800 shrink-0">
+      <div className="px-3 py-3 border-t border-slate-200 shrink-0">
         <div className="flex items-end gap-2">
           <textarea
             value={draft}
@@ -109,7 +109,7 @@ export default function RightRail({ entityType, entityId, label }: RightRailProp
             onKeyDown={handleKey}
             placeholder="Add a comment… (Enter to send)"
             rows={2}
-            className="flex-1 bg-zinc-800 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#0077B6]/50 resize-none"
+            className="flex-1 bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-[#0077B6]/50 resize-none"
           />
           <button
             onClick={send}

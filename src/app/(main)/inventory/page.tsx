@@ -451,11 +451,11 @@ export default function InventoryPage() {
             </p>
             <form onSubmit={stockTab === 'receive' ? handleReceiveStock : handleStockCount} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Item</label>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Item</label>
                 <select
                   value={selectedItemId}
                   onChange={(e) => setSelectedItemId(e.target.value)}
-                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                  className="w-full bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 py-3 px-4 rounded-xl focus:border-[#0077B6] focus:ring-4 focus:ring-[#0077B6]/15 outline-none transition-all text-sm font-medium"
                 >
                   <option value="">Select item...</option>
                   {stock.map((s) => (
@@ -466,7 +466,7 @@ export default function InventoryPage() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase text-outline font-label tracking-widest">
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">
                   {stockTab === 'receive' ? 'Quantity Received' : 'Actual Count'}
                   {selectedItem ? ` (${selectedItem.unit})` : ''}
                 </label>
@@ -476,7 +476,7 @@ export default function InventoryPage() {
                   value={stockQty}
                   onChange={(e) => setStockQty(e.target.value)}
                   placeholder={stockTab === 'receive' ? 'e.g., 200' : 'e.g., 150'}
-                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                  className="w-full bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 py-3 px-4 rounded-xl focus:border-[#0077B6] focus:ring-4 focus:ring-[#0077B6]/15 outline-none transition-all text-sm font-medium"
                 />
               </div>
               {/* Preview */}
@@ -491,13 +491,13 @@ export default function InventoryPage() {
                 </div>
               )}
               <div className="space-y-1">
-                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Notes (optional)</label>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Notes (optional)</label>
                 <input
                   type="text"
                   value={stockNotes}
                   onChange={(e) => setStockNotes(e.target.value)}
                   placeholder="e.g., Delivery from supplier"
-                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                  className="w-full bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 py-3 px-4 rounded-xl focus:border-[#0077B6] focus:ring-4 focus:ring-[#0077B6]/15 outline-none transition-all text-sm font-medium"
                 />
               </div>
               <button
@@ -549,36 +549,36 @@ export default function InventoryPage() {
 
       {/* Edit Modal */}
       {canEdit && editItem && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-surface-container-low border border-outline-variant/20 p-8 max-w-sm w-full">
-            <h2 className="text-xl font-bold font-headline mb-1">{editItem.item_name}</h2>
-            <p className="text-[10px] text-outline/50 font-label mb-6">[source: inventory_items row {editItem.id?.slice(0, 8)}]</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(15,28,46,0.45)", backdropFilter: "blur(6px)" }}>
+          <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full">
+            <h2 className="text-xl font-black text-slate-900 mb-1">{editItem.item_name}</h2>
+            <p className="text-[10px] text-slate-400 mb-6">[source: inventory_items row {editItem.id?.slice(0, 8)}]</p>
             <form onSubmit={handleEditSave} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Current Quantity ({editItem.unit})</label>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Current Quantity ({editItem.unit})</label>
                 <input
                   type="number"
                   value={editForm.quantity}
                   onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
-                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                  className="w-full bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 py-3 px-4 rounded-xl focus:border-[#0077B6] focus:ring-4 focus:ring-[#0077B6]/15 outline-none transition-all text-sm font-medium"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Reorder Threshold ({editItem.unit})</label>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1.5">Reorder Threshold ({editItem.unit})</label>
                 <input
                   type="number"
                   value={editForm.reorder_threshold}
                   onChange={(e) => setEditForm({ ...editForm, reorder_threshold: e.target.value })}
-                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                  className="w-full bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 py-3 px-4 rounded-xl focus:border-[#0077B6] focus:ring-4 focus:ring-[#0077B6]/15 outline-none transition-all text-sm font-medium"
                 />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setEditItem(null)}
-                  className="flex-1 py-2 bg-surface-container-high text-on-surface text-xs font-bold font-label hover:bg-surface-container-highest">
+                  className="flex-1 py-3 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-200 transition-all">
                   Cancel
                 </button>
                 <button type="submit" disabled={editSaving}
-                  className="flex-1 py-2 bg-primary-container text-on-primary-container text-xs font-bold font-label hover:brightness-110 disabled:opacity-50">
+                  className="flex-1 py-3 rounded-xl text-white text-xs font-bold disabled:opacity-50 transition-all" style={{ background: "linear-gradient(135deg, #0077B6, #0096C7)" }}>
                   {editSaving ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>

@@ -370,35 +370,35 @@ export default function ProductionPage() {
             <span className="w-12 h-[1px] bg-slate-200" />
             <h3 className="font-headline text-xl font-bold">Log New Batch</h3>
           </div>
-          <form onSubmit={handleSubmit} className="glass-card-strong p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5">
             <div className="space-y-1">
-              <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Product Type</label>
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Product Type</label>
               <select
                 value={formData.product_type}
                 onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
-                className="input w-full"
+                className="w-full bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 py-3 px-4 rounded-xl focus:border-[#0077B6] focus:ring-4 focus:ring-[#0077B6]/15 outline-none transition-all text-sm font-medium"
               >
                 {PRODUCT_TYPES.map((t) => <option key={t}>{t}</option>)}
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Jar Count</label>
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Jar Count</label>
               <input
                 type="number"
                 value={formData.jar_count}
                 onChange={(e) => setFormData({ ...formData, jar_count: e.target.value })}
                 placeholder="e.g., 60"
-                className="input w-full"
+                className="w-full bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 py-3 px-4 rounded-xl focus:border-[#0077B6] focus:ring-4 focus:ring-[#0077B6]/15 outline-none transition-all text-sm font-medium"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Notes</label>
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Notes</label>
               <div className="flex gap-2 items-start">
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   rows={2}
-                  className="input flex-1 resize-none"
+                  className="flex-1 bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 py-3 px-4 rounded-xl focus:border-[#0077B6] focus:ring-4 focus:ring-[#0077B6]/15 outline-none transition-all text-sm font-medium resize-none"
                 />
                 <VoiceInputButton
                   currentValue={formData.notes}
@@ -407,7 +407,7 @@ export default function ProductionPage() {
               </div>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Photos</label>
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Photos</label>
               <PhotoCapture userId={user?.id ?? 'anon'} onUploaded={setAttachments} />
             </div>
             {error && (
@@ -449,28 +449,28 @@ export default function ProductionPage() {
 
       {/* Edit Batch Modal — founders/assigned only */}
       {canEdit && editBatch && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="modal-glass p-8 max-w-sm w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(15,28,46,0.45)", backdropFilter: "blur(6px)" }}>
+          <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full">
             <h2 className="text-xl font-bold mb-1">Edit Batch</h2>
             <p className="text-[10px] text-slate-400/70 mb-6">
               [source: production_logs row {editBatch.id?.slice(0, 8)}] · {editBatch.batch_id}
             </p>
             <form onSubmit={handleEditSave} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Jar Count</label>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Jar Count</label>
                 <input
                   type="number"
                   value={editForm.jar_count}
                   onChange={(e) => setEditForm({ ...editForm, jar_count: e.target.value })}
-                  className="input w-full"
+                  className="w-full bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 py-3 px-4 rounded-xl focus:border-[#0077B6] focus:ring-4 focus:ring-[#0077B6]/15 outline-none transition-all text-sm font-medium"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Status</label>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</label>
                 <select
                   value={editForm.status}
                   onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                  className="input w-full"
+                  className="w-full bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 py-3 px-4 rounded-xl focus:border-[#0077B6] focus:ring-4 focus:ring-[#0077B6]/15 outline-none transition-all text-sm font-medium"
                 >
                   <option value="created">Created</option>
                   <option value="passed">QC Passed</option>
@@ -479,17 +479,17 @@ export default function ProductionPage() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Notes</label>
+                <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Notes</label>
                 <textarea
                   value={editForm.notes}
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                   rows={2}
-                  className="input w-full resize-none"
+                  className="w-full bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 py-3 px-4 rounded-xl focus:border-[#0077B6] focus:ring-4 focus:ring-[#0077B6]/15 outline-none transition-all text-sm font-medium resize-none"
                 />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setEditBatch(null)}
-                  className="flex-1 py-2 glass-card text-slate-700 text-xs font-bold hover:bg-white/80 rounded-xl transition-all">
+                  className="flex-1 py-3 bg-slate-100 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-200 transition-all">
                   Cancel
                 </button>
                 <button type="submit" disabled={editSaving}

@@ -349,7 +349,7 @@ export default function QualityPage() {
             <span className="w-12 h-[1px] bg-slate-200" />
             <h3 className="font-headline text-xl font-bold">Log Water Test</h3>
           </div>
-          <form onSubmit={handleSubmit} className="glass-card-strong p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5">
             <div className="space-y-1">
               <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Batch ID</label>
               <input

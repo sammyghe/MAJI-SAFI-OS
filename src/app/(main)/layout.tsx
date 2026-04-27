@@ -9,6 +9,7 @@ import AddAnythingButton from '@/components/AddAnythingButton';
 import AskSAFI from '@/components/AskSAFI';
 import SimulationBanner from '@/components/SimulationBanner';
 import GalaxyFloatingButton from '@/components/GalaxyFloatingButton';
+import MobileNav from '@/components/MobileNav';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -63,7 +64,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       )}
 
-      <main className={`pt-16 bg-transparent min-h-screen ${isLargeDensity ? '' : 'md:ml-[var(--sidebar-w,240px)]'}`}>
+      <main className={`pt-16 bg-transparent min-h-screen pb-20 md:pb-0 ${isLargeDensity ? '' : 'md:ml-[var(--sidebar-w,240px)]'}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}
@@ -77,6 +78,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         </AnimatePresence>
       </main>
 
+      <MobileNav />
       <AddAnythingButton />
       <AskSAFI />
       <GalaxyFloatingButton />

@@ -12,13 +12,13 @@ const ROLE_ACCENT: Record<string, string> = {
 };
 
 const EMPTY_CTA: Record<string, string> = {
-  'Jars Today':     '↑ Log first batch',
-  'Revenue Today':  '↑ Record first sale',
-  'Team Present':   '↑ Start a shift',
-  'QC Pass Rate':   '↑ Run first test',
-  'Low Stock Items':'All good',
-  'Open Issues':    'All clear',
-  'Machine Status': 'Online',
+  'Jars Today':      '↑ Log first batch',
+  'Revenue Today':   '↑ Record first sale',
+  'Team Present':    '↑ Start a shift',
+  'QC Pass Rate':    '↑ Run first test',
+  'Low Stock Items': 'All good',
+  'Open Issues':     'All clear',
+  'Machine Status':  'Online',
 };
 
 export default function RoleKpiCard({
@@ -38,23 +38,22 @@ export default function RoleKpiCard({
 
   return (
     <motion.div
-      whileHover={{ y: -2, boxShadow: `0 12px 32px rgba(0,0,0,0.10)` }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-      className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm cursor-default min-h-[160px] flex flex-col justify-between"
-      style={{ borderLeft: `4px solid ${accent}` }}
+      whileHover={{ y: -3, scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+      className="glass-card p-6 cursor-default min-h-[160px] flex flex-col justify-between"
     >
       {/* Top row */}
       <div className="flex items-start justify-between">
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center"
-          style={{ background: `${accent}18` }}
+          className="w-12 h-12 rounded-2xl flex items-center justify-center"
+          style={{ background: `linear-gradient(135deg, ${accent}30, ${accent}10)`, backdropFilter: 'blur(8px)' }}
         >
           <Icon className="w-6 h-6" style={{ color: accent }} />
         </div>
         <div className="flex items-center gap-1.5">
           {trend && (
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-              trend.startsWith('+') ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'
+            <span className={`text-xs font-bold px-2.5 py-1 rounded-full backdrop-blur-sm ${
+              trend.startsWith('+') ? 'bg-emerald-100/70 text-emerald-700' : 'bg-red-100/70 text-red-600'
             }`}>
               {trend}
             </span>
@@ -67,14 +66,18 @@ export default function RoleKpiCard({
       <div className="mt-4">
         {isEmpty && cta ? (
           <div>
-            <p className="text-4xl font-black text-slate-200 tabular-nums leading-none">—</p>
+            <p className="text-4xl font-black text-slate-300 tabular-nums leading-none">—</p>
             <p className="text-xs font-semibold mt-1" style={{ color: accent }}>{cta}</p>
           </div>
         ) : (
-          <p className="text-4xl font-black text-slate-900 tabular-nums leading-none">{value}</p>
+          <p className="text-4xl font-black text-slate-900 tabular-nums leading-none tracking-tight">{value}</p>
         )}
-        <p className="text-sm text-slate-500 mt-2 font-medium">{label}</p>
-        {context && <p className="text-xs text-slate-400 mt-0.5">{context}</p>}
+        <p className="text-sm text-slate-600 mt-2 font-medium">{label}</p>
+        {context && (
+          <div className="mt-3 pt-3 border-t border-slate-200/60">
+            <p className="text-xs text-slate-400">{context}</p>
+          </div>
+        )}
       </div>
     </motion.div>
   );

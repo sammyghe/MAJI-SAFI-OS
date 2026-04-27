@@ -87,7 +87,7 @@ export default function RootLayout({
           }
         ` }} />
       </head>
-      <body className="bg-[#FAFBFC] text-[#0F172A] relative">
+      <body className="text-[#0F172A] relative" style={{ background: 'linear-gradient(135deg, #DBE7F2 0%, #E8F0F7 50%, #F0F5FA 100%)', backgroundAttachment: 'fixed', minHeight: '100vh' }}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
           <AuthProvider>
             <ThemeSync />

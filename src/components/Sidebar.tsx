@@ -48,6 +48,15 @@ const moreItems = [
   { slug: 'settings/security',         name: 'Security',      icon: Lock,         founderOnly: true },
 ];
 
+const ROLE_COLORS: Record<string, string> = {
+  founder:    '#FFD700',
+  manager:    '#0077B6',
+  operator:   '#10B981',
+  delivery:   '#6366F1',
+  marketing:  '#EC4899',
+  compliance: '#F59E0B',
+};
+
 interface SidebarProps { isOpen: boolean; onClose: () => void; }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
@@ -69,7 +78,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     }
   }, []);
 
-  const handleResizeStop = (_e: any, _direction: string, _ref: any, delta: any) => {
+  const handleResizeStop = (_e: unknown, _direction: string, _ref: unknown, delta: { width: number }) => {
     const newWidth = width + delta.width;
     setWidth(newWidth);
     localStorage.setItem('maji-safi.sidebarWidth', newWidth.toString());
@@ -101,6 +110,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const showHome = hasRoleFilter && userSidebarItems.includes('home');
   const homePath = user?.landing_page ?? '/home';
+  const roleColor = ROLE_COLORS[user?.role ?? ''] ?? '#0077B6';
+  const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() ?? '?';
 
   const navItem = (slug: string, label: string, Icon: React.ComponentType<{ className?: string }>) => {
     const active = isActive(slug);
@@ -109,10 +120,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         key={slug}
         href={getDepartmentPath(slug)}
         onClick={onClose}
-        className={`flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-all duration-150 rounded-lg mx-2 ${
+        className={`flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium transition-all duration-150 rounded-xl mx-2 ${
           active
-            ? 'bg-[#0077B6]/8 text-[#0077B6] font-semibold border-l-[3px] border-[#0077B6] pl-[13px] rounded-l-none'
-            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            ? 'bg-[#0077B6] text-white font-semibold shadow-sm'
+            : 'text-slate-600 hover:text-[#0077B6] hover:bg-white/50'
         }`}
       >
         <Icon className="w-[15px] h-[15px] flex-shrink-0" />
@@ -134,9 +145,39 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         onResizeStop={handleResizeStop}
         style={{ height: '100%' }}
       >
-        <nav className="h-full bg-white border-r border-slate-200 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto py-5 space-y-0.5">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-6 mb-3">
+        <nav
+          className="h-full flex flex-col overflow-hidden"
+          style={{
+            background: 'rgba(255,255,255,0.72)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            borderRight: '1px solid rgba(255,255,255,0.5)',
+            boxShadow: '4px 0 24px rgba(15,40,69,0.08)',
+          }}
+        >
+          {/* User profile chip */}
+          <div className="px-4 pt-5 pb-4 border-b border-slate-200/50">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black flex-shrink-0"
+                style={{ background: `linear-gradient(135deg, ${roleColor}40, ${roleColor}20)`, color: roleColor }}
+              >
+                {initials}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-slate-800 truncate">{user?.name ?? 'User'}</p>
+                <span
+                  className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                  style={{ background: `${roleColor}18`, color: roleColor }}
+                >
+                  {user?.role ?? 'staff'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto py-3 space-y-0.5">
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-5 mb-2 mt-1">
               Navigation
             </p>
 
@@ -144,10 +185,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               <Link
                 href={homePath}
                 onClick={onClose}
-                className={`flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-all duration-150 rounded-lg mx-2 ${
+                className={`flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium transition-all duration-150 rounded-xl mx-2 ${
                   pathname === homePath || pathname.startsWith('/home')
-                    ? 'bg-[#0077B6]/8 text-[#0077B6] font-semibold border-l-[3px] border-[#0077B6] pl-[13px] rounded-l-none'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    ? 'bg-[#0077B6] text-white font-semibold shadow-sm'
+                    : 'text-slate-600 hover:text-[#0077B6] hover:bg-white/50'
                 }`}
               >
                 <Home className="w-[15px] h-[15px]" />
@@ -163,7 +204,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 target="_blank"
                 rel="noreferrer"
                 onClick={onClose}
-                className="flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all rounded-lg mx-2"
+                className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-slate-600 hover:text-[#0077B6] hover:bg-white/50 transition-all rounded-xl mx-2"
               >
                 <BarChart2 className="w-[15px] h-[15px]" />
                 <span>Investor View</span>
@@ -172,10 +213,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </div>
 
           {/* More section */}
-          <div className="border-t border-slate-200 px-2 py-3 flex-shrink-0">
+          <div className="border-t border-slate-200/50 px-2 py-3 flex-shrink-0">
             <button
               onClick={() => setIsMoreOpen(!isMoreOpen)}
-              className="flex items-center gap-2.5 w-full px-4 py-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors text-xs font-semibold uppercase tracking-widest rounded-lg"
+              className="flex items-center gap-2.5 w-full px-3 py-2 text-slate-500 hover:text-slate-700 hover:bg-white/40 transition-colors text-xs font-semibold uppercase tracking-widest rounded-xl"
             >
               <span className="flex-1 text-left">More</span>
               {isMoreOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}

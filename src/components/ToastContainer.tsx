@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, Bell, CheckCircle, AlertTriangle, Info, XCircle } from 'lucide-react';
+import { X, CheckCircle, AlertTriangle, Info, XCircle } from 'lucide-react';
 
 export type Toast = {
   id: string;
@@ -11,48 +11,15 @@ export type Toast = {
 
 let _addToast: ((toast: Omit<Toast, 'id'>) => void) | null = null;
 
-// Imperative API for use outside React tree (e.g. from supabase callbacks)
 export function showToast(toast: Omit<Toast, 'id'>) {
   _addToast?.(toast);
 }
 
 const TOAST_CONFIG = {
-  info: {
-    border: 'border-cyan-500/40',
-    bg: 'bg-slate-900/95',
-    text: 'text-cyan-100',
-    bar: 'bg-cyan-500',
-    glow: 'shadow-[0_0_20px_rgba(6,182,212,0.15)]',
-    Icon: Info,
-    iconClass: 'text-cyan-400',
-  },
-  success: {
-    border: 'border-emerald-500/40',
-    bg: 'bg-slate-900/95',
-    text: 'text-emerald-100',
-    bar: 'bg-emerald-500',
-    glow: 'shadow-[0_0_20px_rgba(16,185,129,0.15)]',
-    Icon: CheckCircle,
-    iconClass: 'text-emerald-400',
-  },
-  warning: {
-    border: 'border-orange-500/40',
-    bg: 'bg-slate-900/95',
-    text: 'text-orange-100',
-    bar: 'bg-orange-500',
-    glow: 'shadow-[0_0_20px_rgba(249,115,22,0.2)]',
-    Icon: AlertTriangle,
-    iconClass: 'text-orange-400',
-  },
-  error: {
-    border: 'border-red-500/40',
-    bg: 'bg-slate-900/95',
-    text: 'text-red-100',
-    bar: 'bg-red-500',
-    glow: 'shadow-[0_0_20px_rgba(239,68,68,0.2)]',
-    Icon: XCircle,
-    iconClass: 'text-red-400',
-  },
+  info:    { bar: '#0077B6', icon: Info,          iconColor: '#0077B6', label: 'bg-blue-50   text-blue-700'   },
+  success: { bar: '#10B981', icon: CheckCircle,   iconColor: '#10B981', label: 'bg-emerald-50 text-emerald-700' },
+  warning: { bar: '#F59E0B', icon: AlertTriangle, iconColor: '#F59E0B', label: 'bg-amber-50   text-amber-700'  },
+  error:   { bar: '#EF4444', icon: XCircle,       iconColor: '#EF4444', label: 'bg-red-50     text-red-700'    },
 };
 
 export default function ToastContainer() {
@@ -79,42 +46,36 @@ export default function ToastContainer() {
     >
       {toasts.map(t => {
         const cfg = TOAST_CONFIG[t.type];
+        const Icon = cfg.icon;
         return (
           <div
             key={t.id}
             role="alert"
-            className={`
-              relative overflow-hidden flex items-start gap-3 p-4 rounded-2xl border 
-              backdrop-blur-xl pointer-events-auto
-              animate-in slide-in-from-right-8 fade-in duration-300
-              ${cfg.bg} ${cfg.border} ${cfg.glow}
-            `}
+            className="toast relative overflow-hidden flex items-start gap-3 p-4 pointer-events-auto"
+            style={{ animation: 'slideInDown 0.3s ease-out' }}
           >
-            {/* Coloured left bar */}
-            <div className={`absolute left-0 top-0 bottom-0 w-1 ${cfg.bar} rounded-l-2xl`} />
+            <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl" style={{ background: cfg.bar }} />
 
-            {/* Icon */}
-            <cfg.Icon className={`w-5 h-5 mt-0.5 flex-shrink-0 ${cfg.iconClass}`} />
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${cfg.bar}15` }}>
+              <Icon className="w-4 h-4" style={{ color: cfg.iconColor }} />
+            </div>
 
-            {/* Message */}
-            <p className={`text-sm font-medium flex-1 leading-snug ${cfg.text}`}>
+            <p className="text-sm font-medium flex-1 leading-snug text-slate-800 mt-1">
               {t.message}
             </p>
 
-            {/* Dismiss */}
             <button
               onClick={() => remove(t.id)}
-              className="opacity-40 hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5"
+              className="opacity-40 hover:opacity-80 transition-opacity flex-shrink-0 mt-1"
               aria-label="Dismiss notification"
             >
-              <X className="w-4 h-4 text-white" />
+              <X className="w-4 h-4 text-slate-600" />
             </button>
 
-            {/* Auto-dismiss progress bar */}
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white/5 overflow-hidden rounded-b-2xl">
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 overflow-hidden rounded-b-2xl" style={{ background: 'rgba(0,0,0,0.05)' }}>
               <div
-                className={`h-full ${cfg.bar} opacity-50`}
-                style={{ animation: 'toast-shrink 5s linear forwards' }}
+                className="h-full"
+                style={{ background: cfg.bar, opacity: 0.4, animation: 'toast-shrink 5s linear forwards' }}
               />
             </div>
           </div>

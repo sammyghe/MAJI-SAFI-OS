@@ -185,8 +185,8 @@ export default function ProductionPage() {
     <AchievementToast achievement={newAchievement} onDismiss={() => setNewAchievement(null)} />
     <div className="px-4 md:px-8 py-10 max-w-7xl mx-auto">
       {isReadOnly && (
-        <div className="mb-6 px-4 py-2.5 bg-surface-container border-l-2 border-outline/30 flex items-center gap-2">
-          <span className="text-[10px] font-label text-outline uppercase tracking-widest">View only — you are not assigned to this department</span>
+        <div className="mb-6 px-4 py-2.5 bg-slate-50 border-l-2 border-outline/30 flex items-center gap-2">
+          <span className="text-[10px] text-slate-400 uppercase tracking-widest">View only — you are not assigned to this department</span>
         </div>
       )}
       {/* Header */}
@@ -195,11 +195,11 @@ export default function ProductionPage() {
           <h2 className="font-headline text-4xl font-extrabold tracking-tight mb-2">
             Operations – Production &amp; Quality
           </h2>
-          <p className="text-slate-400 font-label text-sm">Plant Authority Ledger // Location: Buziga</p>
+          <p className="text-slate-400 text-sm">Plant Authority Ledger // Location: Buziga</p>
         </div>
         <button
           onClick={() => (document.getElementById('log-batch-form') as HTMLElement)?.scrollIntoView({ behavior: 'smooth' })}
-          className="bg-primary-container text-on-primary-container px-6 py-2.5 font-label text-sm font-semibold tracking-wide hover:brightness-110 flex items-center gap-2 transition-all"
+          className="rounded-xl text-white px-6 py-2.5 text-sm font-semibold tracking-wide hover:brightness-110 flex items-center gap-2 transition-all"
         >
           <span className="material-symbols-outlined text-lg">science</span>
           Log New Batch
@@ -219,13 +219,13 @@ export default function ProductionPage() {
 
       {/* Halted alert */}
       {haltedCount > 0 && (
-        <div className="mb-8 p-4 bg-tertiary-container/10 border-l-2 border-tertiary-container flex items-start gap-3">
-          <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">warning</span>
+        <div className="mb-8 p-4 bg-red-50 border-l-2 border-red-400 flex items-start gap-3">
+          <span className="material-symbols-outlined text-amber-600 text-sm mt-0.5">warning</span>
           <div>
-            <p className="text-tertiary font-body text-[10px] font-bold uppercase tracking-widest">
+            <p className="text-amber-600 font-body text-[10px] font-bold uppercase tracking-widest">
               {haltedCount} Batch{haltedCount > 1 ? 'es' : ''} Halted — QC Failure
             </p>
-            <p className="text-sm font-label text-on-surface-variant mt-1">
+            <p className="text-sm text-slate-500 mt-1">
               Halted batches cannot be dispatched. QC must sign off before resuming.
             </p>
           </div>
@@ -239,7 +239,7 @@ export default function ProductionPage() {
             label: "Today's Jars Filled",
             value: jarsToday.toString(),
             suffix: '',
-            color: jarsToday >= 500 ? 'text-secondary-fixed' : 'text-primary',
+            color: jarsToday >= 500 ? 'text-emerald-700-fixed' : 'text-[#0077B6]',
             ref: 'production_logs, buziga',
             icon: 'water_full',
           },
@@ -247,7 +247,7 @@ export default function ProductionPage() {
             label: 'Batches Logged',
             value: batches.length.toString(),
             suffix: '',
-            color: 'text-on-primary-container',
+            color: 'text-white',
             ref: 'production_logs, buziga',
             icon: 'inventory_2',
           },
@@ -255,12 +255,12 @@ export default function ProductionPage() {
             label: 'Halted Batches',
             value: haltedCount.toString(),
             suffix: '',
-            color: haltedCount > 0 ? 'text-tertiary' : 'text-secondary',
+            color: haltedCount > 0 ? 'text-amber-600' : 'text-emerald-700',
             ref: 'production_logs, buziga',
             icon: 'block',
           },
         ].map((m) => (
-          <div key={m.label} className="bg-surface-container-low ghost-border p-8 relative overflow-hidden">
+          <div key={m.label} className="glass-card p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
               <span className="material-symbols-outlined text-6xl">{m.icon}</span>
             </div>
@@ -269,46 +269,46 @@ export default function ProductionPage() {
               <span className={`font-body text-5xl font-bold ${m.color}`}>{m.value}</span>
               {m.suffix && <span className={`font-body text-xl ${m.color}`}>{m.suffix}</span>}
             </div>
-            <p className="mt-4 font-label text-xs text-outline/50">[source: {m.ref}]</p>
+            <p className="mt-4 text-xs text-slate-400/70">[source: {m.ref}]</p>
           </div>
         ))}
       </div>
 
       {/* Production progress bar */}
-      <div className="mb-12 bg-surface-container-low ghost-border p-6">
-        <div className="flex justify-between text-[10px] font-label text-outline mb-2">
+      <div className="mb-12 glass-card p-6">
+        <div className="flex justify-between text-[10px] text-slate-400 mb-2">
           <span>Daily progress vs 500-jar target</span>
           <span>{jarsToday} / 500</span>
         </div>
-        <div className="w-full bg-surface-container-highest h-2 overflow-hidden">
+        <div className="w-full bg-slate-200 h-2 overflow-hidden">
           <div
             className={`h-full transition-all ${jarsToday >= 500 ? 'bg-secondary' : 'bg-primary'}`}
             style={{ width: `${Math.min((jarsToday / 500) * 100, 100)}%` }}
           />
         </div>
-        <p className="text-[10px] font-label text-outline/40 mt-2">[source: production_logs, buziga]</p>
+        <p className="text-[10px] text-slate-400/60 mt-2">[source: production_logs, buziga]</p>
       </div>
 
       {/* Batch Ledger Table */}
       <div className="mb-12">
         <div className="flex items-center gap-4 mb-6">
-          <span className="w-12 h-[1px] bg-primary-container" />
+          <span className="w-12 h-[1px] bg-[#0077B6]" />
           <h3 className="font-headline text-xl font-bold">Today&apos;s Batch Ledger</h3>
         </div>
-        <div className="bg-surface-container-lowest ghost-border overflow-hidden">
+        <div className="bg-white/60 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-[#262a31]/30">
                   {['Batch ID', 'Product', 'Jars', 'Operator', 'Status', ''].map((h) => (
-                    <th key={h} className="px-6 py-4 font-label text-[11px] uppercase tracking-widest text-slate-500">{h}</th>
+                    <th key={h} className="px-6 py-4 text-[11px] uppercase tracking-widest text-slate-500">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="font-body">
                 {batches.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-outline/50 font-label text-sm">
+                    <td colSpan={6} className="px-6 py-8 text-center text-slate-400/70 text-sm">
                       No batches logged yet today
                     </td>
                   </tr>
@@ -320,39 +320,39 @@ export default function ProductionPage() {
                       key={b.id}
                       className={`border-b border-[#262a31]/10 transition-colors cursor-pointer ${
                         isHalted
-                          ? 'bg-tertiary-container/10 border-l-2 border-tertiary-container hover:bg-tertiary-container/20'
+                          ? 'bg-red-50 border-l-2 border-red-400 hover:bg-amber-100/20'
                           : 'hover:bg-[#262a31]/20'
                       }`}
                       onClick={() => openEdit(b)}
                     >
                       <td className="px-6 py-4 text-sm font-semibold">
                         {b.batch_id}
-                        <span className="ml-2 text-[10px] font-label text-outline/50">[Ref: {b.id?.slice(0, 6)}]</span>
+                        <span className="ml-2 text-[10px] text-slate-400/70">[Ref: {b.id?.slice(0, 6)}]</span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-on-surface-variant font-label">{b.product_type}</td>
+                      <td className="px-6 py-4 text-sm text-slate-500">{b.product_type}</td>
                       <td className="px-6 py-4 text-sm">{b.jar_count}</td>
-                      <td className="px-6 py-4 text-sm text-on-surface-variant font-label">{b.operator_name}</td>
+                      <td className="px-6 py-4 text-sm text-slate-500">{b.operator_name}</td>
                       <td className="px-6 py-4">
                         {isHalted ? (
-                          <span className="bg-tertiary-container text-on-tertiary-container text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
+                          <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-0.5 rounded-lg font-bold tracking-tighter">
                             HALTED
                           </span>
                         ) : isPassed ? (
-                          <span className="bg-secondary-container text-secondary text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
+                          <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-lg font-bold tracking-tighter">
                             QC PASSED
                           </span>
                         ) : b.status === 'dispatched' ? (
-                          <span className="bg-primary-container text-on-primary-container text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
+                          <span className="rounded-xl text-white text-[10px] px-2 py-0.5 rounded-lg font-bold tracking-tighter">
                             DISPATCHED
                           </span>
                         ) : (
-                          <span className="bg-surface-container text-on-surface-variant text-[10px] px-2 py-0.5 rounded-none font-bold font-label tracking-tighter">
+                          <span className="bg-slate-50 text-slate-500 text-[10px] px-2 py-0.5 rounded-lg font-bold tracking-tighter">
                             ACTIVE
                           </span>
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-xs font-label text-primary">Edit</span>
+                        <span className="text-xs text-[#0077B6]">Edit</span>
                       </td>
                     </tr>
                   );
@@ -367,38 +367,38 @@ export default function ProductionPage() {
       {canEdit && <div id="log-batch-form" className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div>
           <div className="flex items-center gap-4 mb-6">
-            <span className="w-12 h-[1px] bg-outline-variant" />
+            <span className="w-12 h-[1px] bg-slate-200" />
             <h3 className="font-headline text-xl font-bold">Log New Batch</h3>
           </div>
-          <form onSubmit={handleSubmit} className="bg-surface-container-low ghost-border p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="glass-card-strong p-6 space-y-5">
             <div className="space-y-1">
-              <label className="text-[10px] uppercase text-outline font-label tracking-widest">Product Type</label>
+              <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Product Type</label>
               <select
                 value={formData.product_type}
                 onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
-                className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                className="input w-full"
               >
                 {PRODUCT_TYPES.map((t) => <option key={t}>{t}</option>)}
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] uppercase text-outline font-label tracking-widest">Jar Count</label>
+              <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Jar Count</label>
               <input
                 type="number"
                 value={formData.jar_count}
                 onChange={(e) => setFormData({ ...formData, jar_count: e.target.value })}
                 placeholder="e.g., 60"
-                className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                className="input w-full"
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] uppercase text-outline font-label tracking-widest">Notes</label>
+              <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Notes</label>
               <div className="flex gap-2 items-start">
                 <textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   rows={2}
-                  className="flex-1 bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface resize-none"
+                  className="input flex-1 resize-none"
                 />
                 <VoiceInputButton
                   currentValue={formData.notes}
@@ -407,29 +407,29 @@ export default function ProductionPage() {
               </div>
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] uppercase text-outline font-label tracking-widest">Photos</label>
+              <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Photos</label>
               <PhotoCapture userId={user?.id ?? 'anon'} onUploaded={setAttachments} />
             </div>
             {error && (
-              <div className="p-3 bg-tertiary-container/10 border-l-2 border-tertiary-container">
-                <p className="text-tertiary text-xs font-label">{error}</p>
+              <div className="p-3 bg-red-50 border-l-2 border-red-400 rounded-xl">
+                <p className="text-red-600 text-xs font-medium">{error}</p>
               </div>
             )}
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-primary-container text-on-primary-container font-label text-xs font-bold uppercase tracking-widest hover:brightness-110 disabled:opacity-50 transition-all"
+              className="btn-glass w-full py-3 text-sm font-bold uppercase tracking-widest disabled:opacity-50 transition-all" style={{ background: "linear-gradient(135deg, #0077B6, #0096C7)", color: "white" }}
             >
               {loading ? 'Logging...' : 'Log Batch'}
             </button>
           </form>
         </div>
 
-        <div className="bg-surface-container-low ghost-border p-6 flex flex-col justify-between">
+        <div className="glass-card p-6 flex flex-col justify-between">
           <div>
             <p className="font-label text-[10px] text-slate-400 uppercase tracking-widest mb-1">Automation</p>
             <p className="font-headline text-xl font-bold mb-3">What happens on submit</p>
-            <div className="space-y-3 text-xs text-slate-300 font-label">
+            <div className="space-y-3 text-xs text-slate-300">
               {[
                 'production_logs row written (append-only)',
                 'batch_created event → Founder Office feed',
@@ -437,40 +437,40 @@ export default function ProductionPage() {
                 'QC test required before dispatch (Supabase constraint)',
               ].map((step, i) => (
                 <div key={i} className="flex items-start gap-3">
-                  <span className="text-primary font-bold mt-0.5">{i + 1}.</span>
+                  <span className="text-[#0077B6] font-bold mt-0.5">{i + 1}.</span>
                   <span>{step}</span>
                 </div>
               ))}
             </div>
           </div>
-          <p className="mt-6 text-[10px] text-outline/40 font-label">[source: production_logs, events, inventory_items — buziga]</p>
+          <p className="mt-6 text-[10px] text-slate-400/60">[source: production_logs, events, inventory_items — buziga]</p>
         </div>
       </div>}
 
       {/* Edit Batch Modal — founders/assigned only */}
       {canEdit && editBatch && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-surface-container-low border border-outline-variant/20 p-8 max-w-sm w-full">
-            <h2 className="text-xl font-bold font-headline mb-1">Edit Batch</h2>
-            <p className="text-[10px] text-outline/50 font-label mb-6">
+          <div className="modal-glass p-8 max-w-sm w-full">
+            <h2 className="text-xl font-bold mb-1">Edit Batch</h2>
+            <p className="text-[10px] text-slate-400/70 mb-6">
               [source: production_logs row {editBatch.id?.slice(0, 8)}] · {editBatch.batch_id}
             </p>
             <form onSubmit={handleEditSave} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Jar Count</label>
+                <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Jar Count</label>
                 <input
                   type="number"
                   value={editForm.jar_count}
                   onChange={(e) => setEditForm({ ...editForm, jar_count: e.target.value })}
-                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                  className="input w-full"
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Status</label>
+                <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Status</label>
                 <select
                   value={editForm.status}
                   onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface"
+                  className="input w-full"
                 >
                   <option value="created">Created</option>
                   <option value="passed">QC Passed</option>
@@ -479,21 +479,21 @@ export default function ProductionPage() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase text-outline font-label tracking-widest">Notes</label>
+                <label className="text-[10px] uppercase text-slate-400 font-bold tracking-widest">Notes</label>
                 <textarea
                   value={editForm.notes}
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                   rows={2}
-                  className="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary-container focus:ring-0 text-sm font-label py-2 text-on-surface resize-none"
+                  className="input w-full resize-none"
                 />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setEditBatch(null)}
-                  className="flex-1 py-2 bg-surface-container-high text-on-surface text-xs font-bold font-label hover:bg-surface-container-highest">
+                  className="flex-1 py-2 glass-card text-slate-700 text-xs font-bold hover:bg-white/80 rounded-xl transition-all">
                   Cancel
                 </button>
                 <button type="submit" disabled={editSaving}
-                  className="flex-1 py-2 bg-primary-container text-on-primary-container text-xs font-bold font-label hover:brightness-110 disabled:opacity-50">
+                  className="flex-1 py-2 rounded-xl text-white text-xs font-bold disabled:opacity-50 transition-all" style={{ background: "linear-gradient(135deg, #0077B6, #0096C7)" }}>
                   {editSaving ? 'Saving...' : 'Save'}
                 </button>
               </div>

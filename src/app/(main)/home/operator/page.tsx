@@ -101,17 +101,24 @@ export default function OperatorHome() {
       {/* Today's One Thing — phase-aware */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 }}>
         {phase === 'qc-due' ? (
-          <div className="bg-gradient-to-r from-amber-500 to-orange-400 rounded-2xl p-5 text-white flex items-center gap-4 shadow-lg">
-            <Beaker className="w-10 h-10 flex-shrink-0 opacity-90" />
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest opacity-75 mb-0.5">Urgent</p>
-              <p className="text-lg font-black">QC Test Overdue</p>
-              <p className="text-sm opacity-75">Last test was 2+ hours ago — run water test now</p>
+          <Link href="/quality">
+            <div className="rounded-2xl p-5 text-white flex items-center gap-4 shadow-lg cursor-pointer active:scale-95 transition-transform"
+              style={{ background: 'linear-gradient(135deg, #F59E0B, #EF4444)' }}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                <Beaker className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-bold uppercase tracking-widest opacity-75 mb-0.5">Urgent — 2h+ overdue</p>
+                <p className="text-xl font-black">Run QC Test</p>
+                <p className="text-sm opacity-75">Water test required now</p>
+              </div>
             </div>
-          </div>
+          </Link>
         ) : phase === 'off-shift' ? (
-          <div className="bg-slate-100 rounded-2xl p-5 flex items-center gap-4">
-            <AlertCircle className="w-10 h-10 text-slate-400 flex-shrink-0" />
+          <div className="glass-card p-5 flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(148,163,184,0.15)' }}>
+              <AlertCircle className="w-8 h-8 text-slate-400" />
+            </div>
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-0.5">Off Shift</p>
               <p className="text-lg font-black text-slate-700">Shift hours: 6:00 AM — 7:00 PM</p>
@@ -120,11 +127,14 @@ export default function OperatorHome() {
           </div>
         ) : (
           <Link href={cfg.href}>
-            <div className="rounded-2xl p-5 text-white flex items-center gap-4 shadow-lg cursor-pointer active:scale-98 transition-transform" style={{ background: `linear-gradient(135deg, ${cfg.color}, ${cfg.color}cc)` }}>
-              <Icon className="w-10 h-10 flex-shrink-0 opacity-90" />
+            <div className="rounded-2xl p-5 text-white flex items-center gap-4 shadow-lg cursor-pointer active:scale-95 transition-transform"
+              style={{ background: `linear-gradient(135deg, ${cfg.color}, ${cfg.color}cc)` }}>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.2)' }}>
+                <Icon className="w-8 h-8" />
+              </div>
               <div className="flex-1">
                 <p className="text-xs font-bold uppercase tracking-widest opacity-75 mb-0.5">Next Action</p>
-                <p className="text-lg font-black">{cfg.label}</p>
+                <p className="text-xl font-black">{cfg.label}</p>
                 <p className="text-sm opacity-75">{cfg.sublabel}</p>
               </div>
             </div>
@@ -134,7 +144,7 @@ export default function OperatorHome() {
 
       {/* Production progress */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.08 }}>
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+        <div className="glass-card-strong p-6">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Today's Target</p>
           <div className="flex items-end justify-between mb-3">
             <div>
@@ -182,7 +192,7 @@ export default function OperatorHome() {
         ].map((l) => {
           const LIcon = l.icon;
           return (
-            <Link key={l.href} href={l.href} className="flex flex-col items-center gap-2 p-4 bg-white border border-slate-200 rounded-xl hover:border-slate-300 hover:shadow-sm transition-all">
+            <Link key={l.href} href={l.href} className="flex flex-col items-center gap-2 p-4 glass-card rounded-xl hover:scale-105 active:scale-95 transition-all">
               <LIcon className="w-5 h-5 text-slate-400" />
               <span className="text-[10px] font-bold text-slate-500 uppercase text-center leading-tight">{l.label}</span>
             </Link>

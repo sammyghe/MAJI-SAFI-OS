@@ -95,13 +95,14 @@ export default function FounderHome() {
     // Last 7 days for sparkline
     const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
 
-    const [prod, qc, sales, events, team, sparkRaw] = await Promise.all([
+    const [prod, qc, sales, events, team, sparkRaw, gaps] = await Promise.all([
       supabase.from('production_logs').select('jar_count').eq('location_id', 'buziga').eq('production_date', today),
       supabase.from('water_tests').select('result').eq('location_id', 'buziga').gte('tested_at', today),
       supabase.from('sales_ledger').select('amount_ugx').eq('location_id', 'buziga').eq('sale_date', today),
       supabase.from('events').select('id, event_type, payload').eq('location_id', 'buziga').eq('severity', 'critical').order('created_at', { ascending: false }).limit(5),
       supabase.from('team_members').select('id').eq('contract_status', 'active').gte('last_seen_at', hourAgo),
       supabase.from('production_logs').select('production_date, jar_count').eq('location_id', 'buziga').gte('production_date', sevenDaysAgo).order('production_date', { ascending: true }),
+      supabase.from('compliance_gaps').select('*').eq('location_id', 'buziga').neq('status', 'resolved'),
     ]);
 
     const jarsToday = (prod.data ?? []).reduce((s, r) => s + (r.jar_count ?? 0), 0);
@@ -118,8 +119,13 @@ export default function FounderHome() {
     (sparkRaw.data ?? []).forEach(r => { if (r.production_date in byDay) byDay[r.production_date] += r.jar_count ?? 0; });
     setSparkData(Object.values(byDay));
 
-    setKpis({ jarsToday, qcPassRate, revenueToday, openIssues: events.data?.length ?? 0, teamPresent: team.data?.length ?? 0 });
-    setAlerts((events.data ?? []).map(e => ({ id: e.id, type: e.event_type ?? 'event', msg: e.payload ? JSON.stringify(e.payload).slice(0, 80) : e.event_type })));
+    // Build alerts from events + compliance gaps
+    const eventAlerts = (events.data ?? []).map(e => ({ id: e.id, type: e.event_type ?? 'event', msg: e.payload ? JSON.stringify(e.payload).slice(0, 80) : e.event_type }));
+    const criticalGaps = (gaps.data ?? []).filter((g: any) => g.severity === 'critical');
+    const gapAlerts = criticalGaps.map((g: any) => ({ id: g.id, type: 'unbs_gap', msg: `${g.gap_description.slice(0, 60)}... (Due: ${g.due_date ? new Date(g.due_date).toLocaleDateString('en-GB', { month: 'short', day: '2-digit' }) : 'soon'})` }));
+
+    setKpis({ jarsToday, qcPassRate, revenueToday, openIssues: eventAlerts.length + gapAlerts.length, teamPresent: team.data?.length ?? 0 });
+    setAlerts([...gapAlerts, ...eventAlerts]);
     setLoading(false);
   };
 
@@ -261,16 +267,23 @@ export default function FounderHome() {
       {alerts.length > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
           <div className="glass-card p-5 border border-red-200/50">
-            <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle className="w-4 h-4 text-red-500" />
-              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Needs Attention</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-500" />
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Needs Attention</h2>
+              </div>
+              {alerts.some(a => a.type === 'unbs_gap') && (
+                <Link href="/compliance/gaps" className="text-xs text-primary font-bold hover:underline">
+                  View All →
+                </Link>
+              )}
             </div>
             <div className="space-y-2">
               {alerts.map((a) => (
-                <div key={a.id} className="flex items-start gap-3 py-2 border-b border-slate-100/60 last:border-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 mt-2 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs font-bold text-slate-800">{a.type.replace(/_/g, ' ').toUpperCase()}</p>
+                <div key={a.id} className={`flex items-start gap-3 py-2 border-b border-slate-100/60 last:border-0 ${a.type === 'unbs_gap' ? 'bg-red-50/50 -mx-3 px-3' : ''}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${a.type === 'unbs_gap' ? 'bg-red-600' : 'bg-red-400'}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-slate-800">{a.type === 'unbs_gap' ? '🛡️ UNBS Compliance' : a.type.replace(/_/g, ' ').toUpperCase()}</p>
                     <p className="text-xs text-slate-500 mt-0.5">{a.msg}</p>
                   </div>
                 </div>

@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --test scripts/*.test.mjs",
+    "healthcheck": "node scripts/deployment-health-check.mjs",
+    "notify:deployment-failure": "node scripts/notify-deployment-failure.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.91.0",

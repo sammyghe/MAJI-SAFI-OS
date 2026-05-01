@@ -57,17 +57,6 @@ export default function SalesPage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [distPerf, setDistPerf] = useState<DistributorPerf[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Quick log form
-  const [form, setForm] = useState({
-    distributor: '',
-    product_type: '20L Refill',
-    jars: '',
-    amount_ugx: '',
-    notes: '',
-  });
-  const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState('');
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const today = new Date().toISOString().split('T')[0];
@@ -137,62 +126,6 @@ export default function SalesPage() {
       if (process.env.NODE_ENV === 'development') console.error('Sales load error:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleJarsChange = (jars: string, type: string) => {
-    const n = parseInt(jars);
-    const amount = n > 0 && T1_PRICES[type] ? (n * T1_PRICES[type]).toString() : '';
-    setForm((prev) => ({ ...prev, jars, product_type: type, amount_ugx: amount }));
-  };
-
-  const handleLogSale = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    if (!form.distributor.trim()) { setFormError('Distributor name required'); return; }
-    if (!form.jars || parseInt(form.jars) <= 0) { setFormError('Jar count required'); return; }
-    if (!form.amount_ugx) { setFormError('Amount required'); return; }
-    setSaving(true);
-    try {
-      const { error } = await supabase.from('sales_ledger').insert([{
-        distributor: form.distributor.trim(),
-        jars_sold: parseInt(form.jars),
-        amount_ugx: parseInt(form.amount_ugx),
-        product_type: form.product_type,
-        location_id: 'buziga',
-        logged_by: user?.name ?? 'Unknown',
-        notes: form.notes || null,
-      }]);
-      if (error) throw error;
-
-      // Decrement inventory
-      const { data: invRow } = await supabase
-        .from('inventory_items')
-        .select('id, quantity, reorder_threshold, unit')
-        .eq('location_id', 'buziga')
-        .eq('item_name', form.product_type)
-        .maybeSingle();
-      if (invRow) {
-        const newQty = Math.max(0, (invRow.quantity ?? 0) - parseInt(form.jars));
-        await supabase.from('inventory_items').update({ quantity: newQty, last_updated: new Date().toISOString() }).eq('id', invRow.id);
-        if (newQty <= invRow.reorder_threshold) {
-          await supabase.from('events').insert([{
-            location_id: 'buziga',
-            event_type: 'reorder_required',
-            department: 'inventory',
-            severity: 'warning',
-            payload: { items: [{ name: form.product_type, quantity: newQty, threshold: invRow.reorder_threshold }], triggered_by: 'sales' },
-          }]);
-        }
-      }
-
-      showToast({ type: 'success', message: `Sale logged — ${form.jars} × ${form.product_type} to ${form.distributor} · UGX ${parseInt(form.amount_ugx).toLocaleString()}` });
-      setForm({ distributor: '', product_type: '20L Refill', jars: '', amount_ugx: '', notes: '' });
-      await loadAll();
-    } catch (err: any) {
-      setFormError(err.message ?? 'Error logging sale');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -430,83 +363,22 @@ export default function SalesPage() {
         </div>
       </div>
 
-      {/* Quick Log Sale Form */}
-      {canEdit && (
-        <section className="mb-10 bg-surface-container-low ghost-border overflow-hidden">
-          <div className="px-6 py-4 bg-surface-container border-b border-outline-variant/10 flex items-center gap-3">
-            <ShoppingCart className="w-4 h-4 text-sky-400" />
-            <h3 className="text-xs font-bold uppercase tracking-widest text-outline font-label">Log a Sale</h3>
-            <span className="ml-auto text-[10px] text-outline/40 font-label">Logged as {user?.name}</span>
+      {/* Log Sale Redirect Button */}
+      <section className="mb-10 bg-primary-container/10 border-l-4 border-primary p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-bold text-on-surface font-headline">Sales are logged in Dispatch</h3>
+            <p className="text-xs text-outline/70 font-label mt-1">Go to Dispatch to record where delivery happens. Sales and cash collection happen together.</p>
           </div>
-          <form onSubmit={handleLogSale} className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-[10px] font-label text-outline uppercase tracking-widest mb-1.5">Distributor Name</label>
-              <input
-                value={form.distributor}
-                onChange={(e) => setForm((p) => ({ ...p, distributor: e.target.value }))}
-                placeholder="e.g. Kato Supplies"
-                className="w-full bg-surface-container border border-outline-variant/20 px-4 py-2.5 text-sm text-on-surface font-label focus:outline-none focus:border-primary/40"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-label text-outline uppercase tracking-widest mb-1.5">Product</label>
-              <select
-                value={form.product_type}
-                onChange={(e) => handleJarsChange(form.jars, e.target.value)}
-                className="w-full bg-surface-container border border-outline-variant/20 px-4 py-2.5 text-sm text-on-surface font-label focus:outline-none focus:border-primary/40"
-              >
-                {PRODUCT_TYPES.map((p) => (
-                  <option key={p} value={p}>{p} — UGX {T1_PRICES[p].toLocaleString()}/jar</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] font-label text-outline uppercase tracking-widest mb-1.5">Jars Sold</label>
-              <input
-                value={form.jars}
-                onChange={(e) => handleJarsChange(e.target.value, form.product_type)}
-                placeholder="e.g. 50"
-                type="number"
-                min="1"
-                className="w-full bg-surface-container border border-outline-variant/20 px-4 py-2.5 text-sm text-on-surface font-label focus:outline-none focus:border-primary/40"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-label text-outline uppercase tracking-widest mb-1.5">Amount (UGX) — T1</label>
-              <input
-                value={form.amount_ugx}
-                onChange={(e) => setForm((p) => ({ ...p, amount_ugx: e.target.value }))}
-                placeholder="Auto-computed"
-                type="number"
-                min="0"
-                className="w-full bg-surface-container border border-outline-variant/20 px-4 py-2.5 text-sm text-on-surface font-label focus:outline-none focus:border-primary/40"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-label text-outline uppercase tracking-widest mb-1.5">Notes (optional)</label>
-              <input
-                value={form.notes}
-                onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
-                placeholder="Payment method, special terms…"
-                className="w-full bg-surface-container border border-outline-variant/20 px-4 py-2.5 text-sm text-on-surface font-label focus:outline-none focus:border-primary/40"
-              />
-            </div>
-            <div className="flex items-end">
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full bg-primary-container text-on-primary-container font-label text-sm font-semibold px-6 py-2.5 hover:brightness-110 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <ShoppingCart className="w-4 h-4" />}
-                {saving ? 'Logging…' : 'Log Sale'}
-              </button>
-            </div>
-            {formError && (
-              <div className="md:col-span-2 xl:col-span-3 text-red-400 text-xs font-bold font-label">{formError}</div>
-            )}
-          </form>
-        </section>
-      )}
+          <a
+            href="/dispatch"
+            className="flex items-center justify-center gap-2 bg-primary text-on-primary font-label text-xs font-semibold px-6 py-3 hover:brightness-110 transition-all active:scale-95 whitespace-nowrap"
+          >
+            <ShoppingCart className="w-4 h-4" />
+            Go to Dispatch
+          </a>
+        </div>
+      </section>
 
       {/* Today's Sales Log */}
       <section className="mb-10 bg-surface-container-low ghost-border overflow-hidden">

@@ -1,0 +1,44 @@
+name: Deployment Monitor
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: deployment-monitor
+  cancel-in-progress: true
+
+jobs:
+  healthcheck:
+    name: Production health check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      APP_URL: ${{ vars.PRODUCTION_URL || secrets.PRODUCTION_URL || vars.VERCEL_PRODUCTION_URL || secrets.VERCEL_PRODUCTION_URL }}
+      HEALTHCHECK_PATHS: /login,/manifest.webmanifest
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      GITHUB_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check production deployment
+        run: npm run healthcheck
+
+      - name: Notify monitor failure
+        if: failure()
+        env:
+          DEPLOYMENT_URL: ${{ env.APP_URL }}
+          CREATE_GITHUB_ISSUE_ON_FAILURE: "true"
+        run: npm run notify:deployment-failure

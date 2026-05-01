@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase';
 import ComplianceClient from './ComplianceClient';
-import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,15 +26,6 @@ export default async function CompliancePage() {
             <h2 className="text-4xl font-extrabold tracking-tight font-headline">
               Compliance – UNBS &amp; HR
             </h2>
-          </div>
-          <div className="flex gap-4">
-            <Link
-              href="/compliance/team"
-              className="bg-surface-container-high text-on-surface text-xs font-bold px-4 py-2 font-label hover:bg-surface-container-highest transition-colors flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined text-sm">group</span>
-              Team Directory
-            </Link>
           </div>
         </div>
       </header>

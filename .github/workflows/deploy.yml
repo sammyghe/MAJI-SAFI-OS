@@ -1,20 +1,149 @@
-name: Deploy to Vercel
+name: Vercel Deploy
 
 on:
-  push:
-    branches: [master]
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch, tag, or SHA to deploy"
+        required: false
+        default: ""
+      production:
+        description: "Promote to production after health checks"
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  deployments: write
+  issues: write
+
+concurrency:
+  group: vercel-${{ github.event.workflow_run.head_branch || github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   deploy:
+    name: Deploy checked build
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      NODE_OPTIONS: "--max-old-space-size=4096"
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      GITHUB_TOKEN: ${{ github.token }}
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Resolve deployment target
+        id: target
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_REF: ${{ inputs.ref }}
+          INPUT_PRODUCTION: ${{ inputs.production }}
+          WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
+          WORKFLOW_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            ref="${INPUT_REF:-$REF_NAME}"
+            branch="$ref"
+            production="$INPUT_PRODUCTION"
+          else
+            ref="$WORKFLOW_SHA"
+            branch="$WORKFLOW_BRANCH"
+            production="false"
+            if [ "$branch" = "master" ] || [ "$branch" = "main" ]; then
+              production="true"
+            fi
+          fi
+
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "production=$production" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.target.outputs.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Verify Vercel secrets
+        shell: bash
+        run: |
+          missing=0
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is not configured in GitHub repository secrets."
+              missing=1
+            fi
+          done
+          exit "$missing"
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Deploy to Vercel (production)
-        run: vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Pull Vercel project settings
+        shell: bash
+        run: |
+          environment="preview"
+          if [ "${{ steps.target.outputs.production }}" = "true" ]; then
+            environment="production"
+          fi
+          vercel pull --yes --environment="$environment" --token="$VERCEL_TOKEN"
+
+      - name: Build with Vercel
+        shell: bash
+        run: |
+          if [ "${{ steps.target.outputs.production }}" = "true" ]; then
+            vercel build --prod --token="$VERCEL_TOKEN"
+          else
+            vercel build --token="$VERCEL_TOKEN"
+          fi
+
+      - name: Deploy candidate
+        id: deploy
+        shell: bash
+        run: |
+          if [ "${{ steps.target.outputs.production }}" = "true" ]; then
+            url="$(vercel deploy --prebuilt --prod --skip-domain --yes --token="$VERCEL_TOKEN")"
+          else
+            url="$(vercel deploy --prebuilt --yes --token="$VERCEL_TOKEN")"
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployment candidate: $url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Health-check candidate
+        env:
+          APP_URL: ${{ steps.deploy.outputs.url }}
+          HEALTHCHECK_PATHS: /login,/manifest.webmanifest
+        run: npm run healthcheck
+
+      - name: Promote production candidate
+        if: steps.target.outputs.production == 'true'
+        shell: bash
+        run: |
+          vercel promote "${{ steps.deploy.outputs.url }}" --yes --token="$VERCEL_TOKEN"
+          echo "Promoted ${{ steps.deploy.outputs.url }} to production." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notify deployment failure
+        if: failure()
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
+          CREATE_GITHUB_ISSUE_ON_FAILURE: "true"
+        run: npm run notify:deployment-failure

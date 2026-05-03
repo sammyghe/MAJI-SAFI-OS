@@ -123,9 +123,10 @@ export default function ProductionPage() {
           .eq('id', invRow.id);
       }
 
+      const t = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
       showToast({
         type: 'success',
-        message: `Batch ${batchId} logged — ${jarCount} × ${formData.product_type}. Inventory updated.`,
+        message: `✓ Batch ${batchId} logged at ${t} — ${jarCount} × ${formData.product_type}.`,
       });
       setFormData({ jar_count: '', product_type: '20L Refill', notes: '' });
       setAttachments([]);
@@ -309,8 +310,9 @@ export default function ProductionPage() {
               <tbody className="font-body">
                 {batches.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-slate-400/70 text-sm">
-                      No batches logged yet today
+                    <td colSpan={6} className="px-6 py-10 text-center">
+                      <p className="text-slate-400 text-sm mb-3">No batches logged today</p>
+                      <p className="text-slate-300 text-xs mb-4">Use the form above to log your first batch and start tracking production.</p>
                     </td>
                   </tr>
                 ) : batches.map((b) => {

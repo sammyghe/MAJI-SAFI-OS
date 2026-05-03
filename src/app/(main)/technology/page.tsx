@@ -97,14 +97,14 @@ export default function TechnologyPage() {
       {/* Header */}
       <header className="mb-12">
         <h2 className="text-4xl font-extrabold tracking-tight font-headline mb-2">
-          Technology – System Intelligence
+          System Health
         </h2>
         <div className="flex items-center gap-4 text-outline text-xs font-label">
           <span className="flex items-center gap-1">
             <span className={`w-2 h-2 rounded-full ${connected ? 'bg-secondary' : 'bg-tertiary'}`} />
-            Supabase: {connected ? 'Connected' : 'Error'}
+            Database: {connected ? 'Connected' : 'Error'}
           </span>
-          {lastEvent && <span>Last event: {lastEvent}</span>}
+          {lastEvent && <span>Recent activity: {lastEvent}</span>}
           <span>Location: buziga</span>
         </div>
       </header>
@@ -113,7 +113,7 @@ export default function TechnologyPage() {
       {completeness.length > 0 && (
         <div className="mb-10 bg-surface-container-low ghost-border p-6">
           <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <p className="font-label text-[10px] text-outline uppercase tracking-[0.2em]">Data Completeness — Today</p>
+            <p className="font-label text-[10px] text-outline uppercase tracking-[0.2em]">Today's Data Status</p>
             <span className={`font-bold text-sm ${completeness.filter((c) => c.ok).length === 5 ? 'text-emerald-400' : 'text-amber-400'}`}>
               {completeness.filter((c) => c.ok).length}/5 complete
             </span>
@@ -170,7 +170,7 @@ export default function TechnologyPage() {
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <span className="w-12 h-[1px] bg-primary-container" />
-            <h3 className="font-headline text-xl font-bold">System Event Log</h3>
+            <h3 className="font-headline text-xl font-bold">Recent System Activity</h3>
           </div>
           <button
             onClick={loadEvents}

@@ -296,8 +296,9 @@ export default function QualityPage() {
               <tbody className="font-body">
                 {tests.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-8 text-center text-slate-400/70 text-sm">
-                      No tests logged today
+                    <td colSpan={6} className="px-6 py-10 text-center">
+                      <p className="text-slate-400 text-sm mb-2">No water tests logged today</p>
+                      <p className="text-slate-300 text-xs">Use the &quot;Run Water Test&quot; form above to log the first test of the shift.</p>
                     </td>
                   </tr>
                 ) : tests.map((t) => {

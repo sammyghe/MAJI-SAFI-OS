@@ -1,12 +1,13 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { notifyDepartment } from '@/lib/notify';
 import { formatDistanceToNow } from 'date-fns';
-import ProductionChart from '@/components/ProductionChart';
+import { MessageSquare, Send, Image, AtSign } from 'lucide-react';
+import { useAuth } from '@/components/AuthProvider';
+import { showToast } from '@/components/ToastContainer';
 
-// ── Types ─────────────────────────────────────────────────────
 interface PulsePost {
   id: number;
   post_type: string;
@@ -33,17 +34,6 @@ interface PulseReply {
   created_at: string;
 }
 
-// ── Constants ─────────────────────────────────────────────────
-const POST_TYPES = [
-  { type: 'update',         label: 'Update',    emoji: '📌', color: '#0077B6' },
-  { type: 'win',            label: 'Win',       emoji: '🏆', color: '#10B981' },
-  { type: 'question',       label: 'Question',  emoji: '❓', color: '#06B6D4' },
-  { type: 'shoutout',       label: 'Shout-out', emoji: '📣', color: '#F59E0B' },
-  { type: 'milestone',      label: 'Milestone', emoji: '🎯', color: '#7F77DD' },
-  { type: 'project_update', label: 'Project',   emoji: '📊', color: '#8B5CF6' },
-  { type: 'alert',          label: 'Alert',     emoji: '🚨', color: '#EF4444' },
-];
-
 const DEPT_SLUGS = [
   'founder-office', 'production', 'quality', 'inventory',
   'dispatch', 'marketing', 'finance', 'compliance', 'technology',
@@ -61,22 +51,14 @@ const DEPT_COLORS: Record<string, string> = {
   technology:       '#90E0EF',
 };
 
-const REACTIONS = ['💧', '🔥', '✅', '🎉'];
-
-// ── Helpers ───────────────────────────────────────────────────
-function typeConfig(type: string) {
-  return POST_TYPES.find((t) => t.type === type) ?? POST_TYPES[0];
-}
+const REACTIONS = ['👍', '❤️', '🎉'];
 
 function extractMentions(text: string): string[] {
   const matches = text.match(/@([\w-]+)/g) ?? [];
-  return matches
-    .map((m) => m.slice(1))
-    .filter((slug) => DEPT_SLUGS.includes(slug));
+  return matches.map((m) => m.slice(1)).filter((slug) => DEPT_SLUGS.includes(slug));
 }
 
-// ── Card Component ────────────────────────────────────────────
-function PostCard({
+function AnnouncementCard({
   post,
   replies,
   onReact,
@@ -87,12 +69,9 @@ function PostCard({
   onReact: (postId: number, emoji: string) => void;
   onReply: (postId: number, content: string) => void;
 }) {
-  const cfg = typeConfig(post.post_type);
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  const borderStyle = { borderLeftColor: post.color };
 
   const handleReply = async () => {
     if (!replyText.trim()) return;
@@ -104,86 +83,71 @@ function PostCard({
   };
 
   return (
-    <div
-      className="glass-card overflow-hidden"
-      style={{ borderLeft: `4px solid ${post.color}` }}
-    >
+    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
       {/* Header */}
-      <div
-        className="px-5 py-3 flex items-center gap-3 text-[11px] font-black uppercase tracking-widest"
-        style={{ backgroundColor: post.color + '22' }}
-      >
-        <span className="text-lg">{post.emoji}</span>
-        <span style={{ color: post.color }}>{cfg.label}</span>
-        <span className="text-slate-300">·</span>
-        {post.department_slug && (
-          <>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black"
-              style={{ backgroundColor: (DEPT_COLORS[post.department_slug] ?? '#0077B6') + '22', color: DEPT_COLORS[post.department_slug] ?? '#0077B6' }}>
-              {post.department_slug.replace('-', ' ').toUpperCase()}
-            </span>
-            <span className="text-slate-300">·</span>
-          </>
-        )}
-        <span className="text-slate-400 font-medium normal-case tracking-normal">
-          {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-        </span>
-        {post.pinned && <span className="ml-auto text-amber-400">📌 Pinned</span>}
+      <div className="px-5 py-3 flex items-center gap-3 border-b border-slate-100">
+        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-black flex-shrink-0"
+          style={{ background: 'linear-gradient(135deg, #0077B6, #7EC8E3)' }}>
+          {post.author_role?.[0]?.toUpperCase() ?? 'M'}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-slate-800 truncate">{post.author_role || 'Team Member'}</p>
+          <p className="text-[10px] text-slate-400">
+            {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+            {post.department_slug && (
+              <span className="ml-2 font-bold" style={{ color: DEPT_COLORS[post.department_slug] ?? '#0077B6' }}>
+                · {post.department_slug.replace(/-/g, ' ')}
+              </span>
+            )}
+          </p>
+        </div>
+        {post.pinned && <span className="text-amber-400 text-sm flex-shrink-0">📌</span>}
       </div>
 
       {/* Body */}
       <div className="px-5 py-4">
-        <p className="text-slate-800 font-medium text-sm leading-relaxed">{post.content}</p>
-
-        {/* Link */}
+        <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+        {post.image_url && (
+          <img src={post.image_url} alt="Announcement" className="mt-3 rounded-xl max-h-48 object-cover w-full" />
+        )}
         {post.link_url && (
           <a
             href={post.link_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 mt-3 text-[#0077B6] text-[11px] font-black uppercase tracking-widest hover:opacity-80 transition-opacity"
+            className="inline-flex items-center gap-1.5 mt-3 text-[#0077B6] text-xs font-bold hover:opacity-80 transition-opacity"
           >
             📎 {post.link_label ?? 'View Link'}
           </a>
         )}
-
-        {/* Alert pulsing dot */}
-        {post.post_type === 'alert' && (
-          <div className="flex items-center gap-2 mt-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
-            </span>
-            <span className="text-red-400 text-[10px] font-black uppercase tracking-widest">Active Alert</span>
-          </div>
-        )}
       </div>
 
       {/* Reactions + Reply */}
-      <div className="px-5 pb-4 flex flex-wrap items-center gap-2">
+      <div className="px-5 pb-4 flex items-center gap-2 flex-wrap">
         {REACTIONS.map((emoji) => (
           <button
             key={emoji}
             onClick={() => onReact(post.id, emoji)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/50 border border-white/60 hover:bg-white/80 transition-colors text-sm font-bold"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors text-sm font-semibold"
           >
             {emoji}
-            <span className="text-slate-500 text-[11px]">
+            <span className="text-slate-500 text-[11px] ml-0.5">
               {(post.reactions as Record<string, number>)[emoji] ?? 0}
             </span>
           </button>
         ))}
         <button
           onClick={() => setShowReplyBox((p) => !p)}
-          className="ml-2 text-[11px] font-black text-[#0077B6] uppercase tracking-widest hover:opacity-70 transition-opacity"
+          className="ml-auto flex items-center gap-1.5 text-[11px] font-bold text-[#0077B6] hover:opacity-70 transition-opacity"
         >
-          + Reply {replies.length > 0 && `(${replies.length})`}
+          <MessageSquare className="w-3.5 h-3.5" />
+          Reply {replies.length > 0 && `(${replies.length})`}
         </button>
       </div>
 
       {/* Replies */}
       {replies.length > 0 && (
-        <div className="px-5 pb-3 space-y-2 border-t border-slate-100/60 pt-3">
+        <div className="px-5 pb-3 space-y-2 border-t border-slate-100 pt-3">
           {replies.map((r) => (
             <div key={r.id} className="flex gap-2 text-xs">
               <span
@@ -191,32 +155,29 @@ function PostCard({
                 style={{ backgroundColor: DEPT_COLORS[r.department_slug ?? ''] ?? '#0077B6' }}
               />
               <div>
-                <span className="font-black text-[#0077B6] uppercase tracking-widest text-[10px]">
-                  {r.author_role}
-                </span>
-                <p className="text-slate-500 leading-relaxed">{r.content}</p>
+                <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wide">{r.author_role}</span>
+                <p className="text-slate-600 leading-relaxed">{r.content}</p>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Reply box */}
       {showReplyBox && (
-        <div className="px-5 pb-4 flex gap-2 border-t border-slate-100/60 pt-3">
+        <div className="px-5 pb-4 flex gap-2 border-t border-slate-100 pt-3">
           <input
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="Write a reply…"
-            className="flex-1 input py-2 text-sm"
+            className="flex-1 bg-white border-2 border-slate-200 text-slate-900 placeholder-slate-400 rounded-xl px-3 py-2 text-sm focus:border-[#0077B6] focus:outline-none"
             onKeyDown={(e) => e.key === 'Enter' && handleReply()}
           />
           <button
             onClick={handleReply}
             disabled={submitting}
-            className="px-4 py-2 rounded-xl bg-[#0077B6] text-white text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="px-4 py-2 rounded-xl bg-[#0077B6] text-white text-xs font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
           >
-            Send
+            <Send className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
@@ -224,27 +185,23 @@ function PostCard({
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────
 export default function PulsePage() {
+  const { user } = useAuth();
   const [posts, setPosts] = useState<PulsePost[]>([]);
   const [replies, setReplies] = useState<PulseReply[]>([]);
-  const [tab, setTab] = useState<'all' | 'department'>('all');
   const [loading, setLoading] = useState(true);
-
-  // Compose state
   const [content, setContent] = useState('');
-  const [postType, setPostType] = useState('update');
-  const [authorRole, setAuthorRole] = useState('Team Member');
+  const [authorRole, setAuthorRole] = useState('');
   const [deptSlug, setDeptSlug] = useState('');
   const [linkUrl, setLinkUrl] = useState('');
   const [linkLabel, setLinkLabel] = useState('');
-  const [posting, setPosting] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [showMentionMenu, setShowMentionMenu] = useState(false);
+  const [posting, setPosting] = useState(false);
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
-  const selectedType = typeConfig(postType);
+  const canPost = user?.role === 'founder' || user?.role === 'manager' || user?.role === 'operations_manager';
 
-  // ── Fetch ────────────────────────────────────────────────────
   const fetchPosts = async () => {
     const [{ data: postsData }, { data: repliesData }] = await Promise.all([
       supabase.from('pulse_posts').select('*').order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(50),
@@ -258,7 +215,6 @@ export default function PulsePage() {
   useEffect(() => {
     fetchPosts();
 
-    // Real-time: new posts
     const postChannel = supabase
       .channel('pulse_posts_live')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pulse_posts' }, (payload) => {
@@ -282,40 +238,43 @@ export default function PulsePage() {
     };
   }, []);
 
-  // ── Post submission ───────────────────────────────────────────
   const handlePost = async () => {
     if (!content.trim()) return;
     setPosting(true);
     const mentions = extractMentions(content);
-    const cfg = typeConfig(postType);
 
     const { data, error } = await supabase.from('pulse_posts').insert({
-      post_type: postType,
+      post_type: 'announcement',
       content: content.trim(),
-      author_role: authorRole || 'Team Member',
+      author_role: authorRole || user?.name || user?.role || 'Team',
       department_slug: deptSlug || null,
-      color: cfg.color,
-      emoji: cfg.emoji,
+      color: '#0077B6',
+      emoji: '📢',
       link_url: linkUrl || null,
       link_label: linkLabel || null,
       mentions,
-      reactions: { '💧': 0, '🔥': 0, '✅': 0, '🎉': 0 },
+      reactions: { '👍': 0, '❤️': 0, '🎉': 0 },
     }).select().single();
 
     if (!error && data) {
-      // Notify mentioned departments
       for (const slug of mentions) {
         await notifyDepartment(slug, content, (data as PulsePost).id);
       }
+      const t = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      showToast({ type: 'success', message: `✓ Announcement posted at ${t}` });
+    } else if (error) {
+      showToast({ type: 'error', message: `Failed to post: ${error.message}` });
     }
 
     setContent('');
     setLinkUrl('');
     setLinkLabel('');
+    setAuthorRole('');
+    setDeptSlug('');
+    setShowAdvanced(false);
     setPosting(false);
   };
 
-  // ── React ─────────────────────────────────────────────────────
   const handleReact = async (postId: number, emoji: string) => {
     const post = posts.find((p) => p.id === postId);
     if (!post) return;
@@ -324,157 +283,133 @@ export default function PulsePage() {
     setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, reactions: updated } : p)));
   };
 
-  // ── Reply ─────────────────────────────────────────────────────
   const handleReply = async (postId: number, replyContent: string) => {
     await supabase.from('pulse_replies').insert({
       post_id: postId,
       content: replyContent,
-      author_role: authorRole || 'Team Member',
+      author_role: user?.name || user?.role || 'Team',
       department_slug: deptSlug || null,
     });
   };
 
-  const displayedPosts = tab === 'department' && deptSlug
-    ? posts.filter((p) => p.department_slug === deptSlug || p.mentions.includes(deptSlug))
-    : posts;
-
   return (
-    <div className="space-y-6 max-w-3xl mx-auto px-4 md:px-6 py-6">
-
-      {/* Production chart at top */}
-      <ProductionChart />
+    <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 space-y-5">
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex items-center gap-3">
+        <MessageSquare className="w-6 h-6 text-[#0077B6]" />
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-            Maji Safi <span style={{ color: '#0077B6' }}>Pulse</span>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            Pulse
           </h1>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Company Feed · Live</p>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-1 p-1 glass-card rounded-2xl">
-          {(['all', 'department'] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
-                tab === t
-                  ? 'bg-[#0077B6] text-white shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              {t === 'all' ? 'All' : 'My Department'}
-            </button>
-          ))}
+          <p className="text-xs text-slate-400 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+            Company announcements · Live
+          </p>
         </div>
       </div>
 
-      {/* Compose Box */}
-      <div className="glass-card p-6 space-y-4">
-        <div className="flex gap-3 items-start">
-          <div
-            className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0 mt-1"
-            style={{ backgroundColor: selectedType.color + '33' }}
-          >
-            {selectedType.emoji}
+      {/* Compose (founder + manager only) */}
+      {canPost && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3 shadow-sm">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Post Announcement</p>
+          <div className="relative">
+            <textarea
+              ref={contentRef}
+              value={content}
+              onChange={(e) => {
+                setContent(e.target.value);
+                const last = e.target.value.split(' ').pop() ?? '';
+                setShowMentionMenu(last.startsWith('@'));
+              }}
+              onBlur={() => setTimeout(() => setShowMentionMenu(false), 150)}
+              placeholder="Share an update with the whole team… (use @ to mention a department)"
+              rows={3}
+              className="w-full bg-white border-2 border-slate-200 text-slate-800 placeholder-slate-400 rounded-xl px-4 py-3 text-sm font-medium leading-relaxed resize-none focus:border-[#0077B6] focus:outline-none"
+            />
+            {showMentionMenu && (
+              <div className="absolute top-full left-0 right-0 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-lg z-10 mt-1">
+                {DEPT_SLUGS.map((slug) => (
+                  <button
+                    key={slug}
+                    onMouseDown={() => {
+                      const words = content.split(' ');
+                      words[words.length - 1] = `@${slug}`;
+                      setContent(words.join(' ') + ' ');
+                      setShowMentionMenu(false);
+                      contentRef.current?.focus();
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-bold hover:bg-slate-50 transition-colors"
+                    style={{ color: DEPT_COLORS[slug] }}
+                  >
+                    @{slug}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <textarea
-            ref={contentRef}
-            value={content}
-            onChange={(e) => {
-              setContent(e.target.value);
-              const last = e.target.value.split(' ').pop() ?? '';
-              setShowMentionMenu(last.startsWith('@'));
-            }}
-            onBlur={() => setTimeout(() => setShowMentionMenu(false), 150)}
-            placeholder="What's happening at Maji Safi? (Use @ to mention a department)"
-            rows={3}
-            className="flex-1 bg-transparent text-slate-800 placeholder:text-slate-400 text-sm font-medium leading-relaxed resize-none focus:outline-none"
-          />
-        </div>
 
-        {/* @mention dropdown */}
-        {showMentionMenu && (
-          <div className="ml-13 glass-card-strong border border-white/40 rounded-xl overflow-hidden text-xs">
-            {DEPT_SLUGS.map((slug) => (
-              <button
-                key={slug}
-                onMouseDown={() => {
-                  const words = content.split(' ');
-                  words[words.length - 1] = `@${slug}`;
-                  setContent(words.join(' ') + ' ');
-                  setShowMentionMenu(false);
-                  contentRef.current?.focus();
-                }}
-                className="w-full text-left px-4 py-2 font-bold text-slate-600 hover:bg-white/60 hover:text-slate-900 transition-colors"
-                style={{ color: DEPT_COLORS[slug] }}
+          {/* Advanced (link, dept) */}
+          {showAdvanced && (
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={deptSlug}
+                onChange={(e) => setDeptSlug(e.target.value)}
+                className="bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-3 py-2 text-xs focus:border-[#0077B6] focus:outline-none"
               >
-                @{slug}
-              </button>
-            ))}
-          </div>
-        )}
+                <option value="">All departments</option>
+                {DEPT_SLUGS.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <input
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="Link URL (optional)"
+                className="bg-white border-2 border-slate-200 text-slate-700 placeholder-slate-400 rounded-xl px-3 py-2 text-xs focus:border-[#0077B6] focus:outline-none"
+              />
+              <input
+                value={linkLabel}
+                onChange={(e) => setLinkLabel(e.target.value)}
+                placeholder="Link label"
+                className="bg-white border-2 border-slate-200 text-slate-700 placeholder-slate-400 rounded-xl px-3 py-2 text-xs focus:border-[#0077B6] focus:outline-none col-span-2"
+              />
+            </div>
+          )}
 
-        {/* Type selector */}
-        <div className="flex flex-wrap gap-2">
-          {POST_TYPES.map((t) => (
+          <div className="flex items-center gap-3">
             <button
-              key={t.type}
-              onClick={() => setPostType(t.type)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-widest border transition-all ${
-                postType === t.type
-                  ? 'border-transparent text-white'
-                  : 'border-white/10 text-slate-500 hover:text-slate-800 hover:border-slate-200'
-              }`}
-              style={postType === t.type ? { backgroundColor: t.color + '33', borderColor: t.color + '66', color: t.color } : {}}
+              onClick={() => setShowAdvanced((p) => !p)}
+              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 transition-colors"
             >
-              {t.emoji} {t.label}
+              <AtSign className="w-3.5 h-3.5" />
+              {showAdvanced ? 'Less' : 'Add link / dept'}
             </button>
-          ))}
+            <button
+              onClick={handlePost}
+              disabled={posting || !content.trim()}
+              className="ml-auto flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0077B6] text-white text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-40"
+            >
+              <Send className="w-3.5 h-3.5" />
+              {posting ? 'Posting…' : 'Post'}
+            </button>
+          </div>
         </div>
-
-        {/* Role + Dept + Link */}
-        <div className="grid grid-cols-2 gap-3">
-          <input value={authorRole} onChange={(e) => setAuthorRole(e.target.value)} placeholder="Your role (e.g. Ops Lead)" className="input" />
-          <select value={deptSlug} onChange={(e) => setDeptSlug(e.target.value)} className="input">
-            <option value="">Department (optional)</option>
-            {DEPT_SLUGS.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-          <input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="Link URL (optional)" className="input" />
-          <input value={linkLabel} onChange={(e) => setLinkLabel(e.target.value)} placeholder="Link label (optional)" className="input" />
-        </div>
-
-        {/* Post button */}
-        <div className="flex justify-end">
-          <button
-            onClick={handlePost}
-            disabled={posting || !content.trim()}
-            className="px-6 py-2.5 rounded-xl font-black text-sm uppercase tracking-widest text-white transition-all disabled:opacity-40"
-            style={{ backgroundColor: selectedType.color }}
-          >
-            {posting ? 'Posting…' : `${selectedType.emoji} Post`}
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Feed */}
       {loading ? (
-        <div className="text-center py-20">
-          <p className="text-slate-500 font-black text-xs uppercase tracking-widest animate-pulse">Loading pulse…</p>
+        <div className="text-center py-16">
+          <p className="text-slate-400 text-xs font-bold uppercase tracking-widest animate-pulse">Loading…</p>
         </div>
-      ) : displayedPosts.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-slate-500 font-black text-xs uppercase tracking-widest">No posts yet. Be the first.</p>
+      ) : posts.length === 0 ? (
+        <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl">
+          <MessageSquare className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+          <p className="text-slate-500 font-semibold text-sm">No announcements yet.</p>
+          {canPost && <p className="text-slate-400 text-xs mt-1">Post the first company update above.</p>}
         </div>
       ) : (
         <div className="space-y-4">
-          {displayedPosts.map((post) => (
-            <PostCard
+          {posts.map((post) => (
+            <AnnouncementCard
               key={post.id}
               post={post}
               replies={replies.filter((r) => r.post_id === post.id)}

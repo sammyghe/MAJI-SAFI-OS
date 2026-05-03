@@ -360,9 +360,9 @@ export default function InventoryPage() {
                 </tr>
               ) : stock.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center font-label text-sm">
-                    <p className="text-outline/50">No data — enter it.</p>
-                    <p className="text-[10px] text-outline/30 mt-1 font-body">[source: inventory_items — no rows found for buziga]</p>
+                  <td colSpan={7} className="px-6 py-10 text-center font-label text-sm">
+                    <p className="text-outline/50 mb-2">No stock items yet</p>
+                    <p className="text-[10px] text-outline/30 font-body">[source: inventory_items — no rows for buziga] — add the first item using the form above.</p>
                   </td>
                 </tr>
               ) : stock.map((item) => {
